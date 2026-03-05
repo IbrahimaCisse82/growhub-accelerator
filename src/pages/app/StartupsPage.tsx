@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
@@ -21,6 +22,7 @@ function getPillColor(value: string | null, map: Record<string, any>, fallback =
 
 export default function StartupsPage() {
   const { data: startups, isLoading } = useStartups();
+  const navigate = useNavigate();
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
@@ -60,7 +62,7 @@ export default function StartupsPage() {
                 <tr><td colSpan={7} className="px-3.5 py-8 text-center text-text-secondary text-sm">Aucune startup pour le moment</td></tr>
               ) : (
                 startups?.map((s) => (
-                  <tr key={s.id} className="hover:bg-surface-2 transition-colors">
+                  <tr key={s.id} onClick={() => navigate(`/app/startups/${s.id}`)} className="hover:bg-surface-2 transition-colors cursor-pointer">
                     <td className="px-3.5 py-2.5 border-b border-border">
                       <div className="font-semibold text-foreground">{s.name}</div>
                       <div className="text-[11px] text-text-secondary">{s.city ?? s.country}</div>
