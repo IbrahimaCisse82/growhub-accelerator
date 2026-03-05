@@ -1,5 +1,5 @@
-import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/logo-growhublink.png";
 
 interface NavItem {
@@ -71,6 +71,12 @@ const navGroups: NavGroup[] = [
       { label: "Rapports", icon: "▦", path: "/app/rapports" },
     ],
   },
+  {
+    label: "Administration",
+    items: [
+      { label: "Utilisateurs", icon: "◉", path: "/app/utilisateurs", badge: "!", badgeType: "alert" },
+    ],
+  },
 ];
 
 const badgeClasses: Record<string, string> = {
@@ -82,6 +88,9 @@ const badgeClasses: Record<string, string> = {
 export default function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { profile, roles, signOut } = useAuth();
+  const initials = profile?.full_name ? profile.full_name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : "??";
+  const mainRole = roles[0] ?? "user";
 
   return (
     <aside className="fixed left-0 top-0 bottom-0 w-[240px] bg-card border-r border-border flex flex-col z-[200] scrollbar-hidden overflow-y-auto">
@@ -130,13 +139,13 @@ export default function AppSidebar() {
 
       {/* Footer */}
       <div className="p-3 border-t border-border flex-shrink-0">
-        <div className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-surface-2 cursor-pointer transition-colors">
+        <div className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-surface-2 cursor-pointer transition-colors" onClick={signOut}>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gh-blue to-gh-purple flex items-center justify-center text-[11px] font-bold text-foreground flex-shrink-0">
-            SN
+            {initials}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-semibold text-foreground">Super Admin</div>
-            <div className="font-mono text-[9px] text-text-tertiary mt-px">GrowHubLink · Admin</div>
+            <div className="text-xs font-semibold text-foreground truncate">{profile?.full_name || "Utilisateur"}</div>
+            <div className="font-mono text-[9px] text-text-tertiary mt-px">{mainRole} · Déconnexion</div>
           </div>
         </div>
       </div>

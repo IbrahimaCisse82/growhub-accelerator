@@ -28,6 +28,7 @@ import GrantsPage from "@/pages/app/GrantsPage";
 import EvenementsPage from "@/pages/app/EvenementsPage";
 import AnalyticsPage from "@/pages/app/AnalyticsPage";
 import PlaceholderPage from "@/pages/app/PlaceholderPage";
+import UsersPage from "@/pages/app/UsersPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,7 @@ const App = () => (
               <Route path="ressources" element={<PlaceholderPage title="Ressources" subtitle="Bibliothèque de ressources partagées" />} />
               <Route path="analytics" element={<AnalyticsPage />} />
               <Route path="rapports" element={<PlaceholderPage title="Rapports" subtitle="Génération et export de rapports" />} />
+              <Route path="utilisateurs" element={<UsersPage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -801,6 +801,7 @@ export type Database = {
           email: string | null
           full_name: string
           id: string
+          is_approved: boolean
           linkedin_url: string | null
           organization: string | null
           phone: string | null
@@ -815,6 +816,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          is_approved?: boolean
           linkedin_url?: string | null
           organization?: string | null
           phone?: string | null
@@ -829,6 +831,7 @@ export type Database = {
           email?: string | null
           full_name?: string
           id?: string
+          is_approved?: boolean
           linkedin_url?: string | null
           organization?: string | null
           phone?: string | null
