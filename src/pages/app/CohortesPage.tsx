@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import StatCard from "@/components/shared/StatCard";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhButton from "@/components/shared/GhButton";
@@ -16,6 +17,7 @@ const statusMap: Record<string, { label: string; color: "green" | "blue" | "ambe
 
 export default function CohortesPage() {
   const { data: cohorts, isLoading } = useCohorts();
+  const navigate = useNavigate();
   const activeCount = cohorts?.filter((c) => c.status === "active").length ?? 0;
 
   return (
@@ -42,7 +44,7 @@ export default function CohortesPage() {
           cohorts?.map((c) => {
             const st = statusMap[c.status] ?? statusMap.draft;
             return (
-              <div key={c.id} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
+              <div key={c.id} onClick={() => navigate(`/app/cohortes/${c.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
                 <div className={`h-[3px] ${st.stripe}`} />
                 <div className="p-4">
                   <div className="font-display text-[15px] font-bold text-foreground">{c.name}</div>

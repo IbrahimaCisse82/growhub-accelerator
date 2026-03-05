@@ -11,8 +11,14 @@ import SignupPage from "@/pages/auth/SignupPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import DashboardPage from "@/pages/app/DashboardPage";
+import PortfoliosPage from "@/pages/app/PortfoliosPage";
+import PortfolioDetailPage from "@/pages/app/PortfolioDetailPage";
+import ProgrammesPage from "@/pages/app/ProgrammesPage";
+import ProgramDetailPage from "@/pages/app/ProgramDetailPage";
 import CohortesPage from "@/pages/app/CohortesPage";
+import CohortDetailPage from "@/pages/app/CohortDetailPage";
 import StartupsPage from "@/pages/app/StartupsPage";
+import StartupDetailPage from "@/pages/app/StartupDetailPage";
 import CandidaturesPage from "@/pages/app/CandidaturesPage";
 import MentorsPage from "@/pages/app/MentorsPage";
 import CoachingPage from "@/pages/app/CoachingPage";
@@ -42,10 +48,14 @@ const App = () => (
             <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="activites" element={<PlaceholderPage title="Activités" subtitle="Fil d'activité de la plateforme" />} />
-              <Route path="portefeuilles" element={<PlaceholderPage title="Portefeuilles" subtitle="Gestion stratégique des portefeuilles" />} />
-              <Route path="programmes" element={<PlaceholderPage title="Programmes" subtitle="Coordination des programmes d'accélération" />} />
+              <Route path="portefeuilles" element={<PortfoliosPage />} />
+              <Route path="portefeuilles/:id" element={<PortfolioDetailPage />} />
+              <Route path="programmes" element={<ProgrammesPage />} />
+              <Route path="programmes/:id" element={<ProgramDetailPage />} />
               <Route path="cohortes" element={<CohortesPage />} />
+              <Route path="cohortes/:id" element={<CohortDetailPage />} />
               <Route path="startups" element={<StartupsPage />} />
+              <Route path="startups/:id" element={<StartupDetailPage />} />
               <Route path="candidatures" element={<CandidaturesPage />} />
               <Route path="mentors" element={<MentorsPage />} />
               <Route path="coaching" element={<CoachingPage />} />

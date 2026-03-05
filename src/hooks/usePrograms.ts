@@ -1,0 +1,48 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export function usePrograms() {
+  return useQuery({
+    queryKey: ["programs"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("programs")
+        .select("*, portfolios(name)")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useProgram(id: string | undefined) {
+  return useQuery({
+    queryKey: ["program", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("programs")
+        .select("*, portfolios(id, name)")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useProgramCohorts(programId: string | undefined) {
+  return useQuery({
+    queryKey: ["program-cohorts", programId],
+    enabled: !!programId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cohorts")
+        .select("*")
+        .eq("program_id", programId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
