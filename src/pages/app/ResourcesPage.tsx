@@ -1,0 +1,49 @@
+import { motion } from "framer-motion";
+import SectionHeader from "@/components/shared/SectionHeader";
+import GhButton from "@/components/shared/GhButton";
+import Pill from "@/components/shared/Pill";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useResources } from "@/hooks/useResources";
+
+const typeIcon: Record<string, string> = {
+  document: "📄", video: "🎥", template: "📋", link: "🔗", presentation: "📊",
+};
+
+const categoryColor: Record<string, "green" | "blue" | "purple" | "amber" | "gray"> = {
+  formation: "blue", template: "purple", guide: "green", outil: "amber",
+};
+
+export default function ResourcesPage() {
+  const { data: resources, isLoading } = useResources();
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+      <SectionHeader title="Ressources" subtitle="Bibliothèque de ressources partagées" actions={<GhButton>+ Ajouter</GhButton>} />
+      <div className="grid grid-cols-3 gap-4">
+        {isLoading ? (
+          Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[160px] rounded-xl" />)
+        ) : !resources || resources.length === 0 ? (
+          <div className="col-span-3 text-center text-muted-foreground py-12 text-sm">Aucune ressource pour le moment</div>
+        ) : resources.map(r => (
+          <div key={r.id} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
+            <div className="h-16 flex items-center justify-center text-3xl bg-gradient-to-br from-accent/20 to-primary/10">
+              {typeIcon[r.type ?? "document"] ?? "📄"}
+            </div>
+            <div className="p-3.5">
+              <div className="text-[13px] font-bold text-foreground">{r.title}</div>
+              <div className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{r.description ?? "Aucune description"}</div>
+              {(r as any).programs?.name && <div className="text-[10px] text-muted-foreground mt-1 font-mono">{(r as any).programs.name}</div>}
+            </div>
+            <div className="px-3.5 py-2 bg-secondary border-t border-border flex justify-between items-center">
+              <div className="flex gap-1.5">
+                {r.category && <Pill color={categoryColor[r.category.toLowerCase()] ?? "gray"}>{r.category}</Pill>}
+                {r.is_public && <Pill color="green">Public</Pill>}
+              </div>
+              {r.file_url && <a href={r.file_url} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}><GhButton variant="ghost">↓</GhButton></a>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}

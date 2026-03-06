@@ -37,7 +37,7 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="bg-card border border-border rounded-2xl p-8 max-w-md w-full mx-4 text-center">
-          <img src={logo} alt="GrowHubLink" className="h-10 mx-auto mb-6" />
+          <img src={logo} alt="GrowHub Accelerator" className="h-10 mx-auto mb-6" />
           <div className="w-14 h-14 rounded-full bg-warning/10 flex items-center justify-center mx-auto mb-4">
             <span className="text-2xl">⏳</span>
           </div>
