@@ -6,13 +6,11 @@ import Pill from "@/components/shared/Pill";
 import GhButton from "@/components/shared/GhButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortfolios } from "@/hooks/usePortfolios";
+import CreatePortfolioDialog from "@/components/dialogs/CreatePortfolioDialog";
 
 const statusMap: Record<string, { label: string; color: "green" | "blue" | "amber" | "gray" }> = {
-  active: { label: "Actif", color: "green" },
-  draft: { label: "Brouillon", color: "gray" },
-  paused: { label: "En pause", color: "amber" },
-  completed: { label: "Terminé", color: "blue" },
-  cancelled: { label: "Annulé", color: "gray" },
+  active: { label: "Actif", color: "green" }, draft: { label: "Brouillon", color: "gray" },
+  paused: { label: "En pause", color: "amber" }, completed: { label: "Terminé", color: "blue" }, cancelled: { label: "Annulé", color: "gray" },
 };
 
 export default function PortfoliosPage() {
@@ -22,40 +20,33 @@ export default function PortfoliosPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <SectionHeader
-        title="Portefeuilles"
-        subtitle="Gestion stratégique des portefeuilles"
-        actions={<GhButton>+ Nouveau portefeuille</GhButton>}
-      />
+      <SectionHeader title="Portefeuilles" subtitle="Gestion stratégique des portefeuilles"
+        actions={<CreatePortfolioDialog><GhButton>+ Nouveau portefeuille</GhButton></CreatePortfolioDialog>} />
       <div className="grid grid-cols-3 gap-3.5 mb-5">
         <StatCard label="Actifs" value={String(activeCount)} note="" color="green" />
         <StatCard label="Total" value={String(portfolios?.length ?? 0)} note="" color="blue" />
         <StatCard label="Terminés" value={String(portfolios?.filter((p) => p.status === "completed").length ?? 0)} note="" color="amber" />
       </div>
-      <div className="grid grid-cols-3 gap-4">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[180px] rounded-xl" />)
-        ) : portfolios?.length === 0 ? (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {isLoading ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[180px] rounded-xl" />) : portfolios?.length === 0 ? (
           <div className="col-span-3 text-center text-muted-foreground py-12 text-sm">Aucun portefeuille pour le moment</div>
-        ) : (
-          portfolios?.map((p) => {
-            const st = statusMap[p.status] ?? statusMap.draft;
-            return (
-              <div key={p.id} onClick={() => navigate(`/app/portefeuilles/${p.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
-                <div className={`h-[3px] ${st.color === "green" ? "bg-primary" : st.color === "blue" ? "bg-accent" : st.color === "amber" ? "bg-warning" : "bg-muted"}`} />
-                <div className="p-4">
-                  <div className="font-display text-[15px] font-bold text-foreground">{p.name}</div>
-                  <div className="font-mono text-[10px] text-muted-foreground mt-0.5">{p.code}</div>
-                  <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2">{p.description ?? "Aucune description"}</p>
-                </div>
-                <div className="px-4 py-2.5 bg-secondary border-t border-border flex justify-between items-center">
-                  <Pill color={st.color}>● {st.label}</Pill>
-                  <GhButton variant="ghost">Détails →</GhButton>
-                </div>
+        ) : portfolios?.map((p) => {
+          const st = statusMap[p.status] ?? statusMap.draft;
+          return (
+            <div key={p.id} onClick={() => navigate(`/app/portefeuilles/${p.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
+              <div className={`h-[3px] ${st.color === "green" ? "bg-primary" : st.color === "blue" ? "bg-accent" : st.color === "amber" ? "bg-gh-amber" : "bg-muted"}`} />
+              <div className="p-4">
+                <div className="font-display text-[15px] font-bold text-foreground">{p.name}</div>
+                <div className="font-mono text-[10px] text-muted-foreground mt-0.5">{p.code}</div>
+                <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2">{p.description ?? "Aucune description"}</p>
               </div>
-            );
-          })
-        )}
+              <div className="px-4 py-2.5 bg-secondary border-t border-border flex justify-between items-center">
+                <Pill color={st.color}>● {st.label}</Pill>
+                <GhButton variant="ghost">Détails →</GhButton>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </motion.div>
   );

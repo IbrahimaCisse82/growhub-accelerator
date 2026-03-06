@@ -45,7 +45,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-[400px] space-y-8">
         <div className="flex flex-col items-center gap-4">
-          <img src={logo} alt="GrowHubLink" className="h-10 w-auto" />
+          <img src={logo} alt="GrowHub Accelerator" className="h-10 w-auto" />
           <div className="text-center">
             <h1 className="text-xl font-display font-bold text-foreground">Nouveau mot de passe</h1>
             <p className="text-sm text-muted-foreground mt-1">Choisissez un nouveau mot de passe</p>

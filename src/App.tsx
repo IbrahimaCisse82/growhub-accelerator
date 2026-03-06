@@ -24,11 +24,18 @@ import MentorsPage from "@/pages/app/MentorsPage";
 import CoachingPage from "@/pages/app/CoachingPage";
 import LmsPage from "@/pages/app/LmsPage";
 import ProjetsPage from "@/pages/app/ProjetsPage";
+import GanttPage from "@/pages/app/GanttPage";
+import RisquesPage from "@/pages/app/RisquesPage";
 import GrantsPage from "@/pages/app/GrantsPage";
+import BudgetsPage from "@/pages/app/BudgetsPage";
 import EvenementsPage from "@/pages/app/EvenementsPage";
+import MessagingPage from "@/pages/app/MessagingPage";
+import ResourcesPage from "@/pages/app/ResourcesPage";
 import AnalyticsPage from "@/pages/app/AnalyticsPage";
-import PlaceholderPage from "@/pages/app/PlaceholderPage";
+import RapportsPage from "@/pages/app/RapportsPage";
 import UsersPage from "@/pages/app/UsersPage";
+import ProfilePage from "@/pages/app/ProfilePage";
+import ActivitesPage from "@/pages/app/ActivitesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -48,7 +55,7 @@ const App = () => (
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="dashboard" element={<DashboardPage />} />
-              <Route path="activites" element={<PlaceholderPage title="Activités" subtitle="Fil d'activité de la plateforme" />} />
+              <Route path="activites" element={<ActivitesPage />} />
               <Route path="portefeuilles" element={<PortfoliosPage />} />
               <Route path="portefeuilles/:id" element={<PortfolioDetailPage />} />
               <Route path="programmes" element={<ProgrammesPage />} />
@@ -62,16 +69,17 @@ const App = () => (
               <Route path="coaching" element={<CoachingPage />} />
               <Route path="lms" element={<LmsPage />} />
               <Route path="projets" element={<ProjetsPage />} />
-              <Route path="gantt" element={<PlaceholderPage title="Gantt" subtitle="Vue Gantt des projets et jalons" />} />
-              <Route path="risques" element={<PlaceholderPage title="Risques" subtitle="Registre et suivi des risques" />} />
+              <Route path="gantt" element={<GanttPage />} />
+              <Route path="risques" element={<RisquesPage />} />
               <Route path="grants" element={<GrantsPage />} />
-              <Route path="budgets" element={<PlaceholderPage title="Budgets" subtitle="Suivi budgétaire et dépenses" />} />
+              <Route path="budgets" element={<BudgetsPage />} />
               <Route path="evenements" element={<EvenementsPage />} />
-              <Route path="messagerie" element={<PlaceholderPage title="Messagerie" subtitle="Messagerie interne de la plateforme" />} />
-              <Route path="ressources" element={<PlaceholderPage title="Ressources" subtitle="Bibliothèque de ressources partagées" />} />
+              <Route path="messagerie" element={<MessagingPage />} />
+              <Route path="ressources" element={<ResourcesPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />
-              <Route path="rapports" element={<PlaceholderPage title="Rapports" subtitle="Génération et export de rapports" />} />
+              <Route path="rapports" element={<RapportsPage />} />
               <Route path="utilisateurs" element={<UsersPage />} />
+              <Route path="profil" element={<ProfilePage />} />
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
