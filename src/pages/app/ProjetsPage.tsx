@@ -63,14 +63,22 @@ function TaskCard({ card, isDragOverlay }: { card: any; isDragOverlay?: boolean 
         isDragOverlay ? "shadow-lg ring-2 ring-primary/30 rotate-[2deg] scale-105" : ""
       }`}
     >
-      <div className="text-xs font-semibold text-foreground mb-2">{card.title}</div>
+      {/* Project name */}
+      {card.projects?.name && (
+        <div className="text-[10px] font-mono text-muted-foreground mb-1 truncate">
+          📁 {card.projects.name}
+        </div>
+      )}
+      <div className="text-xs font-semibold text-foreground mb-1">{card.title}</div>
+      {/* Milestone */}
+      {card.milestone_title && (
+        <div className="text-[10px] text-accent-foreground/70 mb-1 truncate">
+          🏁 {card.milestone_title}
+        </div>
+      )}
       <div className="flex items-center justify-between mt-2">
         <div className="flex gap-1 flex-wrap">
-          {(card.tags ?? []).map((t: string) => (
-            <span key={t} className="font-mono text-[9px] bg-surface-3 text-muted-foreground px-1.5 py-px rounded">
-              {t}
-            </span>
-          ))}
+          {/* Don't show milestone IDs as tags anymore */}
         </div>
         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${priorityColor[card.priority] ?? "bg-gh-amber"}`} />
       </div>
