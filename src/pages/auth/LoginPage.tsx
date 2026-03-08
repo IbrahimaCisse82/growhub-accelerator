@@ -24,8 +24,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="w-full max-w-[400px] space-y-8">
+    <div
+      className="min-h-screen flex items-center justify-center px-4 bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: "url('/images/login-bg.jpg')" }}
+    >
+      <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
+      <div className="relative w-full max-w-[400px] space-y-8 bg-card/90 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-border">
         <div className="flex flex-col items-center gap-4">
           <img src={logo} alt="GrowHub Accelerator" className="h-10 w-auto" />
           <div className="text-center">
