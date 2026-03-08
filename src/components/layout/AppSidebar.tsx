@@ -57,6 +57,7 @@ const navGroups: NavGroup[] = [
     label: "Financements",
     items: [
       { label: "Grants & Subventions", icon: "◎", path: "/app/grants" },
+      { label: "Analytics Grants", icon: "◈", path: "/app/grants-analytics" },
       { label: "Budgets", icon: "◫", path: "/app/budgets" },
     ],
   },
