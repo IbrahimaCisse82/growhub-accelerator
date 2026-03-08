@@ -167,14 +167,15 @@ export default function ProjectWizardPage() {
         if (ke) throw ke;
       }
 
-      // 5. Budget lines
-      const validBudget = budgetLines.filter(b => b.label);
+      // 5. Budget lines (GTS format)
+      const validBudget = budgetLines.filter(b => b.desc);
       if (validBudget.length > 0) {
         const { error: be } = await supabase.from("project_budget_lines" as any).insert(
           validBudget.map(b => ({
-            project_id: project.id, category: b.category, label: b.label,
-            unit: b.unit || null, quantity: b.quantity, unit_cost: b.unitCost,
-            funding_source: b.fundingSource || null,
+            project_id: project.id, category: b.section === "A" ? "operational" : "management",
+            label: b.desc, code: b.code, section: b.section,
+            unit: b.unit || null, quantity: b.qty, unit_cost: b.montant,
+            allocation_pct: b.alloc, funding_source: null,
           }))
         );
         if (be) throw be;
