@@ -88,3 +88,17 @@ export function useChangeUserRole() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
   });
 }
+
+export function useInvitations() {
+  return useQuery({
+    queryKey: ["admin-invitations"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invitations")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
