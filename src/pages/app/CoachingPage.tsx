@@ -29,7 +29,7 @@ export default function CoachingPage() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("coaching_sessions").update({ status: status as any }).eq("id", id);
+      const { error } = await supabase.from("coaching_sessions").update({ status: status as Database["public"]["Enums"]["session_status"] }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["coaching-sessions"] }); toast({ title: "✓ Session mise à jour" }); },
