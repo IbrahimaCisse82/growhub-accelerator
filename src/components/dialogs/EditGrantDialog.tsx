@@ -3,6 +3,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import type { Database } from "@/integrations/supabase/types";
+
+type GrantStatus = Database["public"]["Enums"]["grant_status"];
 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 
@@ -60,7 +63,7 @@ export default function EditGrantDialog({ grant, children, open: controlledOpen,
         description: description || null,
         start_date: startDate || null,
         end_date: endDate || null,
-        status: status as any,
+        status: status as GrantStatus,
       }).eq("id", grant.id);
       if (error) throw error;
     },

@@ -111,7 +111,7 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
 
   const getBadge = (item: NavItem): string | undefined => {
     if (!item.badgeKey || !counts) return undefined;
-    const val = (counts as any)[item.badgeKey];
+    const val = counts[item.badgeKey as keyof typeof counts];
     return val && val > 0 ? String(val) : undefined;
   };
 

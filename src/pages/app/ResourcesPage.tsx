@@ -25,7 +25,7 @@ export default function ResourcesPage() {
             <div className="p-3.5">
               <div className="text-[13px] font-bold text-foreground">{r.title}</div>
               <div className="text-[11px] text-muted-foreground mt-1 line-clamp-2">{r.description ?? "Aucune description"}</div>
-              {(r as any).programs?.name && <div className="text-[10px] text-muted-foreground mt-1 font-mono">{(r as any).programs.name}</div>}
+              {r.program_id && <div className="text-[10px] text-muted-foreground mt-1 font-mono">Programme lié</div>}
             </div>
             <div className="px-3.5 py-2 bg-secondary border-t border-border flex justify-between items-center">
               <div className="flex gap-1.5">

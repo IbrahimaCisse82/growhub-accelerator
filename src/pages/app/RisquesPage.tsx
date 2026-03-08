@@ -40,7 +40,7 @@ export default function RisquesPage() {
                 return (
                   <tr key={r.id} className="hover:bg-secondary transition-colors">
                     <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{r.title}</td>
-                    <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{(r as any).projects?.name ?? "—"}</td>
+                    <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{r.projects?.name ?? "—"}</td>
                     <td className="px-3.5 py-2.5 border-b border-border"><Pill color={lv.color}>{lv.label}</Pill></td>
                     <td className="px-3.5 py-2.5 border-b border-border"><Pill color={r.status === "open" ? "amber" : "green"}>{r.status ?? "open"}</Pill></td>
                     <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground text-[11px] max-w-[200px] truncate">{r.mitigation ?? "—"}</td>

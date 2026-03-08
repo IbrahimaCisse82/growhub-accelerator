@@ -45,7 +45,7 @@ export default function ProgrammesPage() {
               <div className="p-4">
                 <div className="font-display text-[15px] font-bold text-foreground">{p.name}</div>
                 <div className="font-mono text-[10px] text-muted-foreground mt-0.5">{p.code} {p.funder ? `· ${p.funder}` : ""}</div>
-                <div className="text-[11px] text-muted-foreground mt-1">{(p as any).portfolios?.name ?? "Sans portefeuille"}</div>
+                <div className="text-[11px] text-muted-foreground mt-1">{p.portfolios?.name ?? "Sans portefeuille"}</div>
               </div>
               <div className="px-4 py-2.5 bg-secondary border-t border-border flex justify-between items-center">
                 <Pill color={st.color}>● {st.label}</Pill>

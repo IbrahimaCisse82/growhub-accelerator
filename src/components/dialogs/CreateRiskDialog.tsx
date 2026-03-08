@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { useProjects } from "@/hooks/useProjects";
+import type { Database } from "@/integrations/supabase/types";
 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 
@@ -22,7 +23,7 @@ export default function CreateRiskDialog({ children }: { children: React.ReactNo
   const create = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("risks").insert({
-        title, description: description || null, level: level as any,
+        title, description: description || null, level: level as Database["public"]["Enums"]["risk_level"],
         mitigation: mitigation || null, project_id: projectId || null,
         owner_id: user?.id, status: "open",
       });

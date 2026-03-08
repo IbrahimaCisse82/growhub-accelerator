@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import SectionHeader from "@/components/shared/SectionHeader";
 import StatCard from "@/components/shared/StatCard";
 import GhButton from "@/components/shared/GhButton";
@@ -66,7 +67,7 @@ export default function GrantDetailPage() {
 
   const cancelMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("grants").update({ status: "closed" as any }).eq("id", id!);
+      const { error } = await supabase.from("grants").update({ status: "closed" as Database["public"]["Enums"]["grant_status"] }).eq("id", id!);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["grants"] }); qc.invalidateQueries({ queryKey: ["grant_detail", id] }); setShowCancel(false); toast({ title: "Grant annulé" }); },
@@ -225,7 +226,7 @@ export default function GrantDetailPage() {
                         <tr key={b.id} className="hover:bg-secondary/50 transition-colors">
                           <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{b.label}</td>
                           <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{b.category}</td>
-                          <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{(b as any).projects?.name ?? "—"}</td>
+                          <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{b.projects?.name ?? "—"}</td>
                           <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{fmt(b.amount_planned ?? 0)} €</td>
                           <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{fmt(b.amount_spent ?? 0)} €</td>
                           <td className="px-3.5 py-2.5 border-b border-border">
@@ -251,7 +252,7 @@ export default function GrantDetailPage() {
               { label: "Code", val: grant.code },
               { label: "Organisation", val: grant.organization ?? "—" },
               { label: "Description", val: grant.description ?? "—" },
-              { label: "Programme", val: (grant as any).programs?.name ?? "—" },
+              { label: "Programme", val: grant.programs?.name ?? "—" },
               { label: "Devise", val: grant.currency ?? "EUR" },
               { label: "Date début", val: grant.start_date ?? "—" },
               { label: "Date fin", val: grant.end_date ?? "—" },

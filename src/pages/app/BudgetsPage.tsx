@@ -20,12 +20,12 @@ function useProjectBudgetLines(projectId: string | null) {
     enabled: !!projectId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("project_budget_lines" as any)
+        .from("project_budget_lines")
         .select("*, projects(name)")
         .eq("project_id", projectId!)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return data as any[];
+      return data;
     },
   });
 }
@@ -35,11 +35,11 @@ function useAllProjectBudgetLines() {
     queryKey: ["all_project_budget_lines"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("project_budget_lines" as any)
+        .from("project_budget_lines")
         .select("*, projects(name)")
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return data as any[];
+      return data;
     },
   });
 }
@@ -210,8 +210,8 @@ export default function BudgetsPage() {
                     <tr key={b.id} className="hover:bg-secondary/50 transition-colors">
                       <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{b.label}</td>
                       <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{b.category}</td>
-                      <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{(b as any).projects?.name ?? "—"}</td>
-                      <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{(b as any).grants?.name ?? "—"}</td>
+                      <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{b.projects?.name ?? "—"}</td>
+                      <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{b.grants?.name ?? "—"}</td>
                       <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{fmt(b.amount_planned ?? 0)} XOF</td>
                       <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{fmt(b.amount_spent ?? 0)} XOF</td>
                       <td className="px-3.5 py-2.5 border-b border-border font-mono text-primary">{pct}%</td>

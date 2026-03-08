@@ -10,6 +10,7 @@ import { useCoachingSessions } from "@/hooks/useCoachingSessions";
 import CreateSessionDialog from "@/components/dialogs/CreateSessionDialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -29,7 +30,7 @@ export default function CoachingPage() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("coaching_sessions").update({ status: status as any }).eq("id", id);
+      const { error } = await supabase.from("coaching_sessions").update({ status: status as Database["public"]["Enums"]["session_status"] }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["coaching-sessions"] }); toast({ title: "✓ Session mise à jour" }); },
@@ -73,7 +74,7 @@ export default function CoachingPage() {
                       <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">
                         {format(new Date(s.scheduled_at), "dd MMM HH:mm", { locale: fr })}
                       </td>
-                      <td className="px-3.5 py-2.5 border-b border-border text-foreground">{(s as any).startups?.name ?? "—"}</td>
+                      <td className="px-3.5 py-2.5 border-b border-border text-foreground">{s.startups?.name ?? "—"}</td>
                       <td className="px-3.5 py-2.5 border-b border-border text-foreground">{s.title}</td>
                       <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{s.duration_minutes}min</td>
                       <td className="px-3.5 py-2.5 border-b border-border"><Pill color={st.color}>{st.label}</Pill></td>

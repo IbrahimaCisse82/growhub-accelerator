@@ -23,7 +23,7 @@ export default function StartupDetailPage() {
   if (isLoading) return <div className="p-8"><Skeleton className="h-8 w-64 mb-4" /><Skeleton className="h-[300px] rounded-xl" /></div>;
   if (!startup) return <div className="text-center py-12 text-muted-foreground">Startup introuvable</div>;
 
-  const cohort = (startup as any).cohorts;
+  const cohort = startup.cohorts;
   const program = cohort?.programs;
   const portfolio = program?.portfolios;
 

@@ -8,6 +8,7 @@ import Pill from "@/components/shared/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useGrants } from "@/hooks/useGrants";
+import type { Database } from "@/integrations/supabase/types";
 import { useBudgets } from "@/hooks/useBudgets";
 import CreateGrantDialog from "@/components/dialogs/CreateGrantDialog";
 import EditGrantDialog from "@/components/dialogs/EditGrantDialog";
@@ -55,7 +56,7 @@ export default function GrantsPage() {
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("grants").update({ status: "closed" as any }).eq("id", id);
+      const { error } = await supabase.from("grants").update({ status: "closed" as Database["public"]["Enums"]["grant_status"] }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["grants"] }); setCancelGrant(null); toast({ title: "Grant annulé" }); },

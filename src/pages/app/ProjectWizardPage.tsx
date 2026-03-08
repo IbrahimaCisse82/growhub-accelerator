@@ -125,12 +125,12 @@ export default function ProjectWizardPage() {
         program_id: programId, owner_id: user?.id,
         start_date: startDate || null, end_date: endDate || null,
         budget: totalBudget,
-        validation_status: "pending_review" as any,
+        validation_status: "pending_review",
       }).select().single();
       if (pe) throw pe;
 
       // 2. Logical framework
-      const { error: lfe } = await supabase.from("logical_frameworks" as any).insert({
+      const { error: lfe } = await supabase.from("logical_frameworks").insert({
         project_id: project.id,
         overall_objective: overallObjective,
         specific_objectives: specificObjectives.filter(Boolean),
@@ -142,7 +142,7 @@ export default function ProjectWizardPage() {
       if (lfe) throw lfe;
 
       // 3. Theory of change
-      const { error: toce } = await supabase.from("theory_of_change" as any).insert({
+      const { error: toce } = await supabase.from("theory_of_change").insert({
         project_id: project.id,
         inputs: tocInputs.filter(Boolean),
         activities: tocActivities.filter(Boolean),
@@ -157,7 +157,7 @@ export default function ProjectWizardPage() {
       // 4. KPIs
       const validKpis = kpis.filter(k => k.name);
       if (validKpis.length > 0) {
-        const { error: ke } = await supabase.from("project_indicators" as any).insert(
+        const { error: ke } = await supabase.from("project_indicators").insert(
           validKpis.map(k => ({
             project_id: project.id, name: k.name, category: k.category,
             unit: k.unit || null, baseline_value: k.baseline, target_value: k.target,
@@ -170,7 +170,7 @@ export default function ProjectWizardPage() {
       // 5. Budget lines (GTS format)
       const validBudget = budgetLines.filter(b => b.desc);
       if (validBudget.length > 0) {
-        const { error: be } = await supabase.from("project_budget_lines" as any).insert(
+        const { error: be } = await supabase.from("project_budget_lines").insert(
           validBudget.map(b => ({
             project_id: project.id, category: b.section === "A" ? "operational" : "management",
             label: b.desc, code: b.code, section: b.section,

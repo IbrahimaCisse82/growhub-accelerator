@@ -32,7 +32,7 @@ export default function CohortDetailPage() {
   if (!cohort) return <div className="text-center py-12 text-muted-foreground">Cohorte introuvable</div>;
 
   const st = statusMap[cohort.status] ?? statusMap.draft;
-  const program = (cohort as any).programs;
+  const program = cohort.programs;
   const portfolio = program?.portfolios;
 
   const crumbs = [
@@ -103,7 +103,7 @@ export default function CohortDetailPage() {
               <tbody>
                 {applications.map(a => (
                   <tr key={a.id} className="hover:bg-secondary transition-colors cursor-pointer" onClick={() => a.startup_id && navigate(`/app/startups/${a.startup_id}`)}>
-                    <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{(a as any).startups?.name ?? "—"}</td>
+                    <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{a.startups?.name ?? "—"}</td>
                     <td className="px-3.5 py-2.5 border-b border-border"><Pill color={appStepColor[a.status] ?? "gray"}>{a.status}</Pill></td>
                     <td className="px-3.5 py-2.5 border-b border-border font-mono text-primary">{a.score != null ? `${a.score}/100` : "—"}</td>
                     <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{new Date(a.submitted_at).toLocaleDateString("fr-FR")}</td>

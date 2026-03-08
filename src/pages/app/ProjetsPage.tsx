@@ -37,7 +37,7 @@ export default function ProjetsPage() {
 
   const validateProject = useMutation({
     mutationFn: async (projectId: string) => {
-      const { error } = await supabase.from("projects").update({ validation_status: "validated" as any, validated_at: new Date().toISOString() } as any).eq("id", projectId);
+      const { error } = await supabase.from("projects").update({ validation_status: "validated", validated_at: new Date().toISOString() }).eq("id", projectId);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["projects"] }); toast.success("Projet validé !"); },
@@ -51,7 +51,7 @@ export default function ProjetsPage() {
         applications_open: true,
         applications_start_date: appStartDate || null,
         applications_end_date: appEndDate || null,
-      } as any).eq("id", openAppDialog);
+      }).eq("id", openAppDialog);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -95,8 +95,8 @@ export default function ProjetsPage() {
             </thead>
             <tbody>
               {projects.map(p => {
-                const vs = (p as any).validation_status ?? "draft";
-                const appOpen = (p as any).applications_open ?? false;
+                const vs = p.validation_status ?? "draft";
+                const appOpen = p.applications_open ?? false;
                 return (
                   <tr key={p.id} className="border-b border-border last:border-b-0 hover:bg-secondary/50 transition-colors">
                     <td className="px-4 py-3 cursor-pointer" onClick={() => navigate(`/app/projets/${p.id}`)}>

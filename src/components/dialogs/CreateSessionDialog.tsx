@@ -55,7 +55,7 @@ export default function CreateSessionDialog({ children }: { children: React.Reac
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Mentor *</label>
               <select value={mentorId} onChange={e => setMentorId(e.target.value)} required className={inputCls}>
                 <option value="">— Sélectionner</option>
-                {mentors?.map(m => <option key={m.id} value={m.user_id}>{(m as any).profiles?.full_name ?? "Mentor"}</option>)}
+                {mentors?.map(m => <option key={m.id} value={m.user_id}>{m.profile.full_name ?? "Mentor"}</option>)}
               </select>
             </div>
           </div>

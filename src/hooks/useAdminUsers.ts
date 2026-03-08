@@ -1,5 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type AppRole = Database["public"]["Enums"]["app_role"];
 
 interface UserWithRole {
   id: string;
@@ -70,7 +73,7 @@ export function useChangeUserRole() {
       // Upsert: delete then insert in a single transaction-like sequence
       // First insert the new role, then delete old ones to avoid window with no role
       const { error: insError } = await supabase.from("user_roles").upsert(
-        { user_id: userId, role: newRole as any },
+        { user_id: userId, role: newRole as AppRole },
         { onConflict: "user_id,role" }
       );
       if (insError) throw insError;
@@ -79,7 +82,7 @@ export function useChangeUserRole() {
         .from("user_roles")
         .delete()
         .eq("user_id", userId)
-        .neq("role", newRole as any);
+        .neq("role", newRole as AppRole);
       if (delError) throw delError;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
