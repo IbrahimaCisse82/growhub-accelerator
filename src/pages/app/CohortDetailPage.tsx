@@ -6,7 +6,7 @@ import Pill from "@/components/shared/Pill";
 import GhButton from "@/components/shared/GhButton";
 import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useCohort, useCohortStartups } from "@/hooks/useCohortDetail";
+import { useCohort, useCohortStartups, useCohortApplications } from "@/hooks/useCohortDetail";
 
 const statusMap: Record<string, { label: string; color: "green" | "blue" | "amber" | "gray" }> = {
   active: { label: "Active", color: "green" },
@@ -16,11 +16,17 @@ const statusMap: Record<string, { label: string; color: "green" | "blue" | "ambe
   cancelled: { label: "Annulée", color: "gray" },
 };
 
+const appStepColor: Record<string, "blue" | "amber" | "purple" | "green" | "rose" | "gray"> = {
+  submitted: "gray", screening: "amber", interview: "blue",
+  due_diligence: "purple", accepted: "green", rejected: "rose",
+};
+
 export default function CohortDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: cohort, isLoading } = useCohort(id);
   const { data: startups, isLoading: loadingStartups } = useCohortStartups(id);
+  const { data: applications } = useCohortApplications(id);
 
   if (isLoading) return <div className="p-8"><Skeleton className="h-8 w-64 mb-4" /><Skeleton className="h-[300px] rounded-xl" /></div>;
   if (!cohort) return <div className="text-center py-12 text-muted-foreground">Cohorte introuvable</div>;
@@ -45,40 +51,69 @@ export default function CohortDetailPage() {
         actions={<Pill color={st.color}>● {st.label}</Pill>}
       />
 
-      <div className="grid grid-cols-4 gap-3.5 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
         <StatCard label="Startups" value={String(startups?.length ?? 0)} note={`/ ${cohort.max_startups ?? "—"}`} color="green" />
         <StatCard label="Programme" value={program?.name ?? "—"} note="" color="blue" />
         <StatCard label="Début" value={cohort.start_date ? new Date(cohort.start_date).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "—"} note="" color="amber" />
-        <StatCard label="Fin" value={cohort.end_date ? new Date(cohort.end_date).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "—"} note="" color="purple" />
+        <StatCard label="Candidatures" value={String(applications?.length ?? 0)} note="" color="purple" />
       </div>
 
-      <div className="mb-3">
-        <h3 className="font-display text-sm font-bold text-foreground">Startups de la cohorte</h3>
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        {loadingStartups ? (
-          Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[140px] rounded-xl" />)
-        ) : startups?.length === 0 ? (
-          <div className="col-span-3 text-center text-muted-foreground py-8 text-sm">Aucune startup dans cette cohorte</div>
-        ) : (
-          startups?.map((s) => (
-            <div key={s.id} onClick={() => navigate(`/app/startups/${s.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
-              <div className="h-[3px] bg-primary" />
-              <div className="p-4">
-                <div className="font-display text-[14px] font-bold text-foreground">{s.name}</div>
-                <div className="text-[11px] text-muted-foreground mt-0.5">{s.sector ?? "—"} · {s.city ?? s.country ?? "—"}</div>
-                {s.score != null && (
-                  <div className="mt-2 font-mono text-sm text-primary">{s.score}/100</div>
-                )}
+      {/* Startups */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-display text-sm font-bold text-foreground">Startups de la cohorte</h3>
+          <GhButton variant="ghost" onClick={() => navigate("/app/startups")}>Voir tout →</GhButton>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {loadingStartups ? (
+            Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[140px] rounded-xl" />)
+          ) : startups?.length === 0 ? (
+            <div className="col-span-full text-center text-muted-foreground py-8 text-sm">Aucune startup dans cette cohorte</div>
+          ) : (
+            startups?.map((s) => (
+              <div key={s.id} onClick={() => navigate(`/app/startups/${s.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
+                <div className="h-[3px] bg-primary" />
+                <div className="p-4">
+                  <div className="font-display text-[14px] font-bold text-foreground">{s.name}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{s.sector ?? "—"} · {s.city ?? s.country ?? "—"}</div>
+                  {s.score != null && <div className="mt-2 font-mono text-sm text-primary">{s.score}/100</div>}
+                </div>
+                <div className="px-4 py-2 bg-secondary border-t border-border flex justify-between items-center">
+                  <Pill color={s.stage === "croissance" || s.stage === "scale" ? "green" : "amber"}>{s.stage ?? "—"}</Pill>
+                  <GhButton variant="ghost">→</GhButton>
+                </div>
               </div>
-              <div className="px-4 py-2 bg-secondary border-t border-border flex justify-between items-center">
-                <Pill color={s.stage === "croissance" || s.stage === "scale" ? "green" : "amber"}>{s.stage ?? "—"}</Pill>
-                <GhButton variant="ghost">→</GhButton>
-              </div>
-            </div>
-          ))
-        )}
+            ))
+          )}
+        </div>
       </div>
+
+      {/* Candidatures */}
+      {applications && applications.length > 0 && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display text-sm font-bold text-foreground">Candidatures ({applications.length})</h3>
+            <GhButton variant="ghost" onClick={() => navigate("/app/candidatures")}>Voir tout →</GhButton>
+          </div>
+          <div className="bg-card border border-border rounded-xl overflow-hidden">
+            <table className="w-full border-collapse text-[12.5px]">
+              <thead><tr className="bg-secondary">
+                {["Startup", "Étape", "Score", "Date"].map(h => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left">{h}</th>)}
+              </tr></thead>
+              <tbody>
+                {applications.map(a => (
+                  <tr key={a.id} className="hover:bg-secondary transition-colors cursor-pointer" onClick={() => a.startup_id && navigate(`/app/startups/${a.startup_id}`)}>
+                    <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{(a as any).startups?.name ?? "—"}</td>
+                    <td className="px-3.5 py-2.5 border-b border-border"><Pill color={appStepColor[a.status] ?? "gray"}>{a.status}</Pill></td>
+                    <td className="px-3.5 py-2.5 border-b border-border font-mono text-primary">{a.score != null ? `${a.score}/100` : "—"}</td>
+                    <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{new Date(a.submitted_at).toLocaleDateString("fr-FR")}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

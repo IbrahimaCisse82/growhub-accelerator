@@ -32,3 +32,19 @@ export function useCohortStartups(cohortId: string | undefined) {
     },
   });
 }
+
+export function useCohortApplications(cohortId: string | undefined) {
+  return useQuery({
+    queryKey: ["cohort-applications", cohortId],
+    enabled: !!cohortId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("applications")
+        .select("*, startups(name, sector)")
+        .eq("cohort_id", cohortId!)
+        .order("submitted_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}

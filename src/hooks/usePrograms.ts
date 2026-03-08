@@ -46,3 +46,35 @@ export function useProgramCohorts(programId: string | undefined) {
     },
   });
 }
+
+export function useProgramGrants(programId: string | undefined) {
+  return useQuery({
+    queryKey: ["program-grants", programId],
+    enabled: !!programId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("grants")
+        .select("*")
+        .eq("program_id", programId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useProgramEvents(programId: string | undefined) {
+  return useQuery({
+    queryKey: ["program-events", programId],
+    enabled: !!programId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("events")
+        .select("*")
+        .eq("program_id", programId!)
+        .order("start_at", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
