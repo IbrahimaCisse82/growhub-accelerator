@@ -39,8 +39,8 @@ export default function MentorsPage() {
           </div>
         ) : (
           mentors?.map((m, idx) => {
-            const name = m.profile.full_name || "Mentor";
-            const name = profile?.full_name || "Mentor";
+            const mentorName = m.profile.full_name || "Mentor";
+            const initials = mentorName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
             const initials = name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
             const avail = availabilityMap[m.availability ?? "available"] ?? availabilityMap.available;
             return (
