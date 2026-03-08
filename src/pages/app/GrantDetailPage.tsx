@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import SectionHeader from "@/components/shared/SectionHeader";
 import StatCard from "@/components/shared/StatCard";
 import GhButton from "@/components/shared/GhButton";
