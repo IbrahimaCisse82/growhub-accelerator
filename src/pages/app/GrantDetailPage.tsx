@@ -108,6 +108,7 @@ export default function GrantDetailPage() {
   const { data: budgetLines } = useGrantBudgetLines(id);
   const { data: projectBudgetLines } = useGrantProjectBudgetLines(id);
   const { data: grantChanges } = useGrantChanges(id);
+  const { data: transactions } = useGrantTransactions(id);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
