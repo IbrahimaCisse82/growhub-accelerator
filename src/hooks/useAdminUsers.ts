@@ -67,12 +67,20 @@ export function useChangeUserRole() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: string }) => {
-      // Delete existing roles
-      const { error: delError } = await supabase.from("user_roles").delete().eq("user_id", userId);
-      if (delError) throw delError;
-      // Insert new role
-      const { error: insError } = await supabase.from("user_roles").insert({ user_id: userId, role: newRole as any });
+      // Upsert: delete then insert in a single transaction-like sequence
+      // First insert the new role, then delete old ones to avoid window with no role
+      const { error: insError } = await supabase.from("user_roles").upsert(
+        { user_id: userId, role: newRole as any },
+        { onConflict: "user_id,role" }
+      );
       if (insError) throw insError;
+      // Delete other roles for this user
+      const { error: delError } = await supabase
+        .from("user_roles")
+        .delete()
+        .eq("user_id", userId)
+        .neq("role", newRole as any);
+      if (delError) throw delError;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
   });
