@@ -41,7 +41,6 @@ export default function MentorsPage() {
           mentors?.map((m, idx) => {
             const mentorName = m.profile.full_name || "Mentor";
             const initials = mentorName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
-            const initials = name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
             const avail = availabilityMap[m.availability ?? "available"] ?? availabilityMap.available;
             return (
               <div key={m.id} className="bg-card border border-border rounded-xl p-[18px] hover:border-primary/30 transition-colors cursor-pointer">
@@ -50,7 +49,7 @@ export default function MentorsPage() {
                     {initials}
                   </div>
                   <div>
-                    <div className="text-[13px] font-bold text-foreground">{name}</div>
+                    <div className="text-[13px] font-bold text-foreground">{mentorName}</div>
                     <div className="text-[11px] text-muted-foreground mt-px">{m.bio?.slice(0, 40) ?? "—"}</div>
                   </div>
                 </div>
