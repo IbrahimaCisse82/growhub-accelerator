@@ -538,6 +538,65 @@ export type Database = {
           },
         ]
       }
+      grant_transactions: {
+        Row: {
+          amount: number
+          budget_code: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          grant_id: string
+          id: string
+          label: string
+          receipt_url: string | null
+          reference: string | null
+          transaction_date: string
+          updated_at: string
+          vendor: string | null
+        }
+        Insert: {
+          amount?: number
+          budget_code?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          grant_id: string
+          id?: string
+          label: string
+          receipt_url?: string | null
+          reference?: string | null
+          transaction_date?: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Update: {
+          amount?: number
+          budget_code?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          grant_id?: string
+          id?: string
+          label?: string
+          receipt_url?: string | null
+          reference?: string | null
+          transaction_date?: string
+          updated_at?: string
+          vendor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grant_transactions_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "grants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grants: {
         Row: {
           amount_disbursed: number | null
