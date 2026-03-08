@@ -26,6 +26,7 @@ import LmsPage from "@/pages/app/LmsPage";
 import ProjetsPage from "@/pages/app/ProjetsPage";
 import JalonsPage from "@/pages/app/JalonsPage";
 import TachesPage from "@/pages/app/TachesPage";
+import ProjectWizardPage from "@/pages/app/ProjectWizardPage";
 import GanttPage from "@/pages/app/GanttPage";
 import RisquesPage from "@/pages/app/RisquesPage";
 import GrantsPage from "@/pages/app/GrantsPage";
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="coaching" element={<CoachingPage />} />
               <Route path="lms" element={<LmsPage />} />
               <Route path="projets" element={<ProjetsPage />} />
+              <Route path="projets/nouveau" element={<ProjectWizardPage />} />
               <Route path="jalons" element={<JalonsPage />} />
               <Route path="taches" element={<TachesPage />} />
               <Route path="gantt" element={<GanttPage />} />
