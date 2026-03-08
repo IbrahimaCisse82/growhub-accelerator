@@ -393,3 +393,90 @@ function BudgetRow({ l, lineTotal, section }: { l: any; lineTotal: (l: any) => n
     </tr>
   );
 }
+
+const fieldLabels: Record<string, string> = {
+  name: "Nom", code: "Code", organization: "Organisation", status: "Statut",
+  amount_total: "Montant total", amount_disbursed: "Décaissé", description: "Description",
+  start_date: "Date début", end_date: "Date fin",
+};
+
+const actionLabels: Record<string, { label: string; icon: string; color: string }> = {
+  create: { label: "Création", icon: "✦", color: "text-primary" },
+  update: { label: "Modification", icon: "✏️", color: "text-foreground" },
+  delete: { label: "Suppression", icon: "🗑", color: "text-destructive" },
+};
+
+function GrantHistoryTimeline({ changes }: { changes: any[] }) {
+  if (changes.length === 0) {
+    return (
+      <div className="bg-card border border-border rounded-xl p-12 text-center">
+        <div className="text-2xl mb-2">📋</div>
+        <div className="text-sm text-muted-foreground">Aucune modification enregistrée</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <div className="px-4 py-3 border-b border-border">
+        <span className="text-xs font-bold text-foreground">Historique des modifications</span>
+      </div>
+      <div className="divide-y divide-border">
+        {changes.map((c: any) => {
+          const act = actionLabels[c.action] ?? actionLabels.update;
+          const changesObj = c.changes ?? {};
+          const changedFields = Object.keys(changesObj);
+          const date = new Date(c.created_at);
+
+          return (
+            <div key={c.id} className="px-4 py-3.5 flex gap-3">
+              {/* Timeline dot */}
+              <div className="flex flex-col items-center pt-0.5">
+                <div className={`w-2 h-2 rounded-full shrink-0 ${c.action === "create" ? "bg-primary" : c.action === "delete" ? "bg-destructive" : "bg-muted-foreground"}`} />
+                <div className="w-px flex-1 bg-border mt-1" />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                {/* Header */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-[12px] font-semibold ${act.color}`}>{act.icon} {act.label}</span>
+                  <span className="text-[11px] text-muted-foreground">par</span>
+                  <span className="text-[12px] font-medium text-foreground">{c.user_name}</span>
+                  <span className="text-[10px] text-muted-foreground font-mono ml-auto">
+                    {date.toLocaleDateString("fr-FR")} à {date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                </div>
+
+                {/* Changes detail */}
+                {c.action === "update" && changedFields.length > 0 && (
+                  <div className="mt-2 space-y-1.5">
+                    {changedFields.map(field => {
+                      const change = changesObj[field];
+                      if (!change || typeof change !== "object") return null;
+                      const label = fieldLabels[field] ?? field;
+                      return (
+                        <div key={field} className="text-[11.5px] flex items-start gap-2 bg-secondary/50 rounded-lg px-2.5 py-1.5">
+                          <span className="text-muted-foreground font-mono text-[10px] uppercase tracking-wider shrink-0 w-24">{label}</span>
+                          <span className="text-destructive/70 line-through text-[11px]">{String(change.old ?? "—")}</span>
+                          <span className="text-muted-foreground">→</span>
+                          <span className="text-primary font-medium text-[11px]">{String(change.new ?? "—")}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Creation detail */}
+                {c.action === "create" && (
+                  <div className="mt-1.5 text-[11px] text-muted-foreground">
+                    Grant créé : <span className="text-foreground font-medium">{changesObj.name ?? "—"}</span> ({changesObj.code ?? "—"})
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
