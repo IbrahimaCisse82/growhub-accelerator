@@ -125,7 +125,7 @@ export default function ProjectWizardPage() {
         program_id: programId, owner_id: user?.id,
         start_date: startDate || null, end_date: endDate || null,
         budget: totalBudget,
-        validation_status: "pending_review" as any,
+        validation_status: "pending_review",
       }).select().single();
       if (pe) throw pe;
 
