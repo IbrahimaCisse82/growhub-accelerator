@@ -9,7 +9,7 @@ const colorMap = {
   amber: "bg-gh-amber/12 text-gh-amber",
   purple: "bg-gh-purple/12 text-gh-purple",
   rose: "bg-gh-rose/12 text-gh-rose",
-  gray: "bg-surface-3 text-text-secondary",
+  gray: "bg-muted text-muted-foreground",
 };
 
 export default function Pill({ children, color }: PillProps) {

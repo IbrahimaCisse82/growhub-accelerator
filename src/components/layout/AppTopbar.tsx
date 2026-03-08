@@ -4,6 +4,7 @@ import { useNotifications, useUnreadCount, useMarkNotificationRead, useMarkAllRe
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import SearchDialog from "./SearchDialog";
+import { useTheme } from "@/hooks/useTheme";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -32,15 +33,6 @@ const pageTitles: Record<string, string> = {
   "/app/profil": "Mon profil",
 };
 
-const quickActions = [
-  { label: "Portefeuille", path: "/app/portefeuilles", icon: "◈" },
-  { label: "Programme", path: "/app/programmes", icon: "◇" },
-  { label: "Cohorte", path: "/app/cohortes", icon: "◉" },
-  { label: "Startup", path: "/app/startups", icon: "△" },
-  { label: "Projet", path: "/app/projets", icon: "▦" },
-  { label: "Événement", path: "/app/evenements", icon: "◆" },
-];
-
 interface AppTopbarProps {
   onToggleSidebar?: () => void;
   showMenuButton?: boolean;
@@ -55,13 +47,14 @@ export default function AppTopbar({ onToggleSidebar, showMenuButton }: AppTopbar
   const { data: unreadCount } = useUnreadCount();
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllRead();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <>
       <div className="h-14 bg-card/90 backdrop-blur-xl border-b border-border px-4 md:px-7 flex items-center justify-between sticky top-0 z-[100] flex-shrink-0">
         <div className="flex items-center gap-3">
           {showMenuButton && (
-            <button onClick={onToggleSidebar} className="p-2 rounded-lg hover:bg-surface-2 text-foreground transition-colors md:hidden">
+            <button onClick={onToggleSidebar} className="p-2 rounded-lg hover:bg-secondary text-foreground transition-colors md:hidden">
               ☰
             </button>
           )}
@@ -74,15 +67,21 @@ export default function AppTopbar({ onToggleSidebar, showMenuButton }: AppTopbar
         <div className="flex items-center gap-2">
           <button
             onClick={() => setSearchOpen(true)}
-            className="bg-surface-2 border border-border rounded-lg px-3 py-[7px] font-body text-[12.5px] text-muted-foreground outline-none transition-colors hover:border-primary/50 w-[180px] md:w-[220px] text-left"
+            className="hidden sm:flex bg-secondary border border-border rounded-lg px-3 py-[7px] font-body text-[12.5px] text-muted-foreground outline-none transition-colors hover:border-primary/50 w-[180px] md:w-[220px] text-left"
           >
             🔍 Rechercher… <span className="font-mono text-[10px] ml-2 opacity-50">⌘K</span>
+          </button>
+          <button onClick={() => setSearchOpen(true)} className="sm:hidden bg-secondary border border-border text-muted-foreground p-[7px] w-[34px] h-[34px] rounded-lg flex items-center justify-center hover:bg-muted transition-colors text-sm">🔍</button>
+
+          {/* Theme toggle */}
+          <button onClick={toggleTheme} className="bg-secondary border border-border text-muted-foreground p-[7px] w-[34px] h-[34px] rounded-lg flex items-center justify-center hover:bg-muted hover:text-foreground transition-colors text-sm">
+            {theme === "dark" ? "☀️" : "🌙"}
           </button>
 
           {/* Notifications */}
           <Popover>
             <PopoverTrigger asChild>
-              <button className="relative bg-surface-2 border border-border text-muted-foreground p-[7px] w-[34px] h-[34px] rounded-lg flex items-center justify-center hover:bg-surface-3 hover:text-foreground transition-colors text-sm">
+              <button className="relative bg-secondary border border-border text-muted-foreground p-[7px] w-[34px] h-[34px] rounded-lg flex items-center justify-center hover:bg-muted hover:text-foreground transition-colors text-sm">
                 🔔
                 {(unreadCount ?? 0) > 0 && (
                   <span className="absolute top-1 right-1 w-[8px] h-[8px] bg-destructive rounded-full border-[1.5px] border-card" />
@@ -101,7 +100,7 @@ export default function AppTopbar({ onToggleSidebar, showMenuButton }: AppTopbar
                   <div className="p-4 text-center text-sm text-muted-foreground">Aucune notification</div>
                 ) : notifications.map(n => (
                   <div key={n.id} onClick={() => { if (!n.is_read) markRead.mutate(n.id); if (n.link) navigate(n.link); }}
-                    className={`px-4 py-2.5 border-b border-border cursor-pointer hover:bg-surface-2 transition-colors ${!n.is_read ? "bg-primary/5" : ""}`}>
+                    className={`px-4 py-2.5 border-b border-border cursor-pointer hover:bg-secondary transition-colors ${!n.is_read ? "bg-primary/5" : ""}`}>
                     <div className="text-[12px] font-medium text-foreground">{n.title}</div>
                     {n.content && <div className="text-[11px] text-muted-foreground mt-0.5">{n.content}</div>}
                     <div className="font-mono text-[9px] text-muted-foreground mt-1">{format(new Date(n.created_at), "dd MMM HH:mm", { locale: fr })}</div>
@@ -115,12 +114,19 @@ export default function AppTopbar({ onToggleSidebar, showMenuButton }: AppTopbar
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="inline-flex items-center gap-1.5 px-3.5 py-[7px] rounded-lg font-body text-xs font-semibold bg-primary text-primary-foreground hover:brightness-110 transition-all">
-                + Nouveau
+                + <span className="hidden sm:inline">Nouveau</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-card border-border" align="end">
-              {quickActions.map(a => (
-                <DropdownMenuItem key={a.path} onClick={() => navigate(a.path)} className="cursor-pointer text-foreground hover:bg-surface-2">
+              {[
+                { label: "Portefeuille", path: "/app/portefeuilles", icon: "◈" },
+                { label: "Programme", path: "/app/programmes", icon: "◇" },
+                { label: "Cohorte", path: "/app/cohortes", icon: "◉" },
+                { label: "Startup", path: "/app/startups", icon: "△" },
+                { label: "Projet", path: "/app/projets", icon: "▦" },
+                { label: "Événement", path: "/app/evenements", icon: "◆" },
+              ].map(a => (
+                <DropdownMenuItem key={a.path} onClick={() => navigate(a.path)} className="cursor-pointer text-foreground hover:bg-secondary">
                   <span className="mr-2">{a.icon}</span> {a.label}
                 </DropdownMenuItem>
               ))}

@@ -27,13 +27,13 @@ export default function StatCard({ label, value, note, icon, color }: StatCardPr
       {icon && (
         <span className="absolute top-3.5 right-3.5 text-[22px] opacity-15">{icon}</span>
       )}
-      <div className="font-mono text-[10px] tracking-[0.1em] uppercase text-text-tertiary">
+      <div className="font-mono text-[10px] tracking-[0.1em] uppercase text-muted-foreground">
         {label}
       </div>
       <div className="font-mono text-[26px] font-semibold text-foreground mt-2 mb-1 leading-none">
         {value}
       </div>
-      <div className="text-[11px] text-text-secondary">{note}</div>
+      <div className="text-[11px] text-muted-foreground">{note}</div>
     </motion.div>
   );
 }

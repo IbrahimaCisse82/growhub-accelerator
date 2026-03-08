@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhButton from "@/components/shared/GhButton";
 import Pill from "@/components/shared/Pill";
+import EmptyState from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProjects } from "@/hooks/useProjects";
 import { useMilestones } from "@/hooks/useMilestones";
@@ -13,49 +14,59 @@ const statusColor: Record<string, "green" | "blue" | "amber" | "gray"> = {
 export default function GanttPage() {
   const { data: projects, isLoading: lp } = useProjects();
   const { data: milestones, isLoading: lm } = useMilestones();
-
   const loading = lp || lm;
+
+  // Calculate timeline range
+  const allDates = projects?.flatMap(p => [p.start_date, p.end_date].filter(Boolean).map(d => new Date(d!).getTime())) ?? [];
+  const minDate = allDates.length > 0 ? Math.min(...allDates) : Date.now();
+  const maxDate = allDates.length > 0 ? Math.max(...allDates) : Date.now() + 90 * 86400000;
+  const range = Math.max(maxDate - minDate, 1);
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <SectionHeader title="Gantt" subtitle="Vue chronologique des projets et jalons" actions={<GhButton variant="ghost">📅 Calendrier</GhButton>} />
+      <SectionHeader title="Gantt — Timeline" subtitle="Vue chronologique des projets et jalons" />
       {loading ? (
         <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>
+      ) : (!projects || projects.length === 0) ? (
+        <EmptyState icon="📅" title="Aucun projet" description="Créez des projets avec des dates pour les voir ici" />
       ) : (
-        <div className="space-y-4">
-          {(!projects || projects.length === 0) ? (
-            <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground text-sm">Aucun projet à afficher</div>
-          ) : projects.map(p => {
+        <div className="bg-card border border-border rounded-xl overflow-hidden">
+          {/* Timeline header */}
+          <div className="px-4 py-2 bg-secondary border-b border-border flex">
+            <div className="w-[200px] flex-shrink-0 text-[10px] font-mono text-muted-foreground uppercase">Projet</div>
+            <div className="flex-1 relative h-6">
+              {[0, 0.25, 0.5, 0.75, 1].map(pct => {
+                const d = new Date(minDate + range * pct);
+                return <span key={pct} className="absolute text-[9px] font-mono text-muted-foreground" style={{ left: `${pct * 100}%`, transform: "translateX(-50%)" }}>{d.toLocaleDateString("fr-FR", { month: "short", year: "2-digit" })}</span>;
+              })}
+            </div>
+          </div>
+          {projects.map(p => {
             const pMilestones = milestones?.filter(m => m.project_id === p.id) ?? [];
+            const startPct = p.start_date ? ((new Date(p.start_date).getTime() - minDate) / range) * 100 : 0;
+            const endPct = p.end_date ? ((new Date(p.end_date).getTime() - minDate) / range) * 100 : startPct + 10;
+            const barWidth = Math.max(endPct - startPct, 2);
+
             return (
-              <div key={p.id} className="bg-card border border-border rounded-xl overflow-hidden">
-                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-                  <div>
-                    <span className="text-sm font-bold text-foreground">{p.name}</span>
-                    <span className="ml-2 font-mono text-[10px] text-muted-foreground">{p.code}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
+              <div key={p.id} className="flex items-center border-b border-border last:border-b-0 hover:bg-secondary/50 transition-colors">
+                <div className="w-[200px] flex-shrink-0 px-4 py-3">
+                  <div className="text-xs font-bold text-foreground truncate">{p.name}</div>
+                  <div className="flex items-center gap-1.5 mt-1">
                     <Pill color={statusColor[p.status] ?? "gray"}>{p.status}</Pill>
-                    <div className="w-24 h-1.5 bg-surface-3 rounded-full overflow-hidden">
-                      <div className="h-full bg-primary rounded-full" style={{ width: `${p.progress ?? 0}%` }} />
-                    </div>
-                    <span className="font-mono text-[10px] text-muted-foreground">{p.progress ?? 0}%</span>
+                    <span className="font-mono text-[9px] text-muted-foreground">{p.progress ?? 0}%</span>
                   </div>
                 </div>
-                {pMilestones.length > 0 && (
-                  <div className="px-4 py-2 flex flex-wrap gap-2">
-                    {pMilestones.map(m => (
-                      <div key={m.id} className={`text-[11px] px-2.5 py-1 rounded-lg border ${m.status === "completed" ? "bg-primary/10 border-primary/20 text-primary" : "bg-surface-2 border-border text-muted-foreground"}`}>
-                        {m.title}
-                        {m.due_date && <span className="ml-1 font-mono text-[9px]">· {new Date(m.due_date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>}
-                      </div>
-                    ))}
+                <div className="flex-1 relative h-12 py-2">
+                  {/* Project bar */}
+                  <div className="absolute h-5 rounded-md bg-primary/20 border border-primary/30" style={{ left: `${startPct}%`, width: `${barWidth}%` }}>
+                    <div className="h-full rounded-md bg-primary/60" style={{ width: `${p.progress ?? 0}%` }} />
                   </div>
-                )}
-                <div className="px-4 py-2 bg-secondary text-[11px] text-muted-foreground flex gap-4">
-                  <span>Début: {p.start_date ? new Date(p.start_date).toLocaleDateString("fr-FR") : "—"}</span>
-                  <span>Fin: {p.end_date ? new Date(p.end_date).toLocaleDateString("fr-FR") : "—"}</span>
-                  <span>Jalons: {pMilestones.length}</span>
+                  {/* Milestones */}
+                  {pMilestones.map(m => {
+                    if (!m.due_date) return null;
+                    const mPct = ((new Date(m.due_date).getTime() - minDate) / range) * 100;
+                    return <div key={m.id} className={`absolute w-2.5 h-2.5 rounded-full border-2 top-1/2 -translate-y-1/2 -translate-x-1/2 ${m.status === "completed" ? "bg-primary border-primary" : "bg-card border-gh-amber"}`} style={{ left: `${mPct}%` }} title={m.title} />;
+                  })}
                 </div>
               </div>
             );

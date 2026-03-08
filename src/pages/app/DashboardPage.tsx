@@ -61,7 +61,7 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-[12.5px]">
               <thead>
-                <tr className="bg-surface-2">
+                <tr className="bg-secondary">
                   {["Projet", "Startup", "Statut", "Avancement", "Échéance"].map((h) => (
                     <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>
                   ))}
@@ -76,12 +76,12 @@ export default function DashboardPage() {
                   <tr><td colSpan={5} className="px-3.5 py-8 text-center text-muted-foreground text-sm">Aucun projet</td></tr>
                 ) : (
                   projects?.slice(0, 6).map((p) => (
-                    <tr key={p.id} className="hover:bg-surface-2 transition-colors">
+                    <tr key={p.id} className="hover:bg-secondary transition-colors">
                       <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{p.name}</td>
-                      <td className="px-3.5 py-2.5 border-b border-border text-foreground">{p.startups?.name ?? "—"}</td>
+                      <td className="px-3.5 py-2.5 border-b border-border text-foreground">{(p as any).startups?.name ?? "—"}</td>
                       <td className="px-3.5 py-2.5 border-b border-border"><Pill color={statusColor[p.status] ?? "gray"}>{p.status}</Pill></td>
                       <td className="px-3.5 py-2.5 border-b border-border">
-                        <div className="h-1 bg-surface-3 rounded-full overflow-hidden">
+                        <div className="h-1 bg-muted rounded-full overflow-hidden">
                           <div className="h-full rounded-full bg-primary transition-all duration-600" style={{ width: `${p.progress ?? 0}%` }} />
                         </div>
                       </td>
@@ -125,7 +125,7 @@ export default function DashboardPage() {
                     <span>{g.organization ?? g.name}</span>
                     <span className="font-mono">{pct}%</span>
                   </div>
-                  <div className="h-1.5 bg-surface-3 rounded-full overflow-hidden">
+                  <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                     <div className="h-full rounded-full bg-accent transition-all duration-600" style={{ width: `${pct}%` }} />
                   </div>
                 </div>

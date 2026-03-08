@@ -8,6 +8,12 @@ interface Profile {
   full_name: string;
   email: string | null;
   is_approved: boolean;
+  phone: string | null;
+  organization: string | null;
+  position: string | null;
+  bio: string | null;
+  linkedin_url: string | null;
+  avatar_url: string | null;
 }
 
 interface AuthContextType {
@@ -40,7 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfileAndRoles = async (userId: string) => {
     const [profileRes, rolesRes] = await Promise.all([
-      supabase.from("profiles").select("id, user_id, full_name, email, is_approved").eq("user_id", userId).single(),
+      supabase.from("profiles").select("id, user_id, full_name, email, is_approved, phone, organization, position, bio, linkedin_url, avatar_url").eq("user_id", userId).single(),
       supabase.from("user_roles").select("role").eq("user_id", userId),
     ]);
     if (profileRes.data) setProfile(profileRes.data as Profile);

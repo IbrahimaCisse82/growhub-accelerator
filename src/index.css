@@ -6,6 +6,63 @@
 
 @layer base {
   :root {
+    --background: 210 20% 96%;
+    --foreground: 214 25% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 214 25% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 214 25% 10%;
+
+    --primary: 165 100% 32%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 18% 92%;
+    --secondary-foreground: 214 25% 10%;
+
+    --muted: 210 15% 90%;
+    --muted-foreground: 207 20% 42%;
+
+    --accent: 199 90% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 348 90% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 18% 87%;
+    --input: 210 18% 87%;
+    --ring: 165 100% 32%;
+
+    --radius: 0.5rem;
+
+    --surface: 0 0% 100%;
+    --surface-2: 210 18% 95%;
+    --surface-3: 210 15% 90%;
+    --border-2: 210 15% 82%;
+    --text-primary: 214 25% 10%;
+    --text-secondary: 207 20% 42%;
+    --text-tertiary: 207 15% 62%;
+    --accent-green: 165 100% 32%;
+    --accent-blue: 199 90% 42%;
+    --accent-amber: 37 91% 48%;
+    --accent-purple: 258 73% 55%;
+    --accent-rose: 348 90% 52%;
+    --success: 165 100% 32%;
+    --warning: 37 91% 48%;
+    --info: 199 90% 42%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 214 25% 10%;
+    --sidebar-primary: 165 100% 32%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 18% 95%;
+    --sidebar-accent-foreground: 214 25% 10%;
+    --sidebar-border: 210 18% 87%;
+    --sidebar-ring: 165 100% 32%;
+  }
+
+  .dark {
     --background: 214 25% 4%;
     --foreground: 210 40% 93%;
 
@@ -34,9 +91,6 @@
     --input: 210 25% 16%;
     --ring: 165 100% 41%;
 
-    --radius: 0.5rem;
-
-    /* GrowHub Accelerator custom tokens */
     --surface: 212 22% 8%;
     --surface-2: 212 18% 11%;
     --surface-3: 210 15% 15%;
@@ -75,8 +129,7 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Subtle grid background */
-  body::before {
+  .dark body::before {
     content: '';
     position: fixed;
     inset: 0;
@@ -92,7 +145,6 @@
 }
 
 @layer utilities {
-  /* Scrollbar */
   .scrollbar-hidden::-webkit-scrollbar { display: none; }
   .scrollbar-hidden { scrollbar-width: none; }
   
