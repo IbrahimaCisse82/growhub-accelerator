@@ -72,6 +72,7 @@ const App = () => (
               <Route path="coaching" element={<CoachingPage />} />
               <Route path="lms" element={<LmsPage />} />
               <Route path="projets" element={<ProjetsPage />} />
+              <Route path="projets/nouveau" element={<ProjectWizardPage />} />
               <Route path="jalons" element={<JalonsPage />} />
               <Route path="taches" element={<TachesPage />} />
               <Route path="gantt" element={<GanttPage />} />
