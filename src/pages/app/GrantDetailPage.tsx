@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useBudgets } from "@/hooks/useBudgets";
 import SectionHeader from "@/components/shared/SectionHeader";
@@ -9,6 +10,9 @@ import GhButton from "@/components/shared/GhButton";
 import Pill from "@/components/shared/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import EditGrantDialog from "@/components/dialogs/EditGrantDialog";
+import { toast } from "@/hooks/use-toast";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
