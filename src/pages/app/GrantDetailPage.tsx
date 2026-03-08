@@ -76,6 +76,29 @@ function useGrantProjectBudgetLines(grantId: string | undefined) {
   });
 }
 
+function useGrantChanges(grantId: string | undefined) {
+  return useQuery({
+    queryKey: ["grant_changes", grantId],
+    enabled: !!grantId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("grant_changes" as any)
+        .select("*")
+        .eq("grant_id", grantId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      // Fetch profile names for user_ids
+      const userIds = [...new Set((data ?? []).map((c: any) => c.user_id).filter(Boolean))];
+      let profiles: Record<string, string> = {};
+      if (userIds.length > 0) {
+        const { data: pData } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
+        profiles = Object.fromEntries((pData ?? []).map(p => [p.user_id, p.full_name]));
+      }
+      return (data ?? []).map((c: any) => ({ ...c, user_name: profiles[c.user_id] ?? "Système" }));
+    },
+  });
+}
+
 export default function GrantDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -83,6 +106,7 @@ export default function GrantDetailPage() {
   const { data: grant, isLoading } = useGrantDetail(id);
   const { data: budgetLines } = useGrantBudgetLines(id);
   const { data: projectBudgetLines } = useGrantProjectBudgetLines(id);
+  const { data: grantChanges } = useGrantChanges(id);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
