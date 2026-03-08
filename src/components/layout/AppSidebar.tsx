@@ -26,13 +26,21 @@ const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Accélération",
+    label: "Gestion Projets",
     items: [
       { label: "Portefeuilles", icon: "◈", path: "/app/portefeuilles" },
       { label: "Programmes", icon: "◇", path: "/app/programmes" },
-      { label: "Cohortes", icon: "◉", path: "/app/cohortes", badgeKey: "activeCohorts" },
-      { label: "Startups", icon: "△", path: "/app/startups", badgeKey: "startups" },
+      { label: "Projets & Tâches", icon: "▦", path: "/app/projets" },
+      { label: "Gantt", icon: "▤", path: "/app/gantt" },
+      { label: "Risques", icon: "⚠", path: "/app/risques", badgeKey: "openRisks", badgeType: "alert" },
+    ],
+  },
+  {
+    label: "Accélération",
+    items: [
       { label: "Candidatures", icon: "✦", path: "/app/candidatures", badgeKey: "pendingApps", badgeType: "alert" },
+      { label: "Startups", icon: "△", path: "/app/startups", badgeKey: "startups" },
+      { label: "Cohortes", icon: "◉", path: "/app/cohortes", badgeKey: "activeCohorts" },
     ],
   },
   {
@@ -41,14 +49,6 @@ const navGroups: NavGroup[] = [
       { label: "Mentors", icon: "◑", path: "/app/mentors" },
       { label: "Coaching", icon: "◐", path: "/app/coaching" },
       { label: "LMS & Cours", icon: "▣", path: "/app/lms" },
-    ],
-  },
-  {
-    label: "Gestion Projets",
-    items: [
-      { label: "Projets & Tâches", icon: "▦", path: "/app/projets" },
-      { label: "Gantt", icon: "▤", path: "/app/gantt" },
-      { label: "Risques", icon: "⚠", path: "/app/risques", badgeKey: "openRisks", badgeType: "alert" },
     ],
   },
   {
