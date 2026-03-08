@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { useGrantDisbursements, useDeleteDisbursement, type GrantDisbursement } from "@/hooks/useGrantDetail";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import GhButton from "@/components/shared/GhButton";
 import Pill from "@/components/shared/Pill";
@@ -12,76 +13,51 @@ const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigit
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 
 const statusMap: Record<string, { label: string; color: "green" | "amber" | "blue" | "gray" }> = {
-  pending: { label: "En attente", color: "amber" },
-  approved: { label: "Approuvé", color: "blue" },
-  received: { label: "Reçu", color: "green" },
-  rejected: { label: "Rejeté", color: "gray" },
+  pending: { label: "En attente", color: "amber" }, approved: { label: "Approuvé", color: "blue" },
+  received: { label: "Reçu", color: "green" }, rejected: { label: "Rejeté", color: "gray" },
 };
 
-export function useGrantDisbursements(grantId: string | undefined) {
-  return useQuery({
-    queryKey: ["grant_disbursements", grantId],
-    enabled: !!grantId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("grant_disbursements" as any)
-        .select("*")
-        .eq("grant_id", grantId!)
-        .order("tranche_number", { ascending: true });
-      if (error) throw error;
-      return data as any[];
-    },
-  });
-}
+export { useGrantDisbursements };
 
 export default function GrantDisbursementsTab({ grantId, grantTotal }: { grantId: string; grantTotal: number }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: disbursements, isLoading } = useGrantDisbursements(grantId);
+  const deleteMut = useDeleteDisbursement(grantId);
   const [showForm, setShowForm] = useState(false);
-  const [editItem, setEditItem] = useState<any>(null);
-  const [deleteItem, setDeleteItem] = useState<any>(null);
+  const [editItem, setEditItem] = useState<GrantDisbursement | null>(null);
+  const [deleteItem, setDeleteItem] = useState<GrantDisbursement | null>(null);
 
-  const totalRequested = disbursements?.reduce((s, d: any) => s + (d.amount_requested ?? 0), 0) ?? 0;
-  const totalApproved = disbursements?.reduce((s, d: any) => s + (d.amount_approved ?? 0), 0) ?? 0;
-  const totalReceived = disbursements?.reduce((s, d: any) => s + (d.amount_received ?? 0), 0) ?? 0;
+  const totalRequested = disbursements?.reduce((s, d) => s + (d.amount_requested ?? 0), 0) ?? 0;
+  const totalApproved = disbursements?.reduce((s, d) => s + (d.amount_approved ?? 0), 0) ?? 0;
+  const totalReceived = disbursements?.reduce((s, d) => s + (d.amount_received ?? 0), 0) ?? 0;
 
   const approveMutation = useMutation({
     mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
-      const { error } = await supabase.from("grant_disbursements" as any).update({
-        status: "approved", amount_approved: amount, approved_by: user?.id, approved_at: new Date().toISOString(),
+      const { error } = await supabase.from("grant_disbursements").update({
+        status: "approved", amount_approved: amount, approved_by: user?.id ?? null, approved_at: new Date().toISOString(),
       }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_disbursements", grantId] }); toast({ title: "Décaissement approuvé" }); },
-    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
   });
 
   const receiveMutation = useMutation({
     mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
-      const { error } = await supabase.from("grant_disbursements" as any).update({
+      const { error } = await supabase.from("grant_disbursements").update({
         status: "received", amount_received: amount, received_at: new Date().toISOString(),
       }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_disbursements", grantId] }); toast({ title: "Réception confirmée" }); },
-    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("grant_disbursements" as any).delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_disbursements", grantId] }); setDeleteItem(null); toast({ title: "Décaissement supprimé" }); },
-    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
   });
 
   const pctReceived = grantTotal > 0 ? Math.round((totalReceived / grantTotal) * 100) : 0;
 
   return (
     <div className="space-y-4">
-      {/* Pipeline progress */}
       <div className="bg-card border border-border rounded-xl p-4">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-mono text-muted-foreground uppercase">Pipeline de décaissement</span>
@@ -91,9 +67,7 @@ export default function GrantDisbursementsTab({ grantId, grantTotal }: { grantId
           <div className="h-full bg-amber-500 transition-all" style={{ width: `${grantTotal > 0 ? Math.round((totalRequested / grantTotal) * 100) : 0}%` }} />
         </div>
         <div className="flex justify-between mt-2 text-[10px] font-mono text-muted-foreground">
-          <span>Demandé: {fmt(totalRequested)} €</span>
-          <span>Approuvé: {fmt(totalApproved)} €</span>
-          <span>Reçu: {fmt(totalReceived)} €</span>
+          <span>Demandé: {fmt(totalRequested)} €</span><span>Approuvé: {fmt(totalApproved)} €</span><span>Reçu: {fmt(totalReceived)} €</span>
         </div>
       </div>
 
@@ -115,7 +89,7 @@ export default function GrantDisbursementsTab({ grantId, grantTotal }: { grantId
         </div>
       ) : (
         <div className="space-y-3">
-          {disbursements.map((d: any) => {
+          {disbursements.map(d => {
             const st = statusMap[d.status] ?? statusMap.pending;
             return (
               <div key={d.id} className="bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors group">
@@ -133,36 +107,16 @@ export default function GrantDisbursementsTab({ grantId, grantTotal }: { grantId
                     <div className="font-mono font-bold text-foreground">{fmt(d.amount_requested)} €</div>
                   </div>
                 </div>
-
-                {/* Progress steps */}
                 <div className="mt-3 flex items-center gap-1">
                   {["pending", "approved", "received"].map((step, i) => {
-                    const steps = ["pending", "approved", "received"];
-                    const currentIdx = steps.indexOf(d.status);
-                    const active = i <= currentIdx;
-                    return (
-                      <div key={step} className="flex items-center gap-1 flex-1">
-                        <div className={`h-1.5 flex-1 rounded-full ${active ? "bg-primary" : "bg-secondary"}`} />
-                      </div>
-                    );
+                    const currentIdx = ["pending", "approved", "received"].indexOf(d.status);
+                    return (<div key={step} className="flex items-center gap-1 flex-1"><div className={`h-1.5 flex-1 rounded-full ${i <= currentIdx ? "bg-primary" : "bg-secondary"}`} /></div>);
                   })}
                 </div>
-                <div className="flex justify-between text-[9px] font-mono text-muted-foreground mt-1">
-                  <span>Demande</span><span>Approbation</span><span>Réception</span>
-                </div>
-
-                {/* Actions */}
+                <div className="flex justify-between text-[9px] font-mono text-muted-foreground mt-1"><span>Demande</span><span>Approbation</span><span>Réception</span></div>
                 <div className="mt-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {d.status === "pending" && (
-                    <button onClick={() => approveMutation.mutate({ id: d.id, amount: d.amount_requested })} className="text-[11px] px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium">
-                      ✓ Approuver
-                    </button>
-                  )}
-                  {d.status === "approved" && (
-                    <button onClick={() => receiveMutation.mutate({ id: d.id, amount: d.amount_approved })} className="text-[11px] px-2 py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-colors font-medium">
-                      ✓ Confirmer réception
-                    </button>
-                  )}
+                  {d.status === "pending" && <button onClick={() => approveMutation.mutate({ id: d.id, amount: d.amount_requested })} className="text-[11px] px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium">✓ Approuver</button>}
+                  {d.status === "approved" && <button onClick={() => receiveMutation.mutate({ id: d.id, amount: d.amount_approved ?? 0 })} className="text-[11px] px-2 py-1 rounded bg-green-500/10 text-green-500 hover:bg-green-500/20 transition-colors font-medium">✓ Confirmer réception</button>}
                   <button onClick={() => { setEditItem(d); setShowForm(true); }} className="text-[11px] px-2 py-1 rounded bg-secondary text-muted-foreground hover:text-foreground transition-colors">✏️ Modifier</button>
                   <button onClick={() => setDeleteItem(d)} className="text-[11px] px-2 py-1 rounded bg-secondary text-muted-foreground hover:text-destructive transition-colors">🗑</button>
                 </div>
@@ -176,14 +130,8 @@ export default function GrantDisbursementsTab({ grantId, grantTotal }: { grantId
 
       <AlertDialog open={!!deleteItem} onOpenChange={(o) => { if (!o) setDeleteItem(null); }}>
         <AlertDialogContent className="bg-card border-border">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette tranche ?</AlertDialogTitle>
-            <AlertDialogDescription>La tranche « {deleteItem?.label} » sera définitivement supprimée.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteItem && deleteMutation.mutate(deleteItem.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Supprimer</AlertDialogAction>
-          </AlertDialogFooter>
+          <AlertDialogHeader><AlertDialogTitle>Supprimer cette tranche ?</AlertDialogTitle><AlertDialogDescription>La tranche « {deleteItem?.label} » sera définitivement supprimée.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={() => deleteItem && deleteMut.mutate(deleteItem.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
@@ -191,7 +139,7 @@ export default function GrantDisbursementsTab({ grantId, grantTotal }: { grantId
 }
 
 function DisbursementFormDialog({ open, onOpenChange, grantId, editData, userId, nextTranche }: {
-  open: boolean; onOpenChange: (o: boolean) => void; grantId: string; editData: any; userId?: string; nextTranche: number;
+  open: boolean; onOpenChange: (o: boolean) => void; grantId: string; editData: GrantDisbursement | null; userId?: string; nextTranche: number;
 }) {
   const qc = useQueryClient();
   const isEdit = !!editData;
@@ -205,29 +153,18 @@ function DisbursementFormDialog({ open, onOpenChange, grantId, editData, userId,
     if (o && editData) {
       setLabel(editData.label ?? ""); setTrancheNumber(String(editData.tranche_number ?? 1));
       setAmountRequested(String(editData.amount_requested ?? "")); setJustification(editData.justification ?? ""); setNotes(editData.notes ?? "");
-    } else if (o) {
-      setLabel(""); setTrancheNumber(String(nextTranche)); setAmountRequested(""); setJustification(""); setNotes("");
-    }
+    } else if (o) { setLabel(""); setTrancheNumber(String(nextTranche)); setAmountRequested(""); setJustification(""); setNotes(""); }
     onOpenChange(o);
   };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = {
-        grant_id: grantId, label, tranche_number: parseInt(trancheNumber) || 1,
-        amount_requested: parseFloat(amountRequested) || 0, justification: justification || null,
-        notes: notes || null, requested_by: userId ?? null,
-      };
-      if (isEdit) {
-        const { error } = await supabase.from("grant_disbursements" as any).update(payload).eq("id", editData.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("grant_disbursements" as any).insert(payload);
-        if (error) throw error;
-      }
+      const payload = { grant_id: grantId, label, tranche_number: parseInt(trancheNumber) || 1, amount_requested: parseFloat(amountRequested) || 0, justification: justification || null, notes: notes || null, requested_by: userId ?? null };
+      if (isEdit) { const { error } = await supabase.from("grant_disbursements").update(payload).eq("id", editData.id); if (error) throw error; }
+      else { const { error } = await supabase.from("grant_disbursements").insert(payload); if (error) throw error; }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_disbursements", grantId] }); onOpenChange(false); toast({ title: isEdit ? "Tranche modifiée" : "Tranche créée" }); },
-    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
   });
 
   return (
