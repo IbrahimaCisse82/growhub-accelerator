@@ -204,6 +204,7 @@ export default function GrantDetailPage() {
           <TabsTrigger value="budget">Budget Annexe 1b</TabsTrigger>
           <TabsTrigger value="tracking">Suivi budgétaire</TabsTrigger>
           <TabsTrigger value="info">Informations</TabsTrigger>
+          <TabsTrigger value="history">Historique ({grantChanges?.length ?? 0})</TabsTrigger>
         </TabsList>
 
         {/* Annexe 1b Tab */}
