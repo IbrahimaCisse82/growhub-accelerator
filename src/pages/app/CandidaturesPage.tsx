@@ -46,7 +46,7 @@ export default function CandidaturesPage() {
 
   const advance = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await supabase.from("applications").update({ status: status as any, reviewed_at: new Date().toISOString() }).eq("id", id);
+      const { error } = await supabase.from("applications").update({ status: status as ApplicationStatus, reviewed_at: new Date().toISOString() }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["applications"] }); qc.invalidateQueries({ queryKey: ["applications-pipeline"] }); toast({ title: "✓ Candidature mise à jour" }); },
