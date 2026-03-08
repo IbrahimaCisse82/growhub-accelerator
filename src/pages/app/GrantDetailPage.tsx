@@ -277,6 +277,8 @@ export default function GrantDetailPage() {
               </div>
             ))}
           </div>
+        </TabsContent>
+
         {/* History Tab */}
         <TabsContent value="history">
           <GrantHistoryTimeline changes={grantChanges ?? []} />
