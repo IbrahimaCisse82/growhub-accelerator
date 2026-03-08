@@ -12,6 +12,9 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useState } from "react";
+import type { Database } from "@/integrations/supabase/types";
+
+type ApplicationStatus = Database["public"]["Enums"]["application_status"];
 
 const pipelineLabels: { key: string; label: string }[] = [
   { key: "submitted", label: "Reçues" },
