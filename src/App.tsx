@@ -71,6 +71,8 @@ const App = () => (
               <Route path="coaching" element={<CoachingPage />} />
               <Route path="lms" element={<LmsPage />} />
               <Route path="projets" element={<ProjetsPage />} />
+              <Route path="jalons" element={<JalonsPage />} />
+              <Route path="taches" element={<TachesPage />} />
               <Route path="gantt" element={<GanttPage />} />
               <Route path="risques" element={<RisquesPage />} />
               <Route path="grants" element={<GrantsPage />} />
