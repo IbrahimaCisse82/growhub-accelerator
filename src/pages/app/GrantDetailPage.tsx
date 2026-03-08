@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useBudgets } from "@/hooks/useBudgets";
 import SectionHeader from "@/components/shared/SectionHeader";
 import StatCard from "@/components/shared/StatCard";
 import GhButton from "@/components/shared/GhButton";
@@ -14,12 +13,17 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import EditGrantDialog from "@/components/dialogs/EditGrantDialog";
 import { toast } from "@/hooks/use-toast";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
-import GrantTransactionsTab, { useGrantTransactions } from "@/components/grants/GrantTransactionsTab";
-import GrantReportsTab, { useGrantReports } from "@/components/grants/GrantReportsTab";
-import GrantDisbursementsTab, { useGrantDisbursements } from "@/components/grants/GrantDisbursementsTab";
-import GrantDocumentsTab, { useGrantDocuments } from "@/components/grants/GrantDocumentsTab";
-import GrantIndicatorsTab, { useGrantIndicators } from "@/components/grants/GrantIndicatorsTab";
-import GrantActivitiesTab, { useGrantActivities } from "@/components/grants/GrantActivitiesTab";
+import {
+  useGrantDetailQuery, useGrantTransactions, useGrantReports, useGrantDisbursements,
+  useGrantDocuments, useGrantIndicators, useGrantActivities, useGrantChanges,
+  useGrantBudgetLines, useGrantProjectBudgetLines, type GrantStatus,
+} from "@/hooks/useGrantDetail";
+import GrantTransactionsTab from "@/components/grants/GrantTransactionsTab";
+import GrantReportsTab from "@/components/grants/GrantReportsTab";
+import GrantDisbursementsTab from "@/components/grants/GrantDisbursementsTab";
+import GrantDocumentsTab from "@/components/grants/GrantDocumentsTab";
+import GrantIndicatorsTab from "@/components/grants/GrantIndicatorsTab";
+import GrantActivitiesTab from "@/components/grants/GrantActivitiesTab";
 import GrantBudgetChart from "@/components/grants/GrantBudgetChart";
 import GrantAlertsPanel from "@/components/grants/GrantAlertsPanel";
 
