@@ -30,7 +30,9 @@ const navGroups: NavGroup[] = [
     items: [
       { label: "Portefeuilles", icon: "◈", path: "/app/portefeuilles" },
       { label: "Programmes", icon: "◇", path: "/app/programmes" },
-      { label: "Projets & Tâches", icon: "▦", path: "/app/projets" },
+      { label: "Projets", icon: "▦", path: "/app/projets" },
+      { label: "Jalons", icon: "🏁", path: "/app/jalons" },
+      { label: "Tâches", icon: "☑", path: "/app/taches" },
       { label: "Gantt", icon: "▤", path: "/app/gantt" },
       { label: "Risques", icon: "⚠", path: "/app/risques", badgeKey: "openRisks", badgeType: "alert" },
     ],
