@@ -30,6 +30,7 @@ import ProjectWizardPage from "@/pages/app/ProjectWizardPage";
 import GanttPage from "@/pages/app/GanttPage";
 import RisquesPage from "@/pages/app/RisquesPage";
 import GrantsPage from "@/pages/app/GrantsPage";
+import GrantDetailPage from "@/pages/app/GrantDetailPage";
 import BudgetsPage from "@/pages/app/BudgetsPage";
 import EvenementsPage from "@/pages/app/EvenementsPage";
 import MessagingPage from "@/pages/app/MessagingPage";
