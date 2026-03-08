@@ -7,7 +7,7 @@ export function useMentors() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("mentor_profiles")
-        .select("*, profiles:user_id(full_name, email)")
+        .select("*, profiles:profiles!mentor_profiles_user_id_fkey(full_name, email)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
