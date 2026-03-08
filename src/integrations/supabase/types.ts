@@ -562,6 +562,53 @@ export type Database = {
           },
         ]
       }
+      logical_frameworks: {
+        Row: {
+          activities: Json | null
+          assumptions: string | null
+          created_at: string
+          expected_results: Json | null
+          id: string
+          overall_objective: string | null
+          pre_conditions: string | null
+          project_id: string
+          specific_objectives: Json | null
+          updated_at: string
+        }
+        Insert: {
+          activities?: Json | null
+          assumptions?: string | null
+          created_at?: string
+          expected_results?: Json | null
+          id?: string
+          overall_objective?: string | null
+          pre_conditions?: string | null
+          project_id: string
+          specific_objectives?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          activities?: Json | null
+          assumptions?: string | null
+          created_at?: string
+          expected_results?: Json | null
+          id?: string
+          overall_objective?: string | null
+          pre_conditions?: string | null
+          project_id?: string
+          specific_objectives?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logical_frameworks_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentor_matches: {
         Row: {
           id: string
@@ -897,8 +944,120 @@ export type Database = {
           },
         ]
       }
+      project_budget_lines: {
+        Row: {
+          category: string
+          created_at: string
+          funding_source: string | null
+          id: string
+          label: string
+          notes: string | null
+          project_id: string
+          quantity: number | null
+          total_cost: number | null
+          unit: string | null
+          unit_cost: number | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          funding_source?: string | null
+          id?: string
+          label: string
+          notes?: string | null
+          project_id: string
+          quantity?: number | null
+          total_cost?: number | null
+          unit?: string | null
+          unit_cost?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          funding_source?: string | null
+          id?: string
+          label?: string
+          notes?: string | null
+          project_id?: string
+          quantity?: number | null
+          total_cost?: number | null
+          unit?: string | null
+          unit_cost?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budget_lines_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_indicators: {
+        Row: {
+          baseline_value: number | null
+          category: string | null
+          created_at: string
+          current_value: number | null
+          data_source: string | null
+          frequency: string | null
+          id: string
+          name: string
+          project_id: string
+          responsible: string | null
+          target_value: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          baseline_value?: number | null
+          category?: string | null
+          created_at?: string
+          current_value?: number | null
+          data_source?: string | null
+          frequency?: string | null
+          id?: string
+          name: string
+          project_id: string
+          responsible?: string | null
+          target_value?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          baseline_value?: number | null
+          category?: string | null
+          created_at?: string
+          current_value?: number | null
+          data_source?: string | null
+          frequency?: string | null
+          id?: string
+          name?: string
+          project_id?: string
+          responsible?: string | null
+          target_value?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_indicators_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
+          applications_end_date: string | null
+          applications_open: boolean | null
+          applications_start_date: string | null
           budget: number | null
           code: string | null
           created_at: string
@@ -913,8 +1072,14 @@ export type Database = {
           startup_id: string | null
           status: Database["public"]["Enums"]["project_status"]
           updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+          validation_status: string | null
         }
         Insert: {
+          applications_end_date?: string | null
+          applications_open?: boolean | null
+          applications_start_date?: string | null
           budget?: number | null
           code?: string | null
           created_at?: string
@@ -929,8 +1094,14 @@ export type Database = {
           startup_id?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_status?: string | null
         }
         Update: {
+          applications_end_date?: string | null
+          applications_open?: boolean | null
+          applications_start_date?: string | null
           budget?: number | null
           code?: string | null
           created_at?: string
@@ -945,6 +1116,9 @@ export type Database = {
           startup_id?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          validation_status?: string | null
         }
         Relationships: [
           {
@@ -1211,6 +1385,56 @@ export type Database = {
             foreignKeyName: "tasks_project_id_fkey"
             columns: ["project_id"]
             isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      theory_of_change: {
+        Row: {
+          activities: Json | null
+          assumptions: Json | null
+          created_at: string
+          id: string
+          impact: string | null
+          inputs: Json | null
+          outcomes: Json | null
+          outputs: Json | null
+          project_id: string
+          risks: Json | null
+          updated_at: string
+        }
+        Insert: {
+          activities?: Json | null
+          assumptions?: Json | null
+          created_at?: string
+          id?: string
+          impact?: string | null
+          inputs?: Json | null
+          outcomes?: Json | null
+          outputs?: Json | null
+          project_id: string
+          risks?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          activities?: Json | null
+          assumptions?: Json | null
+          created_at?: string
+          id?: string
+          impact?: string | null
+          inputs?: Json | null
+          outcomes?: Json | null
+          outputs?: Json | null
+          project_id?: string
+          risks?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "theory_of_change_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
             referencedRelation: "projects"
             referencedColumns: ["id"]
           },
