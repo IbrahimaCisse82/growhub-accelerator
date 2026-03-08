@@ -6,6 +6,7 @@ import Pill from "@/components/shared/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCourses } from "@/hooks/useCourses";
 import CreateCourseDialog from "@/components/dialogs/CreateCourseDialog";
+import { exportToCSV } from "@/lib/exportUtils";
 
 const levelEmoji: Record<string, string> = { beginner: "🌱", intermediate: "📊", advanced: "🚀" };
 
@@ -15,16 +16,23 @@ export default function LmsPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader title="LMS & Formation" subtitle="Bibliothèque de cours et parcours d'apprentissage"
-        actions={<CreateCourseDialog><GhButton>+ Créer cours</GhButton></CreateCourseDialog>} />
+        actions={<>
+          <GhButton variant="ghost" onClick={() => courses && exportToCSV(courses, "cours", [
+            { key: "title", label: "Titre" }, { key: "level", label: "Niveau" },
+            { key: "modules_count", label: "Modules" }, { key: "duration_hours", label: "Heures" },
+            { key: "is_published", label: "Publié" },
+          ])}>⤓ CSV</GhButton>
+          <CreateCourseDialog><GhButton>+ Créer cours</GhButton></CreateCourseDialog>
+        </>} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Cours" value={String(courses?.length ?? 0)} note="" color="blue" />
         <StatCard label="Publiés" value={String(courses?.filter((c) => c.is_published).length ?? 0)} note="" color="green" />
         <StatCard label="Brouillons" value={String(courses?.filter((c) => !c.is_published).length ?? 0)} note="" color="amber" />
         <StatCard label="Heures de contenu" value={String(courses?.reduce((a, c) => a + (c.duration_hours ?? 0), 0) ?? 0)} note="" color="purple" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-[200px] rounded-xl" />) : courses?.length === 0 ? (
-          <div className="col-span-3 text-center text-muted-foreground py-12 text-sm">Aucun cours</div>
+          <div className="col-span-full text-center text-muted-foreground py-12 text-sm">Aucun cours</div>
         ) : courses?.map((c) => (
           <div key={c.id} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
             <div className="h-[80px] flex items-center justify-center text-[32px] bg-gradient-to-br from-accent/20 to-primary/10">{levelEmoji[c.level ?? "beginner"] ?? "📚"}</div>

@@ -8,6 +8,7 @@ import { useGrants } from "@/hooks/useGrants";
 import { useProjects } from "@/hooks/useProjects";
 import { useCohorts } from "@/hooks/useCohorts";
 import { useCoachingSessions } from "@/hooks/useCoachingSessions";
+import { exportToPDF } from "@/lib/exportUtils";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
 const COLORS = ["hsl(165,100%,41%)", "hsl(199,90%,48%)", "hsl(37,91%,55%)", "hsl(258,73%,62%)", "hsl(348,90%,60%)"];
@@ -42,7 +43,17 @@ export default function AnalyticsPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <SectionHeader title="Analytics" subtitle="Performances et métriques de la plateforme" actions={<GhButton variant="ghost">⤓ Exporter</GhButton>} />
+      <SectionHeader title="Analytics" subtitle="Performances et métriques de la plateforme"
+        actions={<GhButton variant="ghost" onClick={() => {
+          const summary = [
+            { metric: "Startups", value: startupsCount ?? 0 },
+            { metric: "Financement total", value: totalFunding },
+            { metric: "Cohortes", value: cohorts?.length ?? 0 },
+            { metric: "Sessions coaching", value: totalSessions },
+            { metric: "Avancement moyen", value: `${avgProgress}%` },
+          ];
+          exportToPDF("Analytics — GrowHub", summary, [{ key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" }]);
+        }}>⎙ PDF</GhButton>} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Startups totales" value={String(startupsCount ?? 0)} note="" color="green" />
         <StatCard label="Financement total" value={new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(totalFunding)} note="XOF" color="blue" />
@@ -79,7 +90,7 @@ export default function AnalyticsPage() {
         </GhCard>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <GhCard title="Avancement moyen">
           <div className="text-center py-4">
             <div className="font-mono text-4xl font-bold text-primary">{avgProgress}%</div>

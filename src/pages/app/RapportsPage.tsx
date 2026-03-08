@@ -7,6 +7,7 @@ import { useStartupsCount } from "@/hooks/useStartups";
 import { useGrants } from "@/hooks/useGrants";
 import { useProjects } from "@/hooks/useProjects";
 import { useCohorts } from "@/hooks/useCohorts";
+import { exportToJSON, exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 const reports = [
   { id: "startups", title: "Rapport Startups", description: "Vue d'ensemble des startups accompagnées, secteurs, stades et scores", icon: "△" },
@@ -24,43 +25,60 @@ export default function RapportsPage() {
   const activeGrants = grants?.filter(g => g.status === "active" || g.status === "disbursing") ?? [];
   const totalFunding = activeGrants.reduce((a, g) => a + g.amount_total, 0);
 
-  const handleExport = (reportId: string) => {
+  const handleExportJSON = (reportId: string) => {
     const data = {
       generatedAt: new Date().toISOString(),
       reportType: reportId,
-      summary: {
-        totalStartups: startupsCount ?? 0,
-        totalGrants: grants?.length ?? 0,
-        totalFunding,
-        totalProjects: projects?.length ?? 0,
-        totalCohorts: cohorts?.length ?? 0,
-      },
+      summary: { totalStartups: startupsCount ?? 0, totalGrants: grants?.length ?? 0, totalFunding, totalProjects: projects?.length ?? 0, totalCohorts: cohorts?.length ?? 0 },
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `rapport-${reportId}-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    exportToJSON(data, `rapport-${reportId}-${new Date().toISOString().slice(0, 10)}`);
+  };
+
+  const handleExportCSV = (reportId: string) => {
+    if (reportId === "financial" && grants) {
+      exportToCSV(grants, `rapport-financier-${new Date().toISOString().slice(0, 10)}`, [
+        { key: "name", label: "Nom" }, { key: "code", label: "Code" }, { key: "amount_total", label: "Montant total" },
+        { key: "amount_disbursed", label: "Décaissé" }, { key: "status", label: "Statut" },
+      ]);
+    } else if (reportId === "programs" && cohorts) {
+      exportToCSV(cohorts, `rapport-programmes-${new Date().toISOString().slice(0, 10)}`, [
+        { key: "name", label: "Nom" }, { key: "status", label: "Statut" }, { key: "max_startups", label: "Max Startups" },
+      ]);
+    } else {
+      handleExportJSON(reportId);
+    }
+  };
+
+  const handleExportPDF = (reportId: string) => {
+    if (reportId === "financial" && grants) {
+      exportToPDF("Rapport Financier", grants, [
+        { key: "name", label: "Nom" }, { key: "code", label: "Code" }, { key: "amount_total", label: "Montant" },
+        { key: "amount_disbursed", label: "Décaissé" }, { key: "status", label: "Statut" },
+      ]);
+    } else if (reportId === "programs" && projects) {
+      exportToPDF("Rapport Programmes", projects, [
+        { key: "name", label: "Projet" }, { key: "status", label: "Statut" }, { key: "progress", label: "Avancement %" },
+      ]);
+    }
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader title="Rapports" subtitle="Génération et export de rapports" />
-      <div className="grid grid-cols-4 gap-3.5 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Startups" value={String(startupsCount ?? 0)} note="" color="green" />
         <StatCard label="Grants actifs" value={String(activeGrants.length)} note="" color="blue" />
         <StatCard label="Projets" value={String(projects?.length ?? 0)} note="" color="amber" />
         <StatCard label="Cohortes" value={String(cohorts?.length ?? 0)} note="" color="purple" />
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {reports.map(r => (
           <GhCard key={r.id} title={r.title}>
             <p className="text-[12px] text-muted-foreground mb-4">{r.description}</p>
-            <div className="flex gap-2">
-              <GhButton variant="primary" onClick={() => handleExport(r.id)}>⤓ Exporter JSON</GhButton>
-              <GhButton variant="ghost">Aperçu</GhButton>
+            <div className="flex flex-wrap gap-2">
+              <GhButton variant="primary" onClick={() => handleExportJSON(r.id)}>⤓ JSON</GhButton>
+              <GhButton variant="secondary" onClick={() => handleExportCSV(r.id)}>⤓ CSV</GhButton>
+              <GhButton variant="ghost" onClick={() => handleExportPDF(r.id)}>⎙ PDF</GhButton>
             </div>
           </GhCard>
         ))}

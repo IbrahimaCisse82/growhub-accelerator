@@ -7,6 +7,7 @@ import Pill from "@/components/shared/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCohorts } from "@/hooks/useCohorts";
 import CreateCohortDialog from "@/components/dialogs/CreateCohortDialog";
+import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 const statusMap: Record<string, { label: string; color: "green" | "blue" | "amber" | "gray"; stripe: string }> = {
   active: { label: "Active", color: "green", stripe: "bg-primary" },
@@ -16,6 +17,11 @@ const statusMap: Record<string, { label: string; color: "green" | "blue" | "ambe
   cancelled: { label: "Annulée", color: "gray", stripe: "bg-surface-3" },
 };
 
+const exportCols = [
+  { key: "name", label: "Nom" }, { key: "status", label: "Statut" },
+  { key: "max_startups", label: "Max Startups" }, { key: "start_date", label: "Début" }, { key: "end_date", label: "Fin" },
+];
+
 export default function CohortesPage() {
   const { data: cohorts, isLoading } = useCohorts();
   const navigate = useNavigate();
@@ -23,16 +29,20 @@ export default function CohortesPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader title="Cohortes" subtitle="Gestion des cohortes de startups accompagnées"
-        actions={<><GhButton variant="ghost">⤓ Exporter</GhButton><CreateCohortDialog><GhButton>+ Nouvelle cohorte</GhButton></CreateCohortDialog></>} />
+        actions={<>
+          <GhButton variant="ghost" onClick={() => cohorts && exportToCSV(cohorts, "cohortes", exportCols)}>⤓ CSV</GhButton>
+          <GhButton variant="ghost" onClick={() => cohorts && exportToPDF("Cohortes", cohorts, exportCols)}>⎙ PDF</GhButton>
+          <CreateCohortDialog><GhButton>+ Nouvelle cohorte</GhButton></CreateCohortDialog>
+        </>} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Actives" value={String(cohorts?.filter((c) => c.status === "active").length ?? 0)} note="" color="green" />
         <StatCard label="Total" value={String(cohorts?.length ?? 0)} note="" color="blue" />
         <StatCard label="Taux complétion" value="—" note="" color="amber" />
         <StatCard label="Mentors assignés" value="—" note="" color="purple" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[200px] rounded-xl" />) : cohorts?.length === 0 ? (
-          <div className="col-span-3 text-center text-muted-foreground py-12 text-sm">Aucune cohorte</div>
+          <div className="col-span-full text-center text-muted-foreground py-12 text-sm">Aucune cohorte</div>
         ) : cohorts?.map((c) => {
           const st = statusMap[c.status] ?? statusMap.draft;
           return (
