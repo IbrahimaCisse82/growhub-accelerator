@@ -20,12 +20,12 @@ function useProjectBudgetLines(projectId: string | null) {
     enabled: !!projectId,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("project_budget_lines" as any)
+        .from("project_budget_lines")
         .select("*, projects(name)")
         .eq("project_id", projectId!)
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return data as any[];
+      return data;
     },
   });
 }
@@ -35,11 +35,11 @@ function useAllProjectBudgetLines() {
     queryKey: ["all_project_budget_lines"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("project_budget_lines" as any)
+        .from("project_budget_lines")
         .select("*, projects(name)")
         .order("created_at", { ascending: true });
       if (error) throw error;
-      return data as any[];
+      return data;
     },
   });
 }
