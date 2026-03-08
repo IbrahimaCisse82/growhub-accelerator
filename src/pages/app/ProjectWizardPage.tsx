@@ -503,8 +503,8 @@ export default function ProjectWizardPage() {
 
               <div className="bg-surface-2 border border-border rounded-lg p-4">
                 <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">💰 Budget</div>
-                <div className="text-lg font-display font-bold text-primary">{totalBudget.toLocaleString("fr-FR")} XOF</div>
-                <div className="text-[10px] text-muted-foreground">{budgetLines.filter(b => b.label).length} lignes budgétaires{grantId ? ` · Lié à ${grants?.find(g => g.id === grantId)?.name}` : ""}</div>
+                <div className="text-lg font-display font-bold text-primary">{fmt(totalBudget)} €</div>
+                <div className="text-[10px] text-muted-foreground">{budgetLines.filter(b => b.desc).length} lignes · A: {fmt(totalA)} € · B: {fmt(totalB)} €{grantId ? ` · Lié à ${grants?.find(g => g.id === grantId)?.name}` : ""}</div>
               </div>
 
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
