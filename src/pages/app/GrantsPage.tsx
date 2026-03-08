@@ -8,6 +8,7 @@ import Pill from "@/components/shared/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { useGrants } from "@/hooks/useGrants";
+import type { Database } from "@/integrations/supabase/types";
 import { useBudgets } from "@/hooks/useBudgets";
 import CreateGrantDialog from "@/components/dialogs/CreateGrantDialog";
 import EditGrantDialog from "@/components/dialogs/EditGrantDialog";

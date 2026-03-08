@@ -10,6 +10,7 @@ import { useCoachingSessions } from "@/hooks/useCoachingSessions";
 import CreateSessionDialog from "@/components/dialogs/CreateSessionDialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
