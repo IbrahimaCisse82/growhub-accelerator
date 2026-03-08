@@ -51,7 +51,7 @@ export default function ProjetsPage() {
         applications_open: true,
         applications_start_date: appStartDate || null,
         applications_end_date: appEndDate || null,
-      } as any).eq("id", openAppDialog);
+      }).eq("id", openAppDialog);
       if (error) throw error;
     },
     onSuccess: () => {
