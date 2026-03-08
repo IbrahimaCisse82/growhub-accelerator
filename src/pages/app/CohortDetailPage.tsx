@@ -32,7 +32,7 @@ export default function CohortDetailPage() {
   if (!cohort) return <div className="text-center py-12 text-muted-foreground">Cohorte introuvable</div>;
 
   const st = statusMap[cohort.status] ?? statusMap.draft;
-  const program = (cohort as any).programs;
+  const program = cohort.programs;
   const portfolio = program?.portfolios;
 
   const crumbs = [
