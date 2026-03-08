@@ -26,6 +26,7 @@ import LmsPage from "@/pages/app/LmsPage";
 import ProjetsPage from "@/pages/app/ProjetsPage";
 import JalonsPage from "@/pages/app/JalonsPage";
 import TachesPage from "@/pages/app/TachesPage";
+import ProjectWizardPage from "@/pages/app/ProjectWizardPage";
 import GanttPage from "@/pages/app/GanttPage";
 import RisquesPage from "@/pages/app/RisquesPage";
 import GrantsPage from "@/pages/app/GrantsPage";
