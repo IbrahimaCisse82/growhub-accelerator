@@ -37,7 +37,7 @@ export default function ProjetsPage() {
 
   const validateProject = useMutation({
     mutationFn: async (projectId: string) => {
-      const { error } = await supabase.from("projects").update({ validation_status: "validated" as any, validated_at: new Date().toISOString() } as any).eq("id", projectId);
+      const { error } = await supabase.from("projects").update({ validation_status: "validated", validated_at: new Date().toISOString() }).eq("id", projectId);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["projects"] }); toast.success("Projet validé !"); },
