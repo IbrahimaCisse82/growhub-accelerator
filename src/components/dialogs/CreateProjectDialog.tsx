@@ -4,23 +4,27 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { usePrograms } from "@/hooks/usePrograms";
 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 
-export default function CreateProjectDialog({ children }: { children: React.ReactNode }) {
+export default function CreateProjectDialog({ children, programId }: { children: React.ReactNode; programId?: string }) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
+  const [progId, setProgId] = useState(programId ?? "");
   const { user } = useAuth();
+  const { data: programs } = usePrograms();
   const qc = useQueryClient();
 
   const create = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("projects").insert({ name, code: code || null, description: description || null, owner_id: user?.id });
+      if (!progId) throw new Error("Veuillez sélectionner un programme");
+      const { error } = await supabase.from("projects").insert({ name, code: code || null, description: description || null, owner_id: user?.id, program_id: progId });
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["projects"] }); setOpen(false); setName(""); setCode(""); setDescription(""); toast({ title: "Projet créé" }); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["projects"] }); setOpen(false); setName(""); setCode(""); setDescription(""); setProgId(programId ?? ""); toast({ title: "Projet créé" }); },
     onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
   });
 
@@ -30,10 +34,17 @@ export default function CreateProjectDialog({ children }: { children: React.Reac
       <DialogContent className="bg-card border-border">
         <DialogHeader><DialogTitle className="font-display">Nouveau projet</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Programme *</label>
+            <select value={progId} onChange={e => setProgId(e.target.value)} required className={inputCls}>
+              <option value="">Sélectionner un programme…</option>
+              {programs?.map(p => <option key={p.id} value={p.id}>{p.name} ({p.code})</option>)}
+            </select>
+          </div>
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Nom *</label><input value={name} onChange={e => setName(e.target.value)} required className={inputCls} /></div>
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Code</label><input value={code} onChange={e => setCode(e.target.value)} className={inputCls} placeholder="PRJ-001" /></div>
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Description</label><textarea value={description} onChange={e => setDescription(e.target.value)} className={inputCls + " h-20 resize-none"} /></div>
-          <button type="submit" disabled={create.isPending} className="w-full h-10 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50">
+          <button type="submit" disabled={create.isPending || !progId} className="w-full h-10 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50">
             {create.isPending ? "Création…" : "Créer"}
           </button>
         </form>
