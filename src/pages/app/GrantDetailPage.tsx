@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import EditGrantDialog from "@/components/dialogs/EditGrantDialog";
 import { toast } from "@/hooks/use-toast";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import GrantTransactionsTab, { useGrantTransactions } from "@/components/grants/GrantTransactionsTab";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
@@ -107,6 +108,7 @@ export default function GrantDetailPage() {
   const { data: budgetLines } = useGrantBudgetLines(id);
   const { data: projectBudgetLines } = useGrantProjectBudgetLines(id);
   const { data: grantChanges } = useGrantChanges(id);
+  const { data: transactions } = useGrantTransactions(id);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
@@ -202,6 +204,7 @@ export default function GrantDetailPage() {
       <Tabs defaultValue="budget" className="space-y-4">
         <TabsList className="bg-secondary border border-border">
           <TabsTrigger value="budget">Budget Annexe 1b</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions ({transactions?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="tracking">Suivi budgétaire</TabsTrigger>
           <TabsTrigger value="info">Informations</TabsTrigger>
           <TabsTrigger value="history">Historique ({grantChanges?.length ?? 0})</TabsTrigger>
@@ -214,6 +217,11 @@ export default function GrantDetailPage() {
           ) : (
             <EmptyBudgetState />
           )}
+        </TabsContent>
+
+        {/* Transactions Tab */}
+        <TabsContent value="transactions">
+          {grant && <GrantTransactionsTab grantId={grant.id} grantCode={grant.code} />}
         </TabsContent>
 
         {/* Tracking Tab */}
