@@ -18,7 +18,8 @@ export default function CreateProgramDialog({ children, portfolioId }: { childre
 
   const create = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("programs").insert({ name, code, funder: funder || null, portfolio_id: pId || null });
+      if (!pId) throw new Error("Veuillez sélectionner un portefeuille");
+      const { error } = await supabase.from("programs").insert({ name, code, funder: funder || null, portfolio_id: pId });
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["programs"] }); qc.invalidateQueries({ queryKey: ["portfolio-programs"] }); setOpen(false); setName(""); setCode(""); setFunder(""); toast({ title: "Programme créé" }); },
@@ -31,17 +32,17 @@ export default function CreateProgramDialog({ children, portfolioId }: { childre
       <DialogContent className="bg-card border-border">
         <DialogHeader><DialogTitle className="font-display">Nouveau programme</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-4">
-          <div className="space-y-2"><label className="text-sm font-medium text-foreground">Nom *</label><input value={name} onChange={e => setName(e.target.value)} required className={inputCls} /></div>
-          <div className="space-y-2"><label className="text-sm font-medium text-foreground">Code *</label><input value={code} onChange={e => setCode(e.target.value)} required className={inputCls} placeholder="PRG-001" /></div>
-          <div className="space-y-2"><label className="text-sm font-medium text-foreground">Bailleur</label><input value={funder} onChange={e => setFunder(e.target.value)} className={inputCls} /></div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Portefeuille</label>
-            <select value={pId} onChange={e => setPId(e.target.value)} className={inputCls}>
-              <option value="">Aucun</option>
+            <label className="text-sm font-medium text-foreground">Portefeuille *</label>
+            <select value={pId} onChange={e => setPId(e.target.value)} required className={inputCls}>
+              <option value="">Sélectionner un portefeuille…</option>
               {portfolios?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <button type="submit" disabled={create.isPending} className="w-full h-10 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50">
+          <div className="space-y-2"><label className="text-sm font-medium text-foreground">Nom *</label><input value={name} onChange={e => setName(e.target.value)} required className={inputCls} /></div>
+          <div className="space-y-2"><label className="text-sm font-medium text-foreground">Code *</label><input value={code} onChange={e => setCode(e.target.value)} required className={inputCls} placeholder="PRG-001" /></div>
+          <div className="space-y-2"><label className="text-sm font-medium text-foreground">Bailleur</label><input value={funder} onChange={e => setFunder(e.target.value)} className={inputCls} /></div>
+          <button type="submit" disabled={create.isPending || !pId} className="w-full h-10 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50">
             {create.isPending ? "Création…" : "Créer"}
           </button>
         </form>
