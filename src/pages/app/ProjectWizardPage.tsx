@@ -113,7 +113,7 @@ export default function ProjectWizardPage() {
     if (step === 1) return overallObjective;
     if (step === 2) return tocImpact;
     if (step === 3) return kpis.some(k => k.name);
-    if (step === 4) return budgetLines.some(b => b.label);
+    if (step === 4) return budgetLines.some(b => b.desc && (b.qty > 0 || b.montant > 0));
     return true;
   };
 
