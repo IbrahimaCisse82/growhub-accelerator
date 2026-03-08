@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import EditGrantDialog from "@/components/dialogs/EditGrantDialog";
 import { toast } from "@/hooks/use-toast";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import GrantTransactionsTab, { useGrantTransactions } from "@/components/grants/GrantTransactionsTab";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
