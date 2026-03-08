@@ -142,7 +142,7 @@ export default function DashboardPage() {
                     (isEntrepreneur && myStartup ? projects?.filter(p => p.startup_id === myStartup.id) : projects)?.slice(0, 6).map((p) => (
                       <tr key={p.id} className="hover:bg-secondary transition-colors">
                         <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{p.name}</td>
-                        <td className="px-3.5 py-2.5 border-b border-border text-foreground">{(p as any).startups?.name ?? "—"}</td>
+                        <td className="px-3.5 py-2.5 border-b border-border text-foreground">{p.startups?.name ?? "—"}</td>
                         <td className="px-3.5 py-2.5 border-b border-border"><Pill color={statusColor[p.status] ?? "gray"}>{p.status}</Pill></td>
                         <td className="px-3.5 py-2.5 border-b border-border">
                           <div className="h-1 bg-muted rounded-full overflow-hidden">
