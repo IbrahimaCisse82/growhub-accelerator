@@ -226,7 +226,7 @@ export default function GrantDetailPage() {
                         <tr key={b.id} className="hover:bg-secondary/50 transition-colors">
                           <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{b.label}</td>
                           <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{b.category}</td>
-                          <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{(b as any).projects?.name ?? "—"}</td>
+                          <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{b.projects?.name ?? "—"}</td>
                           <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{fmt(b.amount_planned ?? 0)} €</td>
                           <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{fmt(b.amount_spent ?? 0)} €</td>
                           <td className="px-3.5 py-2.5 border-b border-border">
