@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
@@ -6,6 +7,7 @@ import Pill from "@/components/shared/Pill";
 import EmptyState from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApplications, useApplicationsPipeline } from "@/hooks/useApplications";
+import { useCohorts } from "@/hooks/useCohorts";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -32,7 +34,11 @@ const nextStatus: Record<string, string> = {
 export default function CandidaturesPage() {
   const { data: apps, isLoading } = useApplications();
   const { data: pipeline } = useApplicationsPipeline();
+  const { data: cohorts } = useCohorts();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<string | null>(null);
+  const [cohortFilter, setCohortFilter] = useState<string | null>(searchParams.get("cohort"));
   const qc = useQueryClient();
 
   const advance = useMutation({
@@ -51,7 +57,8 @@ export default function CandidaturesPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["applications"] }); qc.invalidateQueries({ queryKey: ["applications-pipeline"] }); toast({ title: "Candidature refusée" }); },
   });
 
-  const filtered = filter ? apps?.filter(a => a.status === filter) : apps;
+  let filtered = filter ? apps?.filter(a => a.status === filter) : apps;
+  if (cohortFilter) filtered = filtered?.filter(a => a.cohort_id === cohortFilter);
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
@@ -59,8 +66,9 @@ export default function CandidaturesPage() {
         title="Candidatures"
         subtitle="Évaluation et sélection des startups candidates"
       />
-      <div className="flex flex-wrap border border-border rounded-xl overflow-hidden mb-5">
-        {pipelineLabels.map((step, i) => (
+      {/* Pipeline summary */}
+      <div className="flex flex-wrap border border-border rounded-xl overflow-hidden mb-4">
+        {pipelineLabels.map((step) => (
           <div key={step.key} onClick={() => setFilter(filter === step.key ? null : step.key)}
             className={`flex-1 min-w-[80px] py-3.5 text-center border-r border-border last:border-r-0 relative hover:bg-secondary cursor-pointer transition-colors ${filter === step.key ? "bg-primary/10" : ""}`}>
             {filter === step.key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
@@ -71,6 +79,18 @@ export default function CandidaturesPage() {
           </div>
         ))}
       </div>
+
+      {/* Cohort filter */}
+      {cohorts && cohorts.length > 0 && (
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <span className="text-[11px] text-muted-foreground font-mono uppercase tracking-wider">Cohorte :</span>
+          <button onClick={() => setCohortFilter(null)} className={`text-[11.5px] px-2.5 py-1 rounded-lg transition-colors ${!cohortFilter ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}>Toutes</button>
+          {cohorts.map(c => (
+            <button key={c.id} onClick={() => setCohortFilter(cohortFilter === c.id ? null : c.id)} className={`text-[11.5px] px-2.5 py-1 rounded-lg transition-colors ${cohortFilter === c.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}>{c.name}</button>
+          ))}
+        </div>
+      )}
+
       <GhCard title={filter ? `Candidatures — ${pipelineLabels.find(p => p.key === filter)?.label}` : "Toutes les candidatures"} badge={String(filtered?.length ?? 0)} noPadding>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[12.5px]">
@@ -91,7 +111,11 @@ export default function CandidaturesPage() {
               ) : (
                 filtered.map((c) => (
                   <tr key={c.id} className="hover:bg-secondary transition-colors">
-                    <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{(c as any).startups?.name ?? "—"}</td>
+                    <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">
+                      {c.startup_id ? (
+                        <button onClick={() => navigate(`/app/startups/${c.startup_id}`)} className="hover:text-primary transition-colors text-left">{(c as any).startups?.name ?? "—"}</button>
+                      ) : ((c as any).startups?.name ?? "—")}
+                    </td>
                     <td className="px-3.5 py-2.5 border-b border-border text-foreground">{(c as any).programs?.name ?? "—"}</td>
                     <td className="px-3.5 py-2.5 border-b border-border font-mono text-primary">{c.score != null ? `${c.score}/100` : "—"}</td>
                     <td className="px-3.5 py-2.5 border-b border-border"><Pill color={stepColor[c.status] ?? "gray"}>{c.status}</Pill></td>
