@@ -157,7 +157,7 @@ export default function ProjectWizardPage() {
       // 4. KPIs
       const validKpis = kpis.filter(k => k.name);
       if (validKpis.length > 0) {
-        const { error: ke } = await supabase.from("project_indicators" as any).insert(
+        const { error: ke } = await supabase.from("project_indicators").insert(
           validKpis.map(k => ({
             project_id: project.id, name: k.name, category: k.category,
             unit: k.unit || null, baseline_value: k.baseline, target_value: k.target,
