@@ -503,6 +503,62 @@ export type Database = {
           },
         ]
       }
+      grant_activities: {
+        Row: {
+          created_at: string
+          deliverables: string | null
+          description: string | null
+          end_date: string | null
+          grant_id: string
+          id: string
+          priority: string | null
+          progress: number | null
+          responsible: string | null
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deliverables?: string | null
+          description?: string | null
+          end_date?: string | null
+          grant_id: string
+          id?: string
+          priority?: string | null
+          progress?: number | null
+          responsible?: string | null
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deliverables?: string | null
+          description?: string | null
+          end_date?: string | null
+          grant_id?: string
+          id?: string
+          priority?: string | null
+          progress?: number | null
+          responsible?: string | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grant_activities_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "grants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grant_changes: {
         Row: {
           action: string
@@ -531,6 +587,251 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "grant_changes_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "grants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grant_disbursements: {
+        Row: {
+          amount_approved: number | null
+          amount_received: number | null
+          amount_requested: number
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          grant_id: string
+          id: string
+          justification: string | null
+          label: string
+          notes: string | null
+          received_at: string | null
+          requested_at: string | null
+          requested_by: string | null
+          status: string
+          tranche_number: number
+          updated_at: string
+        }
+        Insert: {
+          amount_approved?: number | null
+          amount_received?: number | null
+          amount_requested?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          grant_id: string
+          id?: string
+          justification?: string | null
+          label: string
+          notes?: string | null
+          received_at?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          status?: string
+          tranche_number?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_approved?: number | null
+          amount_received?: number | null
+          amount_requested?: number
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          grant_id?: string
+          id?: string
+          justification?: string | null
+          label?: string
+          notes?: string | null
+          received_at?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          status?: string
+          tranche_number?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grant_disbursements_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "grants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grant_documents: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          grant_id: string
+          id: string
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          grant_id: string
+          id?: string
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          grant_id?: string
+          id?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grant_documents_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "grants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grant_indicators: {
+        Row: {
+          baseline_value: number | null
+          category: string | null
+          created_at: string
+          current_value: number | null
+          data_source: string | null
+          frequency: string | null
+          grant_id: string
+          id: string
+          name: string
+          notes: string | null
+          responsible: string | null
+          target_value: number | null
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          baseline_value?: number | null
+          category?: string | null
+          created_at?: string
+          current_value?: number | null
+          data_source?: string | null
+          frequency?: string | null
+          grant_id: string
+          id?: string
+          name: string
+          notes?: string | null
+          responsible?: string | null
+          target_value?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          baseline_value?: number | null
+          category?: string | null
+          created_at?: string
+          current_value?: number | null
+          data_source?: string | null
+          frequency?: string | null
+          grant_id?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          responsible?: string | null
+          target_value?: number | null
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grant_indicators_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "grants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grant_reports: {
+        Row: {
+          amount_declared: number | null
+          amount_received: number | null
+          amount_validated: number | null
+          created_at: string
+          end_date: string | null
+          grant_id: string
+          id: string
+          notes: string | null
+          period_label: string
+          period_type: string
+          start_date: string | null
+          status: string
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          amount_declared?: number | null
+          amount_received?: number | null
+          amount_validated?: number | null
+          created_at?: string
+          end_date?: string | null
+          grant_id: string
+          id?: string
+          notes?: string | null
+          period_label: string
+          period_type?: string
+          start_date?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          amount_declared?: number | null
+          amount_received?: number | null
+          amount_validated?: number | null
+          created_at?: string
+          end_date?: string | null
+          grant_id?: string
+          id?: string
+          notes?: string | null
+          period_label?: string
+          period_type?: string
+          start_date?: string | null
+          status?: string
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grant_reports_grant_id_fkey"
             columns: ["grant_id"]
             isOneToOne: false
             referencedRelation: "grants"
