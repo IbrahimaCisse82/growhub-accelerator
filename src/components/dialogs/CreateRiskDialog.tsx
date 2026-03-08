@@ -23,7 +23,7 @@ export default function CreateRiskDialog({ children }: { children: React.ReactNo
   const create = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("risks").insert({
-        title, description: description || null, level: level as any,
+        title, description: description || null, level: level as Database["public"]["Enums"]["risk_level"],
         mitigation: mitigation || null, project_id: projectId || null,
         owner_id: user?.id, status: "open",
       });

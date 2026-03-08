@@ -170,7 +170,7 @@ export default function ProjectWizardPage() {
       // 5. Budget lines (GTS format)
       const validBudget = budgetLines.filter(b => b.desc);
       if (validBudget.length > 0) {
-        const { error: be } = await supabase.from("project_budget_lines" as any).insert(
+        const { error: be } = await supabase.from("project_budget_lines").insert(
           validBudget.map(b => ({
             project_id: project.id, category: b.section === "A" ? "operational" : "management",
             label: b.desc, code: b.code, section: b.section,

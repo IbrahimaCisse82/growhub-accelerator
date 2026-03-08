@@ -73,7 +73,7 @@ export default function CoachingPage() {
                       <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">
                         {format(new Date(s.scheduled_at), "dd MMM HH:mm", { locale: fr })}
                       </td>
-                      <td className="px-3.5 py-2.5 border-b border-border text-foreground">{(s as any).startups?.name ?? "—"}</td>
+                      <td className="px-3.5 py-2.5 border-b border-border text-foreground">{s.startups?.name ?? "—"}</td>
                       <td className="px-3.5 py-2.5 border-b border-border text-foreground">{s.title}</td>
                       <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{s.duration_minutes}min</td>
                       <td className="px-3.5 py-2.5 border-b border-border"><Pill color={st.color}>{st.label}</Pill></td>

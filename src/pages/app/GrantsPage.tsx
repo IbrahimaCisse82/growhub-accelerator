@@ -55,7 +55,7 @@ export default function GrantsPage() {
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("grants").update({ status: "closed" as any }).eq("id", id);
+      const { error } = await supabase.from("grants").update({ status: "closed" as Database["public"]["Enums"]["grant_status"] }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["grants"] }); setCancelGrant(null); toast({ title: "Grant annulé" }); },

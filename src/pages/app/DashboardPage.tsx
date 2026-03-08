@@ -169,7 +169,7 @@ export default function DashboardPage() {
                 <div key={step.key} className="flex justify-between items-center py-1.5 border-b border-border last:border-b-0">
                   <span className="text-[11.5px] text-muted-foreground">{step.label}</span>
                   <span className="font-mono text-sm font-semibold text-foreground">
-                    {pipeline ? (pipeline as any)[step.key] ?? 0 : "—"}
+                    {pipeline ? pipeline[step.key as keyof typeof pipeline] ?? 0 : "—"}
                   </span>
                 </div>
               ))}
