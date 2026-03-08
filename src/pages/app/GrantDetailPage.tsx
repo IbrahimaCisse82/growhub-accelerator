@@ -219,6 +219,11 @@ export default function GrantDetailPage() {
           )}
         </TabsContent>
 
+        {/* Transactions Tab */}
+        <TabsContent value="transactions">
+          {grant && <GrantTransactionsTab grantId={grant.id} grantCode={grant.code} />}
+        </TabsContent>
+
         {/* Tracking Tab */}
         <TabsContent value="tracking">
           {budgetLines && budgetLines.length > 0 ? (
