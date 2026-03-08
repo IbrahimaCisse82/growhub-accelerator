@@ -3,8 +3,13 @@ import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
 import Pill from "@/components/shared/Pill";
+import EmptyState from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApplications, useApplicationsPipeline } from "@/hooks/useApplications";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 const pipelineLabels: { key: string; label: string }[] = [
   { key: "submitted", label: "Reçues" },
@@ -20,35 +25,59 @@ const stepColor: Record<string, "blue" | "amber" | "purple" | "green" | "rose" |
   due_diligence: "purple", accepted: "green", rejected: "rose",
 };
 
+const nextStatus: Record<string, string> = {
+  submitted: "screening", screening: "interview", interview: "due_diligence", due_diligence: "accepted",
+};
+
 export default function CandidaturesPage() {
   const { data: apps, isLoading } = useApplications();
   const { data: pipeline } = useApplicationsPipeline();
+  const [filter, setFilter] = useState<string | null>(null);
+  const qc = useQueryClient();
+
+  const advance = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from("applications").update({ status: status as any, reviewed_at: new Date().toISOString() }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["applications"] }); qc.invalidateQueries({ queryKey: ["applications-pipeline"] }); toast({ title: "✓ Candidature mise à jour" }); },
+  });
+
+  const reject = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("applications").update({ status: "rejected" as any, reviewed_at: new Date().toISOString() }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["applications"] }); qc.invalidateQueries({ queryKey: ["applications-pipeline"] }); toast({ title: "Candidature refusée" }); },
+  });
+
+  const filtered = filter ? apps?.filter(a => a.status === filter) : apps;
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader
         title="Candidatures"
         subtitle="Évaluation et sélection des startups candidates"
-        actions={<><GhButton variant="ghost">Filtrer ▾</GhButton><GhButton>+ Ouvrir appel</GhButton></>}
       />
-      <div className="flex border border-border rounded-xl overflow-hidden mb-5">
+      <div className="flex flex-wrap border border-border rounded-xl overflow-hidden mb-5">
         {pipelineLabels.map((step, i) => (
-          <div key={step.key} className={`flex-1 min-w-[80px] py-3.5 text-center border-r border-border last:border-r-0 relative hover:bg-surface-2 cursor-pointer transition-colors ${i === 0 ? "bg-primary/8" : ""}`}>
-            {i === 0 && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+          <div key={step.key} onClick={() => setFilter(filter === step.key ? null : step.key)}
+            className={`flex-1 min-w-[80px] py-3.5 text-center border-r border-border last:border-r-0 relative hover:bg-secondary cursor-pointer transition-colors ${filter === step.key ? "bg-primary/10" : ""}`}>
+            {filter === step.key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
             <div className="font-mono text-xl font-semibold text-foreground">
               {pipeline ? (pipeline as any)[step.key] ?? 0 : "—"}
             </div>
-            <div className="text-[11px] text-text-secondary mt-1">{step.label}</div>
+            <div className="text-[11px] text-muted-foreground mt-1">{step.label}</div>
           </div>
         ))}
       </div>
-      <GhCard title="Candidatures" badge={String(apps?.length ?? 0)} noPadding>
+      <GhCard title={filter ? `Candidatures — ${pipelineLabels.find(p => p.key === filter)?.label}` : "Toutes les candidatures"} badge={String(filtered?.length ?? 0)} noPadding>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[12.5px]">
             <thead>
-              <tr className="bg-surface-2">
+              <tr className="bg-secondary">
                 {["Startup", "Programme", "Score", "Étape", "Date", "Actions"].map((h) => (
-                  <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-text-tertiary uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -57,25 +86,28 @@ export default function CandidaturesPage() {
                 Array.from({ length: 4 }).map((_, i) => (
                   <tr key={i}>{Array.from({ length: 6 }).map((_, j) => <td key={j} className="px-3.5 py-2.5 border-b border-border"><Skeleton className="h-4 w-20" /></td>)}</tr>
                 ))
-              ) : apps?.length === 0 ? (
-                <tr><td colSpan={6} className="px-3.5 py-8 text-center text-text-secondary text-sm">Aucune candidature pour le moment</td></tr>
+              ) : !filtered || filtered.length === 0 ? (
+                <tr><td colSpan={6}><EmptyState icon="📋" title="Aucune candidature" description="Les candidatures apparaîtront ici" /></td></tr>
               ) : (
-                apps?.map((c) => (
-                  <tr key={c.id} className="hover:bg-surface-2 transition-colors">
-                    <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">
-                      {c.startups?.name ?? "—"}
-                    </td>
-                    <td className="px-3.5 py-2.5 border-b border-border text-foreground">{c.programs?.name ?? "—"}</td>
-                    <td className="px-3.5 py-2.5 border-b border-border font-mono text-primary">
-                      {c.score != null ? `${c.score}/100` : "—"}
-                    </td>
+                filtered.map((c) => (
+                  <tr key={c.id} className="hover:bg-secondary transition-colors">
+                    <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{(c as any).startups?.name ?? "—"}</td>
+                    <td className="px-3.5 py-2.5 border-b border-border text-foreground">{(c as any).programs?.name ?? "—"}</td>
+                    <td className="px-3.5 py-2.5 border-b border-border font-mono text-primary">{c.score != null ? `${c.score}/100` : "—"}</td>
+                    <td className="px-3.5 py-2.5 border-b border-border"><Pill color={stepColor[c.status] ?? "gray"}>{c.status}</Pill></td>
+                    <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{new Date(c.submitted_at).toLocaleDateString("fr-FR")}</td>
                     <td className="px-3.5 py-2.5 border-b border-border">
-                      <Pill color={stepColor[c.status] ?? "gray"}>{c.status}</Pill>
+                      <div className="flex gap-1">
+                        {nextStatus[c.status] && (
+                          <GhButton variant="primary" disabled={advance.isPending} onClick={() => advance.mutate({ id: c.id, status: nextStatus[c.status] })}>
+                            Avancer →
+                          </GhButton>
+                        )}
+                        {c.status !== "rejected" && c.status !== "accepted" && (
+                          <GhButton variant="ghost" disabled={reject.isPending} onClick={() => reject.mutate(c.id)}>Refuser</GhButton>
+                        )}
+                      </div>
                     </td>
-                    <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">
-                      {new Date(c.submitted_at).toLocaleDateString("fr-FR")}
-                    </td>
-                    <td className="px-3.5 py-2.5 border-b border-border"><GhButton variant="primary">Évaluer</GhButton></td>
                   </tr>
                 ))
               )}
