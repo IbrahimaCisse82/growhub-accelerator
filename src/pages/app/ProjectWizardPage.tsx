@@ -46,11 +46,21 @@ function ArrayEditor({ items, onChange, placeholder }: { items: string[]; onChan
 interface KpiRow { name: string; category: string; unit: string; baseline: number; target: number; frequency: string; source: string; responsible: string }
 const emptyKpi = (): KpiRow => ({ name: "", category: "output", unit: "", baseline: 0, target: 0, frequency: "quarterly", source: "", responsible: "" });
 
-// --- Budget Line ---
-interface BudgetLine { category: string; label: string; unit: string; quantity: number; unitCost: number; fundingSource: string }
-const emptyBudgetLine = (): BudgetLine => ({ category: "personnel", label: "", unit: "", quantity: 1, unitCost: 0, fundingSource: "" });
-
-const budgetCategories = ["personnel", "equipement", "formation", "deplacement", "communication", "fonctionnement", "suivi_evaluation", "imprevu", "autre"];
+// --- Budget Line (GTS Format) ---
+interface BudgetLine { code: string; desc: string; unit: string; qty: number; montant: number; alloc: number; section: "A" | "B" }
+const DEFAULT_BUDGET_LINES: BudgetLine[] = [
+  { code: "A1.1.1", desc: "Experts (personnel employé par le bénéficiaire)", unit: "homme/mois", qty: 0, montant: 0, alloc: 100, section: "A" },
+  { code: "A1.1.2", desc: "Déplacements et indemnités journalières", unit: "voyages", qty: 0, montant: 0, alloc: 100, section: "A" },
+  { code: "A1.1.3", desc: "Consultants (externes)", unit: "jours", qty: 0, montant: 150, alloc: 100, section: "A" },
+  { code: "A1.1.4", desc: "Formations, ateliers, conférences, séminaires", unit: "sessions", qty: 0, montant: 0, alloc: 100, section: "A" },
+  { code: "A1.1.5", desc: "Sous-bénéficiaires", unit: "contrats", qty: 0, montant: 0, alloc: 100, section: "A" },
+  { code: "A1.1.6", desc: "Achats de matériel et d'équipements", unit: "unités", qty: 0, montant: 0, alloc: 100, section: "A" },
+  { code: "A1.1.7", desc: "Sous-Subventions", unit: "—", qty: 0, montant: 0, alloc: 100, section: "A" },
+  { code: "A1.1.8", desc: "Autres coûts opérationnels", unit: "—", qty: 0, montant: 0, alloc: 100, section: "A" },
+  { code: "B.1", desc: "Frais de gestion / coûts de structure", unit: "forfait", qty: 1, montant: 0, alloc: 100, section: "B" },
+];
+const lineTotal = (l: BudgetLine) => (l.qty || 0) * (l.montant || 0) * ((l.alloc || 100) / 100);
+const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
 export default function ProjectWizardPage() {
   const [step, setStep] = useState(0);
@@ -89,17 +99,21 @@ export default function ProjectWizardPage() {
   // Step 4: KPIs
   const [kpis, setKpis] = useState<KpiRow[]>([emptyKpi()]);
 
-  // Step 5: Budget
-  const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([emptyBudgetLine()]);
+  // Step 5: Budget (GTS format)
+  const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([...DEFAULT_BUDGET_LINES]);
 
-  const totalBudget = budgetLines.reduce((sum, l) => sum + l.quantity * l.unitCost, 0);
+  const linesA = budgetLines.filter(l => l.section === "A");
+  const linesB = budgetLines.filter(l => l.section === "B");
+  const totalA = linesA.reduce((s, l) => s + lineTotal(l), 0);
+  const totalB = linesB.reduce((s, l) => s + lineTotal(l), 0);
+  const totalBudget = totalA + totalB;
 
   const canNext = () => {
     if (step === 0) return name && programId;
     if (step === 1) return overallObjective;
     if (step === 2) return tocImpact;
     if (step === 3) return kpis.some(k => k.name);
-    if (step === 4) return budgetLines.some(b => b.label);
+    if (step === 4) return budgetLines.some(b => b.desc && (b.qty > 0 || b.montant > 0));
     return true;
   };
 
@@ -153,14 +167,15 @@ export default function ProjectWizardPage() {
         if (ke) throw ke;
       }
 
-      // 5. Budget lines
-      const validBudget = budgetLines.filter(b => b.label);
+      // 5. Budget lines (GTS format)
+      const validBudget = budgetLines.filter(b => b.desc);
       if (validBudget.length > 0) {
         const { error: be } = await supabase.from("project_budget_lines" as any).insert(
           validBudget.map(b => ({
-            project_id: project.id, category: b.category, label: b.label,
-            unit: b.unit || null, quantity: b.quantity, unit_cost: b.unitCost,
-            funding_source: b.fundingSource || null,
+            project_id: project.id, category: b.section === "A" ? "operational" : "management",
+            label: b.desc, code: b.code, section: b.section,
+            unit: b.unit || null, quantity: b.qty, unit_cost: b.montant,
+            allocation_pct: b.alloc, funding_source: null,
           }))
         );
         if (be) throw be;
@@ -349,41 +364,102 @@ export default function ProjectWizardPage() {
             </div>
           )}
 
-          {/* STEP 4: Budget */}
+          {/* STEP 4: Budget — Annexe 1b (GTS Format) */}
           {step === 4 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Budget prévisionnel</h2>
-                <p className={helpCls}>Détaillez les lignes budgétaires par catégorie. Le budget sera automatiquement lié à la subvention sélectionnée pour un suivi intégré des dépenses.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">Budget — Annexe 1b</h2>
+                <p className={helpCls}>Répartition détaillée du budget selon la structure budgétaire des bailleurs. Formule : Qté × Montant unitaire × Allocation%. Modifiez les cellules directement.</p>
               </div>
-              <div className="space-y-3">
-                {budgetLines.map((line, i) => (
-                  <div key={i} className="border border-border rounded-lg p-4 bg-surface-2 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-foreground">Ligne {i + 1}</span>
-                      {budgetLines.length > 1 && <button type="button" onClick={() => setBudgetLines(budgetLines.filter((_, idx) => idx !== i))} className="text-destructive text-xs hover:underline">Supprimer</button>}
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Catégorie</label>
-                        <select value={line.category} onChange={e => { const n = [...budgetLines]; n[i] = { ...n[i], category: e.target.value }; setBudgetLines(n); }} className={inputCls}>
-                          {budgetCategories.map(c => <option key={c} value={c}>{c.replace("_", " ")}</option>)}
-                        </select>
-                      </div>
-                      <div className="col-span-2 sm:col-span-1 space-y-1"><label className="text-[11px] text-muted-foreground">Libellé *</label><input value={line.label} onChange={e => { const n = [...budgetLines]; n[i] = { ...n[i], label: e.target.value }; setBudgetLines(n); }} className={inputCls} placeholder="Ex: Chef de projet" /></div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Unité</label><input value={line.unit} onChange={e => { const n = [...budgetLines]; n[i] = { ...n[i], unit: e.target.value }; setBudgetLines(n); }} className={inputCls} placeholder="mois, jour, unité" /></div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Quantité</label><input type="number" value={line.quantity} onChange={e => { const n = [...budgetLines]; n[i] = { ...n[i], quantity: Number(e.target.value) }; setBudgetLines(n); }} className={inputCls} /></div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Coût unitaire (XOF)</label><input type="number" value={line.unitCost} onChange={e => { const n = [...budgetLines]; n[i] = { ...n[i], unitCost: Number(e.target.value) }; setBudgetLines(n); }} className={inputCls} /></div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Source financement</label><input value={line.fundingSource} onChange={e => { const n = [...budgetLines]; n[i] = { ...n[i], fundingSource: e.target.value }; setBudgetLines(n); }} className={inputCls} placeholder="Bailleur, fonds propres…" /></div>
-                    </div>
-                    <div className="text-right text-xs font-mono text-foreground font-bold">{(line.quantity * line.unitCost).toLocaleString("fr-FR")} XOF</div>
-                  </div>
-                ))}
-                <button type="button" onClick={() => setBudgetLines([...budgetLines, emptyBudgetLine()])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter une ligne</button>
+
+              {/* Metrics */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-surface-2 border border-border rounded-lg p-3">
+                  <div className="text-[10px] font-mono uppercase text-muted-foreground">Coûts opérationnels (A)</div>
+                  <div className="text-base font-mono font-bold text-foreground mt-1">{fmt(totalA)} €</div>
+                </div>
+                <div className="bg-surface-2 border border-border rounded-lg p-3">
+                  <div className="text-[10px] font-mono uppercase text-muted-foreground">Frais de gestion (B)</div>
+                  <div className="text-base font-mono font-bold text-foreground mt-1">{fmt(totalB)} €</div>
+                </div>
+                <div className="bg-surface-2 border border-border rounded-lg p-3">
+                  <div className="text-[10px] font-mono uppercase text-primary">Budget TOTAL</div>
+                  <div className="text-base font-mono font-bold text-primary mt-1">{fmt(totalBudget)} €</div>
+                </div>
               </div>
-              <div className="border-t border-border pt-4 flex justify-between items-center">
-                <span className="text-sm font-semibold text-foreground">Budget total</span>
-                <span className="text-lg font-display font-bold text-primary">{totalBudget.toLocaleString("fr-FR")} XOF</span>
+
+              {/* Budget table */}
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-[12px]">
+                    <thead>
+                      <tr className="bg-secondary">
+                        <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[80px]">Code</th>
+                        <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground">Description</th>
+                        <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[80px]">Unité</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[60px]">Qté</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[90px]">Mont. unit.</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[60px]">Alloc.%</th>
+                        <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[100px]">Total EUR</th>
+                        <th className="w-[30px]"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Section A */}
+                      <tr><td colSpan={8} className="px-3 py-2 bg-primary/10 text-primary font-mono text-[10px] font-bold uppercase tracking-wider">A — Coûts opérationnels</td></tr>
+                      {linesA.map((line, i) => {
+                        const idx = budgetLines.indexOf(line);
+                        return (
+                          <tr key={`a-${i}`} className="border-b border-border hover:bg-secondary/50">
+                            <td className="px-3 py-1"><span className="font-mono text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">{line.code}</span></td>
+                            <td className="px-1 py-1"><input value={line.desc} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], desc: e.target.value }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary focus:ring-1 focus:ring-primary rounded px-2 py-1 text-[12px] text-foreground outline-none" /></td>
+                            <td className="px-1 py-1"><input value={line.unit} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], unit: e.target.value }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-foreground outline-none" /></td>
+                            <td className="px-1 py-1"><input type="number" value={line.qty} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], qty: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
+                            <td className="px-1 py-1"><input type="number" value={line.montant} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], montant: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
+                            <td className="px-1 py-1"><input type="number" value={line.alloc} min={0} max={100} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], alloc: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
+                            <td className="px-3 py-1 text-right"><span className="font-mono text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded">{fmt(lineTotal(line))}</span></td>
+                            <td className="px-1 py-1"><button onClick={() => setBudgetLines(budgetLines.filter((_, j) => j !== idx))} className="text-destructive hover:bg-destructive/10 rounded px-1 text-sm">×</button></td>
+                          </tr>
+                        );
+                      })}
+                      <tr><td colSpan={6} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">Sous-total A</td><td className="px-3 py-1.5 text-right font-mono text-[12px] font-bold text-foreground">{fmt(totalA)} €</td><td></td></tr>
+
+                      {/* Section B */}
+                      <tr><td colSpan={8} className="px-3 py-2 bg-accent/10 text-accent-foreground font-mono text-[10px] font-bold uppercase tracking-wider">B — Frais de gestion</td></tr>
+                      {linesB.map((line, i) => {
+                        const idx = budgetLines.indexOf(line);
+                        return (
+                          <tr key={`b-${i}`} className="border-b border-border hover:bg-secondary/50">
+                            <td className="px-3 py-1"><span className="font-mono text-[11px] bg-accent/10 text-accent-foreground px-1.5 py-0.5 rounded font-semibold">{line.code}</span></td>
+                            <td className="px-1 py-1"><input value={line.desc} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], desc: e.target.value }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-foreground outline-none" /></td>
+                            <td className="px-1 py-1"><input value={line.unit} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], unit: e.target.value }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-foreground outline-none" /></td>
+                            <td className="px-1 py-1"><input type="number" value={line.qty} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], qty: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
+                            <td className="px-1 py-1"><input type="number" value={line.montant} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], montant: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
+                            <td className="px-1 py-1"><input type="number" value={line.alloc} min={0} max={100} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], alloc: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
+                            <td className="px-3 py-1 text-right"><span className="font-mono text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded">{fmt(lineTotal(line))}</span></td>
+                            <td className="px-1 py-1"><button onClick={() => setBudgetLines(budgetLines.filter((_, j) => j !== idx))} className="text-destructive hover:bg-destructive/10 rounded px-1 text-sm">×</button></td>
+                          </tr>
+                        );
+                      })}
+                      <tr><td colSpan={6} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">Sous-total B</td><td className="px-3 py-1.5 text-right font-mono text-[12px] font-bold text-foreground">{fmt(totalB)} €</td><td></td></tr>
+
+                      {/* Grand total */}
+                      <tr className="bg-foreground/5">
+                        <td colSpan={6} className="px-3 py-2.5 text-right text-xs font-bold text-foreground uppercase">Total général</td>
+                        <td className="px-3 py-2.5 text-right font-mono text-sm font-bold text-primary">{fmt(totalBudget)} €</td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                {/* Add buttons */}
+                <div className="border-t border-border border-dashed flex">
+                  <button onClick={() => setBudgetLines([...budgetLines, { code: `A1.X.${linesA.length + 1}`, desc: "Nouveau poste", unit: "—", qty: 0, montant: 0, alloc: 100, section: "A" }])} className="flex-1 py-2.5 text-xs text-primary font-semibold hover:bg-primary/5 transition-colors">+ Coût opérationnel (A)</button>
+                  <div className="w-px bg-border" />
+                  <button onClick={() => setBudgetLines([...budgetLines, { code: `B.${linesB.length + 1}`, desc: "Nouveau poste", unit: "forfait", qty: 1, montant: 0, alloc: 100, section: "B" }])} className="flex-1 py-2.5 text-xs text-accent-foreground font-semibold hover:bg-accent/5 transition-colors">+ Frais gestion (B)</button>
+                </div>
               </div>
+
               {grantId && (
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
                   <p className="text-xs text-foreground">🔗 Ce budget sera automatiquement lié à la subvention <strong>{grants?.find(g => g.id === grantId)?.name}</strong> pour le suivi financier.</p>
@@ -427,8 +503,8 @@ export default function ProjectWizardPage() {
 
               <div className="bg-surface-2 border border-border rounded-lg p-4">
                 <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">💰 Budget</div>
-                <div className="text-lg font-display font-bold text-primary">{totalBudget.toLocaleString("fr-FR")} XOF</div>
-                <div className="text-[10px] text-muted-foreground">{budgetLines.filter(b => b.label).length} lignes budgétaires{grantId ? ` · Lié à ${grants?.find(g => g.id === grantId)?.name}` : ""}</div>
+                <div className="text-lg font-display font-bold text-primary">{fmt(totalBudget)} €</div>
+                <div className="text-[10px] text-muted-foreground">{budgetLines.filter(b => b.desc).length} lignes · A: {fmt(totalA)} € · B: {fmt(totalB)} €{grantId ? ` · Lié à ${grants?.find(g => g.id === grantId)?.name}` : ""}</div>
               </div>
 
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">

@@ -946,42 +946,54 @@ export type Database = {
       }
       project_budget_lines: {
         Row: {
+          allocation_pct: number | null
           category: string
+          code: string | null
           created_at: string
+          description: string | null
           funding_source: string | null
           id: string
           label: string
           notes: string | null
           project_id: string
           quantity: number | null
+          section: string | null
           total_cost: number | null
           unit: string | null
           unit_cost: number | null
           updated_at: string
         }
         Insert: {
+          allocation_pct?: number | null
           category: string
+          code?: string | null
           created_at?: string
+          description?: string | null
           funding_source?: string | null
           id?: string
           label: string
           notes?: string | null
           project_id: string
           quantity?: number | null
+          section?: string | null
           total_cost?: number | null
           unit?: string | null
           unit_cost?: number | null
           updated_at?: string
         }
         Update: {
+          allocation_pct?: number | null
           category?: string
+          code?: string | null
           created_at?: string
+          description?: string | null
           funding_source?: string | null
           id?: string
           label?: string
           notes?: string | null
           project_id?: string
           quantity?: number | null
+          section?: string | null
           total_cost?: number | null
           unit?: string | null
           unit_cost?: number | null
