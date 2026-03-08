@@ -503,6 +503,41 @@ export type Database = {
           },
         ]
       }
+      grant_changes: {
+        Row: {
+          action: string
+          changes: Json
+          created_at: string
+          grant_id: string
+          id: string
+          user_id: string | null
+        }
+        Insert: {
+          action?: string
+          changes?: Json
+          created_at?: string
+          grant_id: string
+          id?: string
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          changes?: Json
+          created_at?: string
+          grant_id?: string
+          id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grant_changes_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "grants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grants: {
         Row: {
           amount_disbursed: number | null
