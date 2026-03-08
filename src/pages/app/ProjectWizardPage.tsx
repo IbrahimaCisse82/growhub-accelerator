@@ -130,7 +130,7 @@ export default function ProjectWizardPage() {
       if (pe) throw pe;
 
       // 2. Logical framework
-      const { error: lfe } = await supabase.from("logical_frameworks" as any).insert({
+      const { error: lfe } = await supabase.from("logical_frameworks").insert({
         project_id: project.id,
         overall_objective: overallObjective,
         specific_objectives: specificObjectives.filter(Boolean),
