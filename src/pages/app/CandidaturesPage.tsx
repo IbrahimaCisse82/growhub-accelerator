@@ -76,7 +76,7 @@ export default function CandidaturesPage() {
             className={`flex-1 min-w-[80px] py-3.5 text-center border-r border-border last:border-r-0 relative hover:bg-secondary cursor-pointer transition-colors ${filter === step.key ? "bg-primary/10" : ""}`}>
             {filter === step.key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
             <div className="font-mono text-xl font-semibold text-foreground">
-              {pipeline ? (pipeline as any)[step.key] ?? 0 : "—"}
+              {pipeline ? pipeline[step.key as keyof typeof pipeline] ?? 0 : "—"}
             </div>
             <div className="text-[11px] text-muted-foreground mt-1">{step.label}</div>
           </div>
