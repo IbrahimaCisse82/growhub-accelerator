@@ -7,6 +7,7 @@ import GhButton from "@/components/shared/GhButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePrograms } from "@/hooks/usePrograms";
 import CreateProgramDialog from "@/components/dialogs/CreateProgramDialog";
+import { exportToCSV } from "@/lib/exportUtils";
 
 const statusMap: Record<string, { label: string; color: "green" | "blue" | "amber" | "gray" }> = {
   active: { label: "Actif", color: "green" }, draft: { label: "Brouillon", color: "gray" },
@@ -20,16 +21,22 @@ export default function ProgrammesPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader title="Programmes" subtitle="Coordination des programmes d'accélération"
-        actions={<CreateProgramDialog><GhButton>+ Nouveau programme</GhButton></CreateProgramDialog>} />
+        actions={<>
+          <GhButton variant="ghost" onClick={() => programs && exportToCSV(programs, "programmes", [
+            { key: "name", label: "Nom" }, { key: "code", label: "Code" }, { key: "funder", label: "Bailleur" },
+            { key: "budget_total", label: "Budget" }, { key: "status", label: "Statut" },
+          ])}>⤓ CSV</GhButton>
+          <CreateProgramDialog><GhButton>+ Nouveau programme</GhButton></CreateProgramDialog>
+        </>} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Actifs" value={String(programs?.filter((p) => p.status === "active").length ?? 0)} note="" color="green" />
         <StatCard label="Total" value={String(programs?.length ?? 0)} note="" color="blue" />
         <StatCard label="Budget Total" value={programs ? new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(programs.reduce((s, p) => s + (p.budget_total ?? 0), 0)) : "—"} note="XOF" color="purple" />
         <StatCard label="Terminés" value={String(programs?.filter((p) => p.status === "completed").length ?? 0)} note="" color="amber" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[200px] rounded-xl" />) : programs?.length === 0 ? (
-          <div className="col-span-3 text-center text-muted-foreground py-12 text-sm">Aucun programme</div>
+          <div className="col-span-full text-center text-muted-foreground py-12 text-sm">Aucun programme</div>
         ) : programs?.map((p) => {
           const st = statusMap[p.status] ?? statusMap.draft;
           return (

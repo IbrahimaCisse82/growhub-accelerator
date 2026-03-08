@@ -5,6 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTasks } from "@/hooks/useTasks";
 import CreateTaskDialog from "@/components/dialogs/CreateTaskDialog";
 import CreateProjectDialog from "@/components/dialogs/CreateProjectDialog";
+import { exportToCSV } from "@/lib/exportUtils";
 
 const columns = [
   { key: "todo", title: "À faire" },
@@ -23,10 +24,14 @@ export default function ProjetsPage() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader title="Projets & Tâches" subtitle="Kanban et suivi des projets en cours"
         actions={<>
+          <GhButton variant="ghost" onClick={() => tasks && exportToCSV(tasks, "taches", [
+            { key: "title", label: "Titre" }, { key: "status", label: "Statut" },
+            { key: "priority", label: "Priorité" }, { key: "due_date", label: "Échéance" },
+          ])}>⤓ CSV</GhButton>
           <CreateProjectDialog><GhButton variant="secondary">+ Projet</GhButton></CreateProjectDialog>
           <CreateTaskDialog><GhButton>+ Tâche</GhButton></CreateTaskDialog>
         </>} />
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {isLoading ? Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[300px] rounded-xl" />) : grouped.map((col) => (
           <div key={col.key} className="bg-card border border-border rounded-xl overflow-hidden">
             <div className="px-4 py-3 border-b border-border flex items-center justify-between">
@@ -38,8 +43,8 @@ export default function ProjetsPage() {
                 <div key={card.id} className="bg-surface-2 border border-border rounded-lg p-3 cursor-pointer hover:border-border/80 hover:-translate-y-px transition-all">
                   <div className="text-xs font-semibold text-foreground mb-2">{card.title}</div>
                   <div className="flex items-center justify-between mt-2">
-                    <div className="flex gap-1">{(card.tags ?? []).map((t) => <span key={t} className="font-mono text-[9px] bg-surface-3 text-muted-foreground px-1.5 py-px rounded">{t}</span>)}</div>
-                    <div className={`w-1.5 h-1.5 rounded-full ${priorityColor[card.priority] ?? "bg-gh-amber"}`} />
+                    <div className="flex gap-1 flex-wrap">{(card.tags ?? []).map((t) => <span key={t} className="font-mono text-[9px] bg-surface-3 text-muted-foreground px-1.5 py-px rounded">{t}</span>)}</div>
+                    <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${priorityColor[card.priority] ?? "bg-gh-amber"}`} />
                   </div>
                 </div>
               ))}

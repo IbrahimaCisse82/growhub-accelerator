@@ -5,6 +5,7 @@ import StatCard from "@/components/shared/StatCard";
 import GhButton from "@/components/shared/GhButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBudgets } from "@/hooks/useBudgets";
+import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 function formatXOF(n: number) { return new Intl.NumberFormat("fr-FR").format(n) + " XOF"; }
 
@@ -14,10 +15,25 @@ export default function BudgetsPage() {
   const totalSpent = budgets?.reduce((a, b) => a + (b.amount_spent ?? 0), 0) ?? 0;
   const utilization = totalPlanned > 0 ? Math.round((totalSpent / totalPlanned) * 100) : 0;
 
+  const cols = [
+    { key: "label", label: "Libellé" },
+    { key: "category", label: "Catégorie" },
+    { key: "amount_planned", label: "Planifié" },
+    { key: "amount_spent", label: "Dépensé" },
+    { key: "currency", label: "Devise" },
+  ];
+
+  const handleExportCSV = () => budgets && exportToCSV(budgets, `budgets-${new Date().toISOString().slice(0, 10)}`, cols);
+  const handleExportPDF = () => budgets && exportToPDF("Rapport Budgets", budgets, cols);
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <SectionHeader title="Budgets" subtitle="Suivi budgétaire et dépenses" actions={<GhButton variant="ghost">⤓ Exporter</GhButton>} />
-      <div className="grid grid-cols-4 gap-3.5 mb-5">
+      <SectionHeader title="Budgets" subtitle="Suivi budgétaire et dépenses"
+        actions={<>
+          <GhButton variant="ghost" onClick={handleExportCSV}>⤓ CSV</GhButton>
+          <GhButton variant="ghost" onClick={handleExportPDF}>⎙ PDF</GhButton>
+        </>} />
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Budget planifié" value={formatXOF(totalPlanned)} note="" color="blue" />
         <StatCard label="Dépensé" value={formatXOF(totalSpent)} note="" color="amber" />
         <StatCard label="Utilisation" value={`${utilization}%`} note="" color={utilization > 80 ? "rose" : "green"} />
@@ -29,7 +45,7 @@ export default function BudgetsPage() {
             <thead>
               <tr className="bg-secondary">
                 {["Libellé", "Catégorie", "Projet", "Grant", "Planifié", "Dépensé", "%"].map(h => (
-                  <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left">{h}</th>
+                  <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>

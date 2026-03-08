@@ -7,11 +7,17 @@ import GhButton from "@/components/shared/GhButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortfolios } from "@/hooks/usePortfolios";
 import CreatePortfolioDialog from "@/components/dialogs/CreatePortfolioDialog";
+import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 const statusMap: Record<string, { label: string; color: "green" | "blue" | "amber" | "gray" }> = {
   active: { label: "Actif", color: "green" }, draft: { label: "Brouillon", color: "gray" },
   paused: { label: "En pause", color: "amber" }, completed: { label: "Terminé", color: "blue" }, cancelled: { label: "Annulé", color: "gray" },
 };
+
+const exportCols = [
+  { key: "name", label: "Nom" }, { key: "code", label: "Code" }, { key: "status", label: "Statut" },
+  { key: "start_date", label: "Début" }, { key: "end_date", label: "Fin" },
+];
 
 export default function PortfoliosPage() {
   const { data: portfolios, isLoading } = usePortfolios();
@@ -21,15 +27,18 @@ export default function PortfoliosPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader title="Portefeuilles" subtitle="Gestion stratégique des portefeuilles"
-        actions={<CreatePortfolioDialog><GhButton>+ Nouveau portefeuille</GhButton></CreatePortfolioDialog>} />
+        actions={<>
+          <GhButton variant="ghost" onClick={() => portfolios && exportToCSV(portfolios, "portefeuilles", exportCols)}>⤓ CSV</GhButton>
+          <CreatePortfolioDialog><GhButton>+ Nouveau portefeuille</GhButton></CreatePortfolioDialog>
+        </>} />
       <div className="grid grid-cols-3 gap-3.5 mb-5">
         <StatCard label="Actifs" value={String(activeCount)} note="" color="green" />
         <StatCard label="Total" value={String(portfolios?.length ?? 0)} note="" color="blue" />
         <StatCard label="Terminés" value={String(portfolios?.filter((p) => p.status === "completed").length ?? 0)} note="" color="amber" />
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {isLoading ? Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[180px] rounded-xl" />) : portfolios?.length === 0 ? (
-          <div className="col-span-3 text-center text-muted-foreground py-12 text-sm">Aucun portefeuille pour le moment</div>
+          <div className="col-span-full text-center text-muted-foreground py-12 text-sm">Aucun portefeuille pour le moment</div>
         ) : portfolios?.map((p) => {
           const st = statusMap[p.status] ?? statusMap.draft;
           return (

@@ -7,11 +7,17 @@ import Pill from "@/components/shared/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStartups } from "@/hooks/useStartups";
 import CreateStartupDialog from "@/components/dialogs/CreateStartupDialog";
+import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import { useState } from "react";
 
 const sectorColor: Record<string, "green" | "blue" | "purple" | "rose" | "amber" | "gray"> = { fintech: "blue", agritech: "green", edtech: "purple", healthtech: "rose", cleantech: "green", logistique: "amber" };
 const stageColor: Record<string, "green" | "blue" | "amber" | "gray"> = { mvp: "amber", incubation: "amber", accélération: "green", croissance: "blue", scale: "green" };
 function getPillColor(value: string | null, map: Record<string, any>, fallback = "gray" as const) { return !value ? fallback : map[value.toLowerCase()] ?? fallback; }
+
+const exportCols = [
+  { key: "name", label: "Startup" }, { key: "sector", label: "Secteur" }, { key: "stage", label: "Stade" },
+  { key: "score", label: "Score" }, { key: "country", label: "Pays" }, { key: "city", label: "Ville" },
+];
 
 export default function StartupsPage() {
   const { data: startups, isLoading } = useStartups();
@@ -23,7 +29,9 @@ export default function StartupsPage() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader title="Startups" subtitle="Répertoire et suivi des entreprises accompagnées"
         actions={<>
-          <input className="bg-surface-2 border border-border rounded-lg px-3 py-[7px] text-[12.5px] text-foreground outline-none focus:border-primary/50 w-[200px] placeholder:text-muted-foreground" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} />
+          <input className="bg-surface-2 border border-border rounded-lg px-3 py-[7px] text-[12.5px] text-foreground outline-none focus:border-primary/50 w-[140px] sm:w-[200px] placeholder:text-muted-foreground" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} />
+          <GhButton variant="ghost" onClick={() => filtered && exportToCSV(filtered, "startups", exportCols)}>⤓ CSV</GhButton>
+          <GhButton variant="ghost" onClick={() => filtered && exportToPDF("Startups", filtered, exportCols)}>⎙ PDF</GhButton>
           <CreateStartupDialog><GhButton>+ Ajouter</GhButton></CreateStartupDialog>
         </>} />
       <GhCard title="Toutes les startups" badge={String(filtered?.length ?? 0)} noPadding>
