@@ -51,12 +51,12 @@ export default function GrantDocumentsTab({ grantId }: { grantId: string }) {
     onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
   });
 
-  const grouped = (documents ?? []).reduce((acc: Record<string, any[]>, d: any) => {
+  const grouped: Record<string, any[]> = (documents ?? []).reduce((acc: Record<string, any[]>, d: any) => {
     const cat = d.category || "autre";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(d);
     return acc;
-  }, {});
+  }, {} as Record<string, any[]>);
 
   return (
     <div className="space-y-4">

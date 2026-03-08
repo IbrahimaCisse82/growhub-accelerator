@@ -15,6 +15,13 @@ import EditGrantDialog from "@/components/dialogs/EditGrantDialog";
 import { toast } from "@/hooks/use-toast";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import GrantTransactionsTab, { useGrantTransactions } from "@/components/grants/GrantTransactionsTab";
+import GrantReportsTab, { useGrantReports } from "@/components/grants/GrantReportsTab";
+import GrantDisbursementsTab, { useGrantDisbursements } from "@/components/grants/GrantDisbursementsTab";
+import GrantDocumentsTab, { useGrantDocuments } from "@/components/grants/GrantDocumentsTab";
+import GrantIndicatorsTab, { useGrantIndicators } from "@/components/grants/GrantIndicatorsTab";
+import GrantActivitiesTab, { useGrantActivities } from "@/components/grants/GrantActivitiesTab";
+import GrantBudgetChart from "@/components/grants/GrantBudgetChart";
+import GrantAlertsPanel from "@/components/grants/GrantAlertsPanel";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
@@ -59,18 +66,10 @@ function useGrantProjectBudgetLines(grantId: string | undefined) {
     queryKey: ["grant_project_budget_lines", grantId],
     enabled: !!grantId,
     queryFn: async () => {
-      // Get projects linked to this grant via budgets
-      const { data: budgetData } = await supabase
-        .from("budgets")
-        .select("project_id")
-        .eq("grant_id", grantId!);
+      const { data: budgetData } = await supabase.from("budgets").select("project_id").eq("grant_id", grantId!);
       const projectIds = [...new Set((budgetData ?? []).map(b => b.project_id).filter(Boolean))] as string[];
       if (projectIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from("project_budget_lines")
-        .select("*, projects(name)")
-        .in("project_id", projectIds)
-        .order("created_at", { ascending: true });
+      const { data, error } = await supabase.from("project_budget_lines").select("*, projects(name)").in("project_id", projectIds).order("created_at", { ascending: true });
       if (error) throw error;
       return data;
     },
@@ -82,13 +81,8 @@ function useGrantChanges(grantId: string | undefined) {
     queryKey: ["grant_changes", grantId],
     enabled: !!grantId,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("grant_changes" as any)
-        .select("*")
-        .eq("grant_id", grantId!)
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("grant_changes" as any).select("*").eq("grant_id", grantId!).order("created_at", { ascending: false });
       if (error) throw error;
-      // Fetch profile names for user_ids
       const userIds = [...new Set((data ?? []).map((c: any) => c.user_id).filter(Boolean))];
       let profiles: Record<string, string> = {};
       if (userIds.length > 0) {
@@ -109,6 +103,11 @@ export default function GrantDetailPage() {
   const { data: projectBudgetLines } = useGrantProjectBudgetLines(id);
   const { data: grantChanges } = useGrantChanges(id);
   const { data: transactions } = useGrantTransactions(id);
+  const { data: reports } = useGrantReports(id);
+  const { data: disbursements } = useGrantDisbursements(id);
+  const { data: documents } = useGrantDocuments(id);
+  const { data: indicators } = useGrantIndicators(id);
+  const { data: activities } = useGrantActivities(id);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
@@ -175,6 +174,16 @@ export default function GrantDetailPage() {
         }
       />
 
+      {/* Alerts */}
+      <GrantAlertsPanel
+        grant={grant}
+        budgetLines={budgetLines ?? []}
+        transactions={transactions ?? []}
+        reports={reports ?? []}
+        activities={activities ?? []}
+        disbursements={disbursements ?? []}
+      />
+
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
         <StatCard label="Montant total" value={`${fmt(grant.amount_total)} €`} note={grant.currency ?? "EUR"} color="blue" />
@@ -202,16 +211,22 @@ export default function GrantDetailPage() {
 
       {/* Tabs */}
       <Tabs defaultValue="budget" className="space-y-4">
-        <TabsList className="bg-secondary border border-border">
-          <TabsTrigger value="budget">Budget Annexe 1b</TabsTrigger>
+        <TabsList className="bg-secondary border border-border flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="budget">Budget</TabsTrigger>
           <TabsTrigger value="transactions">Transactions ({transactions?.length ?? 0})</TabsTrigger>
-          <TabsTrigger value="tracking">Suivi budgétaire</TabsTrigger>
-          <TabsTrigger value="info">Informations</TabsTrigger>
+          <TabsTrigger value="disbursements">Décaissements ({disbursements?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="reports">Rapports ({reports?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="activities">Activités ({activities?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="indicators">Indicateurs ({indicators?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="documents">Documents ({documents?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="tracking">Suivi</TabsTrigger>
+          <TabsTrigger value="info">Infos</TabsTrigger>
           <TabsTrigger value="history">Historique ({grantChanges?.length ?? 0})</TabsTrigger>
         </TabsList>
 
-        {/* Annexe 1b Tab */}
-        <TabsContent value="budget">
+        {/* Budget Tab with Chart */}
+        <TabsContent value="budget" className="space-y-4">
+          <GrantBudgetChart budgetLines={budgetLines ?? []} transactions={transactions ?? []} />
           {projectBudgetLines && projectBudgetLines.length > 0 ? (
             <BudgetAnnexeTable linesA={linesA} linesB={linesB} totalA={totalA} totalB={totalB} grandTotal={grandTotal} lineTotal={lineTotal} />
           ) : (
@@ -219,9 +234,28 @@ export default function GrantDetailPage() {
           )}
         </TabsContent>
 
-        {/* Transactions Tab */}
         <TabsContent value="transactions">
           {grant && <GrantTransactionsTab grantId={grant.id} grantCode={grant.code} />}
+        </TabsContent>
+
+        <TabsContent value="disbursements">
+          {grant && <GrantDisbursementsTab grantId={grant.id} grantTotal={grant.amount_total} />}
+        </TabsContent>
+
+        <TabsContent value="reports">
+          {grant && <GrantReportsTab grantId={grant.id} />}
+        </TabsContent>
+
+        <TabsContent value="activities">
+          {grant && <GrantActivitiesTab grantId={grant.id} />}
+        </TabsContent>
+
+        <TabsContent value="indicators">
+          {grant && <GrantIndicatorsTab grantId={grant.id} />}
+        </TabsContent>
+
+        <TabsContent value="documents">
+          {grant && <GrantDocumentsTab grantId={grant.id} />}
         </TabsContent>
 
         {/* Tracking Tab */}
@@ -438,14 +472,11 @@ function GrantHistoryTimeline({ changes }: { changes: any[] }) {
 
           return (
             <div key={c.id} className="px-4 py-3.5 flex gap-3">
-              {/* Timeline dot */}
               <div className="flex flex-col items-center pt-0.5">
                 <div className={`w-2 h-2 rounded-full shrink-0 ${c.action === "create" ? "bg-primary" : c.action === "delete" ? "bg-destructive" : "bg-muted-foreground"}`} />
                 <div className="w-px flex-1 bg-border mt-1" />
               </div>
-
               <div className="flex-1 min-w-0">
-                {/* Header */}
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`text-[12px] font-semibold ${act.color}`}>{act.icon} {act.label}</span>
                   <span className="text-[11px] text-muted-foreground">par</span>
@@ -454,8 +485,6 @@ function GrantHistoryTimeline({ changes }: { changes: any[] }) {
                     {date.toLocaleDateString("fr-FR")} à {date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
-
-                {/* Changes detail */}
                 {c.action === "update" && changedFields.length > 0 && (
                   <div className="mt-2 space-y-1.5">
                     {changedFields.map(field => {
@@ -473,8 +502,6 @@ function GrantHistoryTimeline({ changes }: { changes: any[] }) {
                     })}
                   </div>
                 )}
-
-                {/* Creation detail */}
                 {c.action === "create" && (
                   <div className="mt-1.5 text-[11px] text-muted-foreground">
                     Grant créé : <span className="text-foreground font-medium">{changesObj.name ?? "—"}</span> ({changesObj.code ?? "—"})
