@@ -105,13 +105,15 @@ export default function GrantDetailPage() {
     onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
   });
 
+  if (isLoading) return <div className="space-y-4 p-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>;
+  if (!grant) return <div className="text-center py-12 text-muted-foreground">Grant introuvable</div>;
+
   const st = statusMap[grant.status] ?? statusMap.draft;
   const pct = grant.amount_total > 0 ? Math.round(((grant.amount_disbursed ?? 0) / grant.amount_total) * 100) : 0;
   const totalPlanned = budgetLines?.reduce((s, b) => s + (b.amount_planned ?? 0), 0) ?? 0;
   const totalSpent = budgetLines?.reduce((s, b) => s + (b.amount_spent ?? 0), 0) ?? 0;
   const utilization = totalPlanned > 0 ? Math.round((totalSpent / totalPlanned) * 100) : 0;
 
-  // Annexe 1b lines
   const linesA = projectBudgetLines?.filter((l: any) => l.section === "A") ?? [];
   const linesB = projectBudgetLines?.filter((l: any) => l.section === "B") ?? [];
   const lineTotal = (l: any) => (l.quantity || 0) * (l.unit_cost || 0) * ((l.allocation_pct || 100) / 100);
@@ -126,7 +128,6 @@ export default function GrantDetailPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-      {/* Back + Header */}
       <div className="flex items-center gap-3 mb-1">
         <button onClick={() => navigate("/app/grants")} className="text-muted-foreground hover:text-foreground text-sm transition-colors">← Retour</button>
       </div>
@@ -137,6 +138,11 @@ export default function GrantDetailPage() {
         actions={
           <>
             <Pill color={st.color}>{st.label}</Pill>
+            <GhButton variant="ghost" onClick={() => setShowEdit(true)}>✏️ Modifier</GhButton>
+            {grant.status !== "closed" && (
+              <GhButton variant="ghost" onClick={() => setShowCancel(true)}>⊘ Annuler</GhButton>
+            )}
+            <GhButton variant="ghost" onClick={() => setShowDelete(true)} className="text-destructive hover:text-destructive">🗑 Supprimer</GhButton>
             <GhButton variant="ghost" onClick={() => budgetLines && exportToCSV(budgetLines, `budget-${grant.code}`, budgetExportCols)}>⤓ CSV</GhButton>
             <GhButton variant="ghost" onClick={() => budgetLines && exportToPDF(grant.name, budgetLines, budgetExportCols)}>⎙ PDF</GhButton>
           </>
