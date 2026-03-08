@@ -37,72 +37,11 @@ const statusMap: Record<string, { label: string; color: "green" | "amber" | "blu
   closed: { label: "Clôturé", color: "gray" },
 };
 
-function useGrantDetail(id: string | undefined) {
-  return useQuery({
-    queryKey: ["grant_detail", id],
-    enabled: !!id,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("grants").select("*, programs(name, code)").eq("id", id!).single();
-      if (error) throw error;
-      return data;
-    },
-  });
-}
-
-function useGrantBudgetLines(grantId: string | undefined) {
-  return useQuery({
-    queryKey: ["grant_budget_lines", grantId],
-    enabled: !!grantId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("budgets")
-        .select("*, projects(name)")
-        .eq("grant_id", grantId!)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
-}
-
-function useGrantProjectBudgetLines(grantId: string | undefined) {
-  return useQuery({
-    queryKey: ["grant_project_budget_lines", grantId],
-    enabled: !!grantId,
-    queryFn: async () => {
-      const { data: budgetData } = await supabase.from("budgets").select("project_id").eq("grant_id", grantId!);
-      const projectIds = [...new Set((budgetData ?? []).map(b => b.project_id).filter(Boolean))] as string[];
-      if (projectIds.length === 0) return [];
-      const { data, error } = await supabase.from("project_budget_lines").select("*, projects(name)").in("project_id", projectIds).order("created_at", { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-  });
-}
-
-function useGrantChanges(grantId: string | undefined) {
-  return useQuery({
-    queryKey: ["grant_changes", grantId],
-    enabled: !!grantId,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("grant_changes" as any).select("*").eq("grant_id", grantId!).order("created_at", { ascending: false });
-      if (error) throw error;
-      const userIds = [...new Set((data ?? []).map((c: any) => c.user_id).filter(Boolean))];
-      let profiles: Record<string, string> = {};
-      if (userIds.length > 0) {
-        const { data: pData } = await supabase.from("profiles").select("user_id, full_name").in("user_id", userIds);
-        profiles = Object.fromEntries((pData ?? []).map(p => [p.user_id, p.full_name]));
-      }
-      return (data ?? []).map((c: any) => ({ ...c, user_name: profiles[c.user_id] ?? "Système" }));
-    },
-  });
-}
-
 export default function GrantDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { data: grant, isLoading } = useGrantDetail(id);
+  const { data: grant, isLoading } = useGrantDetailQuery(id);
   const { data: budgetLines } = useGrantBudgetLines(id);
   const { data: projectBudgetLines } = useGrantProjectBudgetLines(id);
   const { data: grantChanges } = useGrantChanges(id);
