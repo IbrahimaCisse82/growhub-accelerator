@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
@@ -5,14 +7,20 @@ import StatCard from "@/components/shared/StatCard";
 import GhButton from "@/components/shared/GhButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBudgets } from "@/hooks/useBudgets";
+import { useGrants } from "@/hooks/useGrants";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 function formatXOF(n: number) { return new Intl.NumberFormat("fr-FR").format(n) + " XOF"; }
 
 export default function BudgetsPage() {
   const { data: budgets, isLoading } = useBudgets();
-  const totalPlanned = budgets?.reduce((a, b) => a + (b.amount_planned ?? 0), 0) ?? 0;
-  const totalSpent = budgets?.reduce((a, b) => a + (b.amount_spent ?? 0), 0) ?? 0;
+  const { data: grants } = useGrants();
+  const [searchParams] = useSearchParams();
+  const [grantFilter, setGrantFilter] = useState<string | null>(searchParams.get("grant"));
+
+  const filtered = grantFilter ? budgets?.filter(b => b.grant_id === grantFilter) : budgets;
+  const totalPlanned = filtered?.reduce((a, b) => a + (b.amount_planned ?? 0), 0) ?? 0;
+  const totalSpent = filtered?.reduce((a, b) => a + (b.amount_spent ?? 0), 0) ?? 0;
   const utilization = totalPlanned > 0 ? Math.round((totalSpent / totalPlanned) * 100) : 0;
 
   const cols = [
@@ -23,8 +31,8 @@ export default function BudgetsPage() {
     { key: "currency", label: "Devise" },
   ];
 
-  const handleExportCSV = () => budgets && exportToCSV(budgets, `budgets-${new Date().toISOString().slice(0, 10)}`, cols);
-  const handleExportPDF = () => budgets && exportToPDF("Rapport Budgets", budgets, cols);
+  const handleExportCSV = () => filtered && exportToCSV(filtered, `budgets-${new Date().toISOString().slice(0, 10)}`, cols);
+  const handleExportPDF = () => filtered && exportToPDF("Rapport Budgets", filtered, cols);
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
@@ -33,13 +41,25 @@ export default function BudgetsPage() {
           <GhButton variant="ghost" onClick={handleExportCSV}>⤓ CSV</GhButton>
           <GhButton variant="ghost" onClick={handleExportPDF}>⎙ PDF</GhButton>
         </>} />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-4">
         <StatCard label="Budget planifié" value={formatXOF(totalPlanned)} note="" color="blue" />
         <StatCard label="Dépensé" value={formatXOF(totalSpent)} note="" color="amber" />
         <StatCard label="Utilisation" value={`${utilization}%`} note="" color={utilization > 80 ? "rose" : "green"} />
-        <StatCard label="Lignes budgétaires" value={String(budgets?.length ?? 0)} note="" color="purple" />
+        <StatCard label="Lignes budgétaires" value={String(filtered?.length ?? 0)} note="" color="purple" />
       </div>
-      <GhCard title="Lignes budgétaires" badge={String(budgets?.length ?? 0)} noPadding>
+
+      {/* Grant filter */}
+      {grants && grants.length > 0 && (
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <span className="text-[11px] text-muted-foreground font-mono uppercase tracking-wider">Grant :</span>
+          <button onClick={() => setGrantFilter(null)} className={`text-[11.5px] px-2.5 py-1 rounded-lg transition-colors ${!grantFilter ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}>Tous</button>
+          {grants.map(g => (
+            <button key={g.id} onClick={() => setGrantFilter(grantFilter === g.id ? null : g.id)} className={`text-[11.5px] px-2.5 py-1 rounded-lg transition-colors ${grantFilter === g.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}>{g.name}</button>
+          ))}
+        </div>
+      )}
+
+      <GhCard title="Lignes budgétaires" badge={String(filtered?.length ?? 0)} noPadding>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[12.5px]">
             <thead>
@@ -52,9 +72,9 @@ export default function BudgetsPage() {
             <tbody>
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => <tr key={i}>{Array.from({ length: 7 }).map((_, j) => <td key={j} className="px-3.5 py-2.5 border-b border-border"><Skeleton className="h-4 w-16" /></td>)}</tr>)
-              ) : !budgets || budgets.length === 0 ? (
+              ) : !filtered || filtered.length === 0 ? (
                 <tr><td colSpan={7} className="px-3.5 py-8 text-center text-muted-foreground text-sm">Aucune ligne budgétaire</td></tr>
-              ) : budgets.map(b => {
+              ) : filtered.map(b => {
                 const pct = (b.amount_planned ?? 0) > 0 ? Math.round(((b.amount_spent ?? 0) / (b.amount_planned ?? 1)) * 100) : 0;
                 return (
                   <tr key={b.id} className="hover:bg-secondary transition-colors">
