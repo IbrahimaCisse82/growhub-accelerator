@@ -204,6 +204,7 @@ export default function GrantDetailPage() {
       <Tabs defaultValue="budget" className="space-y-4">
         <TabsList className="bg-secondary border border-border">
           <TabsTrigger value="budget">Budget Annexe 1b</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions ({transactions?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="tracking">Suivi budgétaire</TabsTrigger>
           <TabsTrigger value="info">Informations</TabsTrigger>
           <TabsTrigger value="history">Historique ({grantChanges?.length ?? 0})</TabsTrigger>
