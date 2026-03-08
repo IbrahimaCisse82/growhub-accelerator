@@ -73,7 +73,7 @@ export function useChangeUserRole() {
       // Upsert: delete then insert in a single transaction-like sequence
       // First insert the new role, then delete old ones to avoid window with no role
       const { error: insError } = await supabase.from("user_roles").upsert(
-        { user_id: userId, role: newRole as any },
+        { user_id: userId, role: newRole as AppRole },
         { onConflict: "user_id,role" }
       );
       if (insError) throw insError;
