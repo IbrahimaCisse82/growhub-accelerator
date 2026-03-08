@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useGrantTransactions, useDeleteTransaction, type GrantTransaction } from "@/hooks/useGrantDetail";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import GhButton from "@/components/shared/GhButton";
@@ -10,21 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 
-export function useGrantTransactions(grantId: string | undefined) {
-  return useQuery({
-    queryKey: ["grant_transactions", grantId],
-    enabled: !!grantId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("grant_transactions" as any)
-        .select("*")
-        .eq("grant_id", grantId!)
-        .order("transaction_date", { ascending: false });
-      if (error) throw error;
-      return data as any[];
-    },
-  });
-}
+export { useGrantTransactions };
 
 interface GrantTransactionsTabProps {
   grantId: string;
@@ -33,26 +20,16 @@ interface GrantTransactionsTabProps {
 
 export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransactionsTabProps) {
   const { user } = useAuth();
-  const qc = useQueryClient();
   const { data: transactions, isLoading } = useGrantTransactions(grantId);
+  const deleteMutation = useDeleteTransaction(grantId);
   const [showForm, setShowForm] = useState(false);
-  const [editTx, setEditTx] = useState<any>(null);
-  const [deleteTx, setDeleteTx] = useState<any>(null);
+  const [editTx, setEditTx] = useState<GrantTransaction | null>(null);
+  const [deleteTx, setDeleteTx] = useState<GrantTransaction | null>(null);
 
-  const totalAmount = transactions?.reduce((s, t: any) => s + (t.amount ?? 0), 0) ?? 0;
-
-  const deleteMutation = useMutation({
-    mutationFn: async (txId: string) => {
-      const { error } = await supabase.from("grant_transactions" as any).delete().eq("id", txId);
-      if (error) throw error;
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_transactions", grantId] }); setDeleteTx(null); toast({ title: "Transaction supprimée" }); },
-    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
-  });
+  const totalAmount = transactions?.reduce((s, t) => s + (t.amount ?? 0), 0) ?? 0;
 
   return (
     <div className="space-y-4">
-      {/* Summary bar */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="text-xs font-bold text-foreground">Transactions</span>
@@ -62,7 +39,6 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
         <GhButton onClick={() => { setEditTx(null); setShowForm(true); }}>+ Nouvelle transaction</GhButton>
       </div>
 
-      {/* Table */}
       {isLoading ? (
         <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-12 bg-secondary rounded-xl animate-pulse" />)}</div>
       ) : !transactions || transactions.length === 0 ? (
@@ -83,7 +59,7 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
                 </tr>
               </thead>
               <tbody>
-                {transactions.map((tx: any) => (
+                {transactions.map((tx) => (
                   <tr key={tx.id} className="hover:bg-secondary/50 transition-colors group">
                     <td className="px-3 py-2.5 border-b border-border font-mono text-foreground whitespace-nowrap">{tx.transaction_date}</td>
                     <td className="px-3 py-2.5 border-b border-border font-semibold text-foreground max-w-[200px] truncate">{tx.label}</td>
@@ -106,7 +82,6 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
                     </td>
                   </tr>
                 ))}
-                {/* Total row */}
                 <tr className="bg-foreground/5">
                   <td colSpan={5} className="px-3 py-2.5 text-right text-[11px] font-bold text-foreground uppercase">Total</td>
                   <td className="px-3 py-2.5 font-mono text-sm font-bold text-primary">{fmt(totalAmount)} €</td>
@@ -118,17 +93,8 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
         </div>
       )}
 
-      {/* Create/Edit Dialog */}
-      <TransactionFormDialog
-        open={showForm}
-        onOpenChange={setShowForm}
-        grantId={grantId}
-        grantCode={grantCode}
-        editData={editTx}
-        userId={user?.id}
-      />
+      <TransactionFormDialog open={showForm} onOpenChange={setShowForm} grantId={grantId} grantCode={grantCode} editData={editTx} userId={user?.id} />
 
-      {/* Delete confirmation */}
       <AlertDialog open={!!deleteTx} onOpenChange={(o) => { if (!o) setDeleteTx(null); }}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
@@ -145,9 +111,8 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
   );
 }
 
-// Form dialog for create/edit
 function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editData, userId }: {
-  open: boolean; onOpenChange: (o: boolean) => void; grantId: string; grantCode: string; editData: any; userId?: string;
+  open: boolean; onOpenChange: (o: boolean) => void; grantId: string; grantCode: string; editData: GrantTransaction | null; userId?: string;
 }) {
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -163,18 +128,13 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
   const isEdit = !!editData;
 
-  // Reset form when opening
   const handleOpenChange = (o: boolean) => {
     if (o && editData) {
-      setLabel(editData.label ?? "");
-      setAmount(String(editData.amount ?? ""));
+      setLabel(editData.label ?? ""); setAmount(String(editData.amount ?? ""));
       setDate(editData.transaction_date ?? new Date().toISOString().slice(0, 10));
-      setBudgetCode(editData.budget_code ?? "");
-      setVendor(editData.vendor ?? "");
-      setReference(editData.reference ?? "");
-      setDescription(editData.description ?? "");
-      setCategory(editData.category ?? "");
-      setReceiptUrl(editData.receipt_url ?? null);
+      setBudgetCode(editData.budget_code ?? ""); setVendor(editData.vendor ?? "");
+      setReference(editData.reference ?? ""); setDescription(editData.description ?? "");
+      setCategory(editData.category ?? ""); setReceiptUrl(editData.receipt_url ?? null);
     } else if (o) {
       setLabel(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
       setBudgetCode(""); setVendor(""); setReference(""); setDescription(""); setCategory(""); setReceiptUrl(null);
@@ -204,32 +164,20 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
   const saveMutation = useMutation({
     mutationFn: async () => {
       const payload = {
-        grant_id: grantId,
-        label,
-        amount: parseFloat(amount) || 0,
-        transaction_date: date,
-        budget_code: budgetCode || null,
-        vendor: vendor || null,
-        reference: reference || null,
-        description: description || null,
-        category: category || null,
-        receipt_url: receiptUrl,
-        created_by: userId ?? null,
+        grant_id: grantId, label, amount: parseFloat(amount) || 0, transaction_date: date,
+        budget_code: budgetCode || null, vendor: vendor || null, reference: reference || null,
+        description: description || null, category: category || null, receipt_url: receiptUrl, created_by: userId ?? null,
       };
       if (isEdit) {
-        const { error } = await supabase.from("grant_transactions" as any).update(payload).eq("id", editData.id);
+        const { error } = await supabase.from("grant_transactions").update(payload).eq("id", editData.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("grant_transactions" as any).insert(payload);
+        const { error } = await supabase.from("grant_transactions").insert(payload);
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["grant_transactions", grantId] });
-      onOpenChange(false);
-      toast({ title: isEdit ? "Transaction modifiée" : "Transaction créée" });
-    },
-    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_transactions", grantId] }); onOpenChange(false); toast({ title: isEdit ? "Transaction modifiée" : "Transaction créée" }); },
+    onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
   });
 
   return (
@@ -239,55 +187,26 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
           <DialogTitle className="font-display">{isEdit ? "Modifier la transaction" : "Nouvelle transaction"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); saveMutation.mutate(); }} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Libellé *</label>
-            <input value={label} onChange={e => setLabel(e.target.value)} required className={inputCls} placeholder="Ex: Achat matériel informatique" />
+          <div className="space-y-2"><label className="text-sm font-medium text-foreground">Libellé *</label><input value={label} onChange={e => setLabel(e.target.value)} required className={inputCls} placeholder="Ex: Achat matériel informatique" /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Montant (€) *</label><input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required className={inputCls} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Date *</label><input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} /></div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Montant (€) *</label>
-              <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required className={inputCls} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Date *</label>
-              <input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Code budgétaire</label>
-              <input value={budgetCode} onChange={e => setBudgetCode(e.target.value)} className={inputCls} placeholder="Ex: A1.1.1" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Catégorie</label>
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Code budgétaire</label><input value={budgetCode} onChange={e => setBudgetCode(e.target.value)} className={inputCls} placeholder="Ex: A1.1.1" /></div>
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Catégorie</label>
               <select value={category} onChange={e => setCategory(e.target.value)} className={inputCls}>
                 <option value="">— Sélectionner —</option>
-                <option value="personnel">Personnel</option>
-                <option value="equipement">Équipement</option>
-                <option value="deplacement">Déplacement</option>
-                <option value="formation">Formation</option>
-                <option value="services">Services externes</option>
-                <option value="fonctionnement">Fonctionnement</option>
-                <option value="autre">Autre</option>
+                <option value="personnel">Personnel</option><option value="equipement">Équipement</option><option value="deplacement">Déplacement</option>
+                <option value="formation">Formation</option><option value="services">Services externes</option><option value="fonctionnement">Fonctionnement</option><option value="autre">Autre</option>
               </select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Fournisseur</label>
-              <input value={vendor} onChange={e => setVendor(e.target.value)} className={inputCls} />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Référence</label>
-              <input value={reference} onChange={e => setReference(e.target.value)} className={inputCls} placeholder="N° facture" />
-            </div>
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Fournisseur</label><input value={vendor} onChange={e => setVendor(e.target.value)} className={inputCls} /></div>
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Référence</label><input value={reference} onChange={e => setReference(e.target.value)} className={inputCls} placeholder="N° facture" /></div>
           </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Description</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className={inputCls + " h-auto"} />
-          </div>
-
-          {/* File upload */}
+          <div className="space-y-2"><label className="text-sm font-medium text-foreground">Description</label><textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className={inputCls + " h-auto"} /></div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Pièce justificative</label>
             {receiptUrl ? (
@@ -304,7 +223,6 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
               </div>
             )}
           </div>
-
           <button type="submit" disabled={saveMutation.isPending} className="w-full h-10 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50">
             {saveMutation.isPending ? "Enregistrement…" : isEdit ? "Enregistrer" : "Créer la transaction"}
           </button>

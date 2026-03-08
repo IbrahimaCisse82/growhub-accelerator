@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useGrantActivities, useDeleteActivity, type GrantActivity } from "@/hooks/useGrantDetail";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import GhButton from "@/components/shared/GhButton";
 import Pill from "@/components/shared/Pill";
@@ -10,58 +11,28 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 
 const statusMap: Record<string, { label: string; color: "green" | "amber" | "blue" | "gray" }> = {
-  planned: { label: "Planifié", color: "gray" },
-  in_progress: { label: "En cours", color: "blue" },
-  completed: { label: "Terminé", color: "green" },
-  delayed: { label: "En retard", color: "amber" },
+  planned: { label: "Planifié", color: "gray" }, in_progress: { label: "En cours", color: "blue" },
+  completed: { label: "Terminé", color: "green" }, delayed: { label: "En retard", color: "amber" },
 };
-
 const priorityMap: Record<string, { label: string; color: "green" | "amber" | "blue" | "gray" }> = {
-  low: { label: "Basse", color: "gray" },
-  medium: { label: "Moyenne", color: "blue" },
-  high: { label: "Haute", color: "amber" },
-  critical: { label: "Critique", color: "green" },
+  low: { label: "Basse", color: "gray" }, medium: { label: "Moyenne", color: "blue" },
+  high: { label: "Haute", color: "amber" }, critical: { label: "Critique", color: "green" },
 };
 
-export function useGrantActivities(grantId: string | undefined) {
-  return useQuery({
-    queryKey: ["grant_activities", grantId],
-    enabled: !!grantId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("grant_activities" as any)
-        .select("*")
-        .eq("grant_id", grantId!)
-        .order("start_date", { ascending: true });
-      if (error) throw error;
-      return data as any[];
-    },
-  });
-}
+export { useGrantActivities };
 
 export default function GrantActivitiesTab({ grantId }: { grantId: string }) {
-  const qc = useQueryClient();
   const { data: activities, isLoading } = useGrantActivities(grantId);
+  const deleteMutation = useDeleteActivity(grantId);
   const [showForm, setShowForm] = useState(false);
-  const [editItem, setEditItem] = useState<any>(null);
-  const [deleteItem, setDeleteItem] = useState<any>(null);
+  const [editItem, setEditItem] = useState<GrantActivity | null>(null);
+  const [deleteItem, setDeleteItem] = useState<GrantActivity | null>(null);
 
   const totalProgress = activities && activities.length > 0
-    ? Math.round(activities.reduce((s: number, a: any) => s + (a.progress ?? 0), 0) / activities.length)
-    : 0;
-
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("grant_activities" as any).delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_activities", grantId] }); setDeleteItem(null); toast({ title: "Activité supprimée" }); },
-    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
-  });
+    ? Math.round(activities.reduce((s, a) => s + (a.progress ?? 0), 0) / activities.length) : 0;
 
   return (
     <div className="space-y-4">
-      {/* Progress overview */}
       {activities && activities.length > 0 && (
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
@@ -72,10 +43,10 @@ export default function GrantActivitiesTab({ grantId }: { grantId: string }) {
             <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${totalProgress}%` }} />
           </div>
           <div className="flex gap-4 mt-2 text-[10px] font-mono text-muted-foreground">
-            <span>✓ {activities.filter((a: any) => a.status === "completed").length} terminées</span>
-            <span>▶ {activities.filter((a: any) => a.status === "in_progress").length} en cours</span>
-            <span>⏳ {activities.filter((a: any) => a.status === "planned").length} planifiées</span>
-            <span className="text-amber-500">⚠ {activities.filter((a: any) => a.status === "delayed").length} en retard</span>
+            <span>✓ {activities.filter(a => a.status === "completed").length} terminées</span>
+            <span>▶ {activities.filter(a => a.status === "in_progress").length} en cours</span>
+            <span>⏳ {activities.filter(a => a.status === "planned").length} planifiées</span>
+            <span className="text-amber-500">⚠ {activities.filter(a => a.status === "delayed").length} en retard</span>
           </div>
         </div>
       )}
@@ -95,9 +66,9 @@ export default function GrantActivitiesTab({ grantId }: { grantId: string }) {
         </div>
       ) : (
         <div className="space-y-2">
-          {activities.map((a: any) => {
+          {activities.map(a => {
             const st = statusMap[a.status] ?? statusMap.planned;
-            const pr = priorityMap[a.priority] ?? priorityMap.medium;
+            const pr = priorityMap[a.priority ?? "medium"] ?? priorityMap.medium;
             return (
               <div key={a.id} className="bg-card border border-border rounded-xl p-4 hover:border-primary/30 transition-colors group">
                 <div className="flex items-start justify-between gap-3">
@@ -120,21 +91,12 @@ export default function GrantActivitiesTab({ grantId }: { grantId: string }) {
                     </div>
                   </div>
                 </div>
-
-                {/* Gantt-like bar */}
                 {a.start_date && a.end_date && (
-                  <div className="mt-3">
-                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full ${a.status === "completed" ? "bg-green-500" : a.status === "delayed" ? "bg-amber-500" : "bg-primary"}`}
-                        style={{ width: `${a.progress ?? 0}%` }} />
-                    </div>
-                  </div>
+                  <div className="mt-3"><div className="h-2 bg-secondary rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full ${a.status === "completed" ? "bg-green-500" : a.status === "delayed" ? "bg-amber-500" : "bg-primary"}`} style={{ width: `${a.progress ?? 0}%` }} />
+                  </div></div>
                 )}
-
-                {a.deliverables && (
-                  <div className="mt-2 text-[10px] text-muted-foreground"><span className="font-semibold">Livrables:</span> {a.deliverables}</div>
-                )}
-
+                {a.deliverables && <div className="mt-2 text-[10px] text-muted-foreground"><span className="font-semibold">Livrables:</span> {a.deliverables}</div>}
                 <div className="mt-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button onClick={() => { setEditItem(a); setShowForm(true); }} className="text-[11px] px-2 py-1 rounded bg-secondary text-muted-foreground hover:text-foreground transition-colors">✏️ Modifier</button>
                   <button onClick={() => setDeleteItem(a)} className="text-[11px] px-2 py-1 rounded bg-secondary text-muted-foreground hover:text-destructive transition-colors">🗑</button>
@@ -149,14 +111,8 @@ export default function GrantActivitiesTab({ grantId }: { grantId: string }) {
 
       <AlertDialog open={!!deleteItem} onOpenChange={(o) => { if (!o) setDeleteItem(null); }}>
         <AlertDialogContent className="bg-card border-border">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer cette activité ?</AlertDialogTitle>
-            <AlertDialogDescription>L'activité « {deleteItem?.title} » sera définitivement supprimée.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteItem && deleteMutation.mutate(deleteItem.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Supprimer</AlertDialogAction>
-          </AlertDialogFooter>
+          <AlertDialogHeader><AlertDialogTitle>Supprimer cette activité ?</AlertDialogTitle><AlertDialogDescription>L'activité « {deleteItem?.title} » sera définitivement supprimée.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={() => deleteItem && deleteMutation.mutate(deleteItem.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
@@ -164,7 +120,7 @@ export default function GrantActivitiesTab({ grantId }: { grantId: string }) {
 }
 
 function ActivityFormDialog({ open, onOpenChange, grantId, editData }: {
-  open: boolean; onOpenChange: (o: boolean) => void; grantId: string; editData: any;
+  open: boolean; onOpenChange: (o: boolean) => void; grantId: string; editData: GrantActivity | null;
 }) {
   const qc = useQueryClient();
   const isEdit = !!editData;
@@ -198,15 +154,15 @@ function ActivityFormDialog({ open, onOpenChange, grantId, editData }: {
         progress: parseFloat(progress) || 0, deliverables: deliverables || null,
       };
       if (isEdit) {
-        const { error } = await supabase.from("grant_activities" as any).update(payload).eq("id", editData.id);
+        const { error } = await supabase.from("grant_activities").update(payload).eq("id", editData.id);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("grant_activities" as any).insert(payload);
+        const { error } = await supabase.from("grant_activities").insert(payload);
         if (error) throw error;
       }
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_activities", grantId] }); onOpenChange(false); toast({ title: isEdit ? "Activité modifiée" : "Activité créée" }); },
-    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
   });
 
   return (
@@ -224,13 +180,11 @@ function ActivityFormDialog({ open, onOpenChange, grantId, editData }: {
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Statut</label>
               <select value={status} onChange={e => setStatus(e.target.value)} className={inputCls}>
                 <option value="planned">Planifié</option><option value="in_progress">En cours</option><option value="completed">Terminé</option><option value="delayed">En retard</option>
-              </select>
-            </div>
+              </select></div>
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Priorité</label>
               <select value={priority} onChange={e => setPriority(e.target.value)} className={inputCls}>
                 <option value="low">Basse</option><option value="medium">Moyenne</option><option value="high">Haute</option><option value="critical">Critique</option>
-              </select>
-            </div>
+              </select></div>
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Progrès %</label><input type="number" min="0" max="100" value={progress} onChange={e => setProgress(e.target.value)} className={inputCls} /></div>
           </div>
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Responsable</label><input value={responsible} onChange={e => setResponsible(e.target.value)} className={inputCls} /></div>

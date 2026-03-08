@@ -1,62 +1,36 @@
 import { useState, useRef } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { useGrantDocuments, useDeleteDocument, type GrantDocument } from "@/hooks/useGrantDetail";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import GhButton from "@/components/shared/GhButton";
-import Pill from "@/components/shared/Pill";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 
 const categoryMap: Record<string, { label: string; color: "green" | "amber" | "blue" | "gray"; icon: string }> = {
-  convention: { label: "Convention", color: "blue", icon: "📄" },
-  avenant: { label: "Avenant", color: "amber", icon: "📝" },
-  pv: { label: "PV Comité", color: "green", icon: "📋" },
-  rapport: { label: "Rapport", color: "gray", icon: "📊" },
-  facture: { label: "Facture", color: "amber", icon: "🧾" },
-  autre: { label: "Autre", color: "gray", icon: "📎" },
+  convention: { label: "Convention", color: "blue", icon: "📄" }, avenant: { label: "Avenant", color: "amber", icon: "📝" },
+  pv: { label: "PV Comité", color: "green", icon: "📋" }, rapport: { label: "Rapport", color: "gray", icon: "📊" },
+  facture: { label: "Facture", color: "amber", icon: "🧾" }, autre: { label: "Autre", color: "gray", icon: "📎" },
 };
 
-export function useGrantDocuments(grantId: string | undefined) {
-  return useQuery({
-    queryKey: ["grant_documents", grantId],
-    enabled: !!grantId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("grant_documents" as any)
-        .select("*")
-        .eq("grant_id", grantId!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data as any[];
-    },
-  });
-}
+export { useGrantDocuments };
 
 export default function GrantDocumentsTab({ grantId }: { grantId: string }) {
   const { user } = useAuth();
-  const qc = useQueryClient();
+  const deleteMutation = useDeleteDocument(grantId);
   const { data: documents, isLoading } = useGrantDocuments(grantId);
   const [showForm, setShowForm] = useState(false);
-  const [deleteDoc, setDeleteDoc] = useState<any>(null);
+  const [deleteDoc, setDeleteDoc] = useState<GrantDocument | null>(null);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("grant_documents" as any).delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_documents", grantId] }); setDeleteDoc(null); toast({ title: "Document supprimé" }); },
-    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
-  });
-
-  const grouped: Record<string, any[]> = (documents ?? []).reduce((acc: Record<string, any[]>, d: any) => {
+  const grouped: Record<string, GrantDocument[]> = (documents ?? []).reduce((acc: Record<string, GrantDocument[]>, d) => {
     const cat = d.category || "autre";
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(d);
     return acc;
-  }, {} as Record<string, any[]>);
+  }, {});
 
   return (
     <div className="space-y-4">
@@ -72,8 +46,7 @@ export default function GrantDocumentsTab({ grantId }: { grantId: string }) {
         <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-16 bg-secondary rounded-xl animate-pulse" />)}</div>
       ) : !documents || documents.length === 0 ? (
         <div className="bg-card border border-border rounded-xl p-12 text-center">
-          <div className="text-2xl mb-2">📁</div>
-          <div className="text-sm text-muted-foreground mb-3">Aucun document rattaché</div>
+          <div className="text-2xl mb-2">📁</div><div className="text-sm text-muted-foreground mb-3">Aucun document rattaché</div>
           <GhButton onClick={() => setShowForm(true)}>+ Premier document</GhButton>
         </div>
       ) : (
@@ -83,26 +56,19 @@ export default function GrantDocumentsTab({ grantId }: { grantId: string }) {
             return (
               <div key={cat} className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="px-4 py-2.5 border-b border-border bg-secondary/50 flex items-center gap-2">
-                  <span>{catInfo.icon}</span>
-                  <span className="text-xs font-bold text-foreground">{catInfo.label}</span>
+                  <span>{catInfo.icon}</span><span className="text-xs font-bold text-foreground">{catInfo.label}</span>
                   <span className="font-mono text-[10px] text-muted-foreground">({docs.length})</span>
                 </div>
                 <div className="divide-y divide-border">
-                  {docs.map((d: any) => (
+                  {docs.map(d => (
                     <div key={d.id} className="px-4 py-3 flex items-center gap-3 hover:bg-secondary/30 transition-colors group">
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-semibold text-foreground truncate">{d.title}</div>
                         {d.description && <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{d.description}</div>}
-                        <div className="text-[10px] text-muted-foreground font-mono mt-1">
-                          {d.file_name ?? "—"} · {new Date(d.created_at).toLocaleDateString("fr-FR")}
-                        </div>
+                        <div className="text-[10px] text-muted-foreground font-mono mt-1">{d.file_name ?? "—"} · {new Date(d.created_at).toLocaleDateString("fr-FR")}</div>
                       </div>
                       <div className="flex gap-2 items-center opacity-0 group-hover:opacity-100 transition-opacity">
-                        {d.file_url && (
-                          <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="text-[11px] px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium">
-                            ⤓ Télécharger
-                          </a>
-                        )}
+                        {d.file_url && <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="text-[11px] px-2 py-1 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-medium">⤓ Télécharger</a>}
                         <button onClick={() => setDeleteDoc(d)} className="text-[11px] text-muted-foreground hover:text-destructive">🗑</button>
                       </div>
                     </div>
@@ -118,14 +84,8 @@ export default function GrantDocumentsTab({ grantId }: { grantId: string }) {
 
       <AlertDialog open={!!deleteDoc} onOpenChange={(o) => { if (!o) setDeleteDoc(null); }}>
         <AlertDialogContent className="bg-card border-border">
-          <AlertDialogHeader>
-            <AlertDialogTitle>Supprimer ce document ?</AlertDialogTitle>
-            <AlertDialogDescription>Le document « {deleteDoc?.title} » sera définitivement supprimé.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction onClick={() => deleteDoc && deleteMutation.mutate(deleteDoc.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Supprimer</AlertDialogAction>
-          </AlertDialogFooter>
+          <AlertDialogHeader><AlertDialogTitle>Supprimer ce document ?</AlertDialogTitle><AlertDialogDescription>Le document « {deleteDoc?.title} » sera définitivement supprimé.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter><AlertDialogCancel>Annuler</AlertDialogCancel><AlertDialogAction onClick={() => deleteDoc && deleteMutation.mutate(deleteDoc.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Supprimer</AlertDialogAction></AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
@@ -160,27 +120,23 @@ function DocumentFormDialog({ open, onOpenChange, grantId, userId }: {
       const { error } = await supabase.storage.from("grant-documents").upload(path, file);
       if (error) throw error;
       const { data: urlData } = supabase.storage.from("grant-documents").getPublicUrl(path);
-      setFileUrl(urlData.publicUrl);
-      setFileName(file.name);
-      setFileSize(file.size);
+      setFileUrl(urlData.publicUrl); setFileName(file.name); setFileSize(file.size);
       toast({ title: "Fichier uploadé" });
     } catch (err) {
       toast({ title: "Erreur upload", description: (err as Error).message, variant: "destructive" });
-    } finally {
-      setUploading(false);
-    }
+    } finally { setUploading(false); }
   };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("grant_documents" as any).insert({
+      const { error } = await supabase.from("grant_documents").insert({
         grant_id: grantId, title, category, description: description || null,
         file_url: fileUrl, file_name: fileName, file_size: fileSize, uploaded_by: userId ?? null,
       });
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_documents", grantId] }); onOpenChange(false); toast({ title: "Document ajouté" }); },
-    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
+    onError: (e: Error) => toast({ title: "Erreur", description: e.message, variant: "destructive" }),
   });
 
   return (
@@ -193,8 +149,7 @@ function DocumentFormDialog({ open, onOpenChange, grantId, userId }: {
             <select value={category} onChange={e => setCategory(e.target.value)} className={inputCls}>
               <option value="convention">Convention</option><option value="avenant">Avenant</option><option value="pv">PV Comité</option>
               <option value="rapport">Rapport</option><option value="facture">Facture</option><option value="autre">Autre</option>
-            </select>
-          </div>
+            </select></div>
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Description</label><textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} className={inputCls + " h-auto"} /></div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Fichier</label>
