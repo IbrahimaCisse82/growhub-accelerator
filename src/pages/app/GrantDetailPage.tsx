@@ -254,6 +254,37 @@ export default function GrantDetailPage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Edit dialog */}
+      <EditGrantDialog grant={grant} open={showEdit} onOpenChange={setShowEdit} />
+
+      {/* Delete confirmation */}
+      <AlertDialog open={showDelete} onOpenChange={setShowDelete}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce grant ?</AlertDialogTitle>
+            <AlertDialogDescription>Cette action est irréversible. Le grant « {grant.name} » et toutes ses données associées seront supprimés.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deleteMutation.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Supprimer</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel confirmation */}
+      <AlertDialog open={showCancel} onOpenChange={setShowCancel}>
+        <AlertDialogContent className="bg-card border-border">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Annuler ce grant ?</AlertDialogTitle>
+            <AlertDialogDescription>Le grant « {grant.name} » sera marqué comme clôturé.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Retour</AlertDialogCancel>
+            <AlertDialogAction onClick={() => cancelMutation.mutate()} className="bg-amber-600 text-white hover:bg-amber-700">Confirmer l'annulation</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </motion.div>
   );
 }
