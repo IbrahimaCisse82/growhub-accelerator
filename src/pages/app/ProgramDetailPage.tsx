@@ -38,7 +38,7 @@ export default function ProgramDetailPage() {
   if (!program) return <div className="text-center py-12 text-muted-foreground">Programme introuvable</div>;
 
   const st = statusMap[program.status] ?? statusMap.draft;
-  const portfolio = (program as any).portfolios;
+  const portfolio = program.portfolios;
   const totalGrantAmount = grants?.reduce((a, g) => a + g.amount_total, 0) ?? 0;
 
   const crumbs = [

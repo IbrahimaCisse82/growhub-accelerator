@@ -252,7 +252,7 @@ export default function GrantDetailPage() {
               { label: "Code", val: grant.code },
               { label: "Organisation", val: grant.organization ?? "—" },
               { label: "Description", val: grant.description ?? "—" },
-              { label: "Programme", val: (grant as any).programs?.name ?? "—" },
+              { label: "Programme", val: grant.programs?.name ?? "—" },
               { label: "Devise", val: grant.currency ?? "EUR" },
               { label: "Date début", val: grant.start_date ?? "—" },
               { label: "Date fin", val: grant.end_date ?? "—" },

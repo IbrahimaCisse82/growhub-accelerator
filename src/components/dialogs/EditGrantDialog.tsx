@@ -60,7 +60,7 @@ export default function EditGrantDialog({ grant, children, open: controlledOpen,
         description: description || null,
         start_date: startDate || null,
         end_date: endDate || null,
-        status: status as any,
+        status: status as GrantStatus,
       }).eq("id", grant.id);
       if (error) throw error;
     },

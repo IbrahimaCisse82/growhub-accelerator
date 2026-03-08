@@ -116,10 +116,10 @@ export default function CandidaturesPage() {
                   <tr key={c.id} className="hover:bg-secondary transition-colors">
                     <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">
                       {c.startup_id ? (
-                        <button onClick={() => navigate(`/app/startups/${c.startup_id}`)} className="hover:text-primary transition-colors text-left">{(c as any).startups?.name ?? "—"}</button>
-                      ) : ((c as any).startups?.name ?? "—")}
+                        <button onClick={() => navigate(`/app/startups/${c.startup_id}`)} className="hover:text-primary transition-colors text-left">{c.startups?.name ?? "—"}</button>
+                      ) : (c.startups?.name ?? "—")}
                     </td>
-                    <td className="px-3.5 py-2.5 border-b border-border text-foreground">{(c as any).programs?.name ?? "—"}</td>
+                    <td className="px-3.5 py-2.5 border-b border-border text-foreground">{c.programs?.name ?? "—"}</td>
                     <td className="px-3.5 py-2.5 border-b border-border font-mono text-primary">{c.score != null ? `${c.score}/100` : "—"}</td>
                     <td className="px-3.5 py-2.5 border-b border-border"><Pill color={stepColor[c.status] ?? "gray"}>{c.status}</Pill></td>
                     <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{new Date(c.submitted_at).toLocaleDateString("fr-FR")}</td>

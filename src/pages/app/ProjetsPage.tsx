@@ -95,8 +95,8 @@ export default function ProjetsPage() {
             </thead>
             <tbody>
               {projects.map(p => {
-                const vs = (p as any).validation_status ?? "draft";
-                const appOpen = (p as any).applications_open ?? false;
+                const vs = p.validation_status ?? "draft";
+                const appOpen = p.applications_open ?? false;
                 return (
                   <tr key={p.id} className="border-b border-border last:border-b-0 hover:bg-secondary/50 transition-colors">
                     <td className="px-4 py-3 cursor-pointer" onClick={() => navigate(`/app/projets/${p.id}`)}>
