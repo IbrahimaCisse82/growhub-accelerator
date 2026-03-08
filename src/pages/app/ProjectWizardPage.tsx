@@ -99,10 +99,14 @@ export default function ProjectWizardPage() {
   // Step 4: KPIs
   const [kpis, setKpis] = useState<KpiRow[]>([emptyKpi()]);
 
-  // Step 5: Budget
-  const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([emptyBudgetLine()]);
+  // Step 5: Budget (GTS format)
+  const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([...DEFAULT_BUDGET_LINES]);
 
-  const totalBudget = budgetLines.reduce((sum, l) => sum + l.quantity * l.unitCost, 0);
+  const linesA = budgetLines.filter(l => l.section === "A");
+  const linesB = budgetLines.filter(l => l.section === "B");
+  const totalA = linesA.reduce((s, l) => s + lineTotal(l), 0);
+  const totalB = linesB.reduce((s, l) => s + lineTotal(l), 0);
+  const totalBudget = totalA + totalB;
 
   const canNext = () => {
     if (step === 0) return name && programId;
