@@ -82,7 +82,7 @@ export function useChangeUserRole() {
         .from("user_roles")
         .delete()
         .eq("user_id", userId)
-        .neq("role", newRole as any);
+        .neq("role", newRole as AppRole);
       if (delError) throw delError;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
