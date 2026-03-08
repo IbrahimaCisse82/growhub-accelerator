@@ -13,7 +13,27 @@ export function useTasks() {
         .select("*, projects(name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Fetch milestone titles for tasks that have a milestone id stored in tags[0]
+      const milestoneIds = data
+        .map(t => t.tags?.[0])
+        .filter((id): id is string => !!id && id.length === 36);
+
+      let milestoneMap: Record<string, string> = {};
+      if (milestoneIds.length > 0) {
+        const { data: ms } = await supabase
+          .from("milestones")
+          .select("id, title")
+          .in("id", milestoneIds);
+        if (ms) {
+          milestoneMap = Object.fromEntries(ms.map(m => [m.id, m.title]));
+        }
+      }
+
+      return data.map(t => ({
+        ...t,
+        milestone_title: t.tags?.[0] ? milestoneMap[t.tags[0]] ?? null : null,
+      }));
     },
   });
 }
