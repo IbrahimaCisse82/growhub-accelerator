@@ -142,7 +142,7 @@ export default function ProjectWizardPage() {
       if (lfe) throw lfe;
 
       // 3. Theory of change
-      const { error: toce } = await supabase.from("theory_of_change" as any).insert({
+      const { error: toce } = await supabase.from("theory_of_change").insert({
         project_id: project.id,
         inputs: tocInputs.filter(Boolean),
         activities: tocActivities.filter(Boolean),
