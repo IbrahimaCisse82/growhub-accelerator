@@ -45,10 +45,7 @@ export function useApproveUser() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ is_approved: true })
-        .eq("user_id", userId);
+      const { error } = await supabase.from("profiles").update({ is_approved: true }).eq("user_id", userId);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
@@ -59,11 +56,23 @@ export function useRevokeUser() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (userId: string) => {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ is_approved: false })
-        .eq("user_id", userId);
+      const { error } = await supabase.from("profiles").update({ is_approved: false }).eq("user_id", userId);
       if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
+  });
+}
+
+export function useChangeUserRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ userId, newRole }: { userId: string; newRole: string }) => {
+      // Delete existing roles
+      const { error: delError } = await supabase.from("user_roles").delete().eq("user_id", userId);
+      if (delError) throw delError;
+      // Insert new role
+      const { error: insError } = await supabase.from("user_roles").insert({ user_id: userId, role: newRole as any });
+      if (insError) throw insError;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["admin-users"] }),
   });
