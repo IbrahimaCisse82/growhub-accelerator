@@ -79,12 +79,31 @@ function useGrantProjectBudgetLines(grantId: string | undefined) {
 export default function GrantDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data: grant, isLoading } = useGrantDetail(id);
   const { data: budgetLines } = useGrantBudgetLines(id);
   const { data: projectBudgetLines } = useGrantProjectBudgetLines(id);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
+  const [showCancel, setShowCancel] = useState(false);
 
-  if (isLoading) return <div className="space-y-4 p-4">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-16 rounded-xl" />)}</div>;
-  if (!grant) return <div className="text-center py-12 text-muted-foreground">Grant introuvable</div>;
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("grants").delete().eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["grants"] }); navigate("/app/grants"); toast({ title: "Grant supprimé" }); },
+    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from("grants").update({ status: "closed" as any }).eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["grants"] }); qc.invalidateQueries({ queryKey: ["grant_detail", id] }); setShowCancel(false); toast({ title: "Grant annulé" }); },
+    onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
+  });
 
   const st = statusMap[grant.status] ?? statusMap.draft;
   const pct = grant.amount_total > 0 ? Math.round(((grant.amount_disbursed ?? 0) / grant.amount_total) * 100) : 0;
