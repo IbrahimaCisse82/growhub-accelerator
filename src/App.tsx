@@ -31,6 +31,7 @@ import GanttPage from "@/pages/app/GanttPage";
 import RisquesPage from "@/pages/app/RisquesPage";
 import GrantsPage from "@/pages/app/GrantsPage";
 import GrantDetailPage from "@/pages/app/GrantDetailPage";
+import GrantsAnalyticsPage from "@/pages/app/GrantsAnalyticsPage";
 import BudgetsPage from "@/pages/app/BudgetsPage";
 import EvenementsPage from "@/pages/app/EvenementsPage";
 import MessagingPage from "@/pages/app/MessagingPage";
@@ -80,6 +81,7 @@ const App = () => (
               <Route path="risques" element={<RisquesPage />} />
               <Route path="grants" element={<GrantsPage />} />
               <Route path="grants/:id" element={<GrantDetailPage />} />
+              <Route path="grants-analytics" element={<GrantsAnalyticsPage />} />
               <Route path="budgets" element={<BudgetsPage />} />
               <Route path="evenements" element={<EvenementsPage />} />
               <Route path="messagerie" element={<MessagingPage />} />
