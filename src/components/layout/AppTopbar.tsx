@@ -122,7 +122,7 @@ export default function AppTopbar({ onToggleSidebar, showMenuButton }: AppTopbar
                 { label: "Portefeuille", path: "/app/portefeuilles", icon: "◈" },
                 { label: "Programme", path: "/app/programmes", icon: "◇" },
                 { label: "Cohorte", path: "/app/cohortes", icon: "◉" },
-                { label: "Startup", path: "/app/startups", icon: "△" },
+                { label: "Entreprise", path: "/app/entreprises", icon: "△" },
                 { label: "Projet", path: "/app/projets", icon: "▦" },
                 { label: "Événement", path: "/app/evenements", icon: "◆" },
               ].map(a => (
