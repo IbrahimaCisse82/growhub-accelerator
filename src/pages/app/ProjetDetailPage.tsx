@@ -157,9 +157,21 @@ export default function ProjetDetailPage() {
               )}
             </div>
             <div className="flex gap-2 shrink-0">
+              {isAdmin && (
+                <>
+                  <GhButton size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
+                    Modifier ✏️
+                  </GhButton>
+                  {project.validation_status !== "validated" && (
+                    <GhButton size="sm" variant="primary" onClick={() => setValidateOpen(true)}>
+                      Valider ✓
+                    </GhButton>
+                  )}
+                </>
+              )}
               {(project.validation_status === "draft" || project.validation_status === "pending_review") && (
-                <GhButton size="sm" variant="secondary" onClick={() => navigate(`/app/projets/nouveau?id=${project.id}`)}>
-                  Modifier ✏️
+                <GhButton size="sm" variant="ghost" onClick={() => navigate(`/app/projets/nouveau?id=${project.id}`)}>
+                  Wizard ↗
                 </GhButton>
               )}
             </div>
