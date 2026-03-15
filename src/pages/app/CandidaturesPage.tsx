@@ -7,7 +7,7 @@ import Pill from "@/components/shared/Pill";
 import EmptyState from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApplications, useApplicationsPipeline } from "@/hooks/useApplications";
-import { useCohorts } from "@/hooks/useCohorts";
+import { useProjects } from "@/hooks/useProjects";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -37,11 +37,11 @@ const nextStatus: Record<string, string> = {
 export default function CandidaturesPage() {
   const { data: apps, isLoading } = useApplications();
   const { data: pipeline } = useApplicationsPipeline();
-  const { data: cohorts } = useCohorts();
+  const { data: projects } = useProjects();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<string | null>(null);
-  const [cohortFilter, setCohortFilter] = useState<string | null>(searchParams.get("cohort"));
+  const [projectFilter, setProjectFilter] = useState<string | null>(searchParams.get("project"));
   const qc = useQueryClient();
 
   const advance = useMutation({
@@ -60,14 +60,17 @@ export default function CandidaturesPage() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["applications"] }); qc.invalidateQueries({ queryKey: ["applications-pipeline"] }); toast({ title: "Candidature refusée" }); },
   });
 
+  // Projects with open applications for filter
+  const projectsWithApps = projects?.filter(p => p.applications_open) ?? [];
+
   let filtered = filter ? apps?.filter(a => a.status === filter) : apps;
-  if (cohortFilter) filtered = filtered?.filter(a => a.cohort_id === cohortFilter);
+  if (projectFilter) filtered = filtered?.filter(a => (a as any).project_id === projectFilter);
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader
         title="Candidatures"
-        subtitle="Évaluation et sélection des startups candidates"
+        subtitle="Évaluation et sélection des entreprises candidates via appels à candidature"
       />
       {/* Pipeline summary */}
       <div className="flex flex-wrap border border-border rounded-xl overflow-hidden mb-4">
@@ -83,13 +86,13 @@ export default function CandidaturesPage() {
         ))}
       </div>
 
-      {/* Cohort filter */}
-      {cohorts && cohorts.length > 0 && (
+      {/* Project filter */}
+      {projectsWithApps.length > 0 && (
         <div className="flex items-center gap-2 mb-4 flex-wrap">
-          <span className="text-[11px] text-muted-foreground font-mono uppercase tracking-wider">Cohorte :</span>
-          <button onClick={() => setCohortFilter(null)} className={`text-[11.5px] px-2.5 py-1 rounded-lg transition-colors ${!cohortFilter ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}>Toutes</button>
-          {cohorts.map(c => (
-            <button key={c.id} onClick={() => setCohortFilter(cohortFilter === c.id ? null : c.id)} className={`text-[11.5px] px-2.5 py-1 rounded-lg transition-colors ${cohortFilter === c.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}>{c.name}</button>
+          <span className="text-[11px] text-muted-foreground font-mono uppercase tracking-wider">Projet :</span>
+          <button onClick={() => setProjectFilter(null)} className={`text-[11.5px] px-2.5 py-1 rounded-lg transition-colors ${!projectFilter ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}>Tous</button>
+          {projectsWithApps.map(p => (
+            <button key={p.id} onClick={() => setProjectFilter(projectFilter === p.id ? null : p.id)} className={`text-[11.5px] px-2.5 py-1 rounded-lg transition-colors ${projectFilter === p.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}>{p.name}</button>
           ))}
         </div>
       )}
@@ -99,7 +102,7 @@ export default function CandidaturesPage() {
           <table className="w-full border-collapse text-[12.5px]">
             <thead>
               <tr className="bg-secondary">
-                {["Startup", "Programme", "Score", "Étape", "Date", "Actions"].map((h) => (
+                {["Entreprise", "Projet", "Score", "Étape", "Date", "Actions"].map((h) => (
                   <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>
                 ))}
               </tr>
@@ -116,7 +119,7 @@ export default function CandidaturesPage() {
                   <tr key={c.id} className="hover:bg-secondary transition-colors">
                     <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">
                       {c.startup_id ? (
-                        <button onClick={() => navigate(`/app/startups/${c.startup_id}`)} className="hover:text-primary transition-colors text-left">{c.startups?.name ?? "—"}</button>
+                        <button onClick={() => navigate(`/app/entreprises/${c.startup_id}`)} className="hover:text-primary transition-colors text-left">{c.startups?.name ?? "—"}</button>
                       ) : (c.startups?.name ?? "—")}
                     </td>
                     <td className="px-3.5 py-2.5 border-b border-border text-foreground">{c.programs?.name ?? "—"}</td>

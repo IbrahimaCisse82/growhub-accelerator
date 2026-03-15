@@ -152,7 +152,7 @@ export default function ProjetsPage() {
         <DialogContent className="bg-card border-border">
           <DialogHeader><DialogTitle className="font-display">Ouvrir les candidatures</DialogTitle></DialogHeader>
           <div className="space-y-4">
-            <p className="text-sm text-muted-foreground">Définissez la fenêtre de candidature pour ce projet. Les startups pourront soumettre leur candidature pendant cette période.</p>
+            <p className="text-sm text-muted-foreground">Définissez la fenêtre de candidature pour ce projet. Les entreprises pourront soumettre leur candidature pendant cette période.</p>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-2"><label className="text-sm font-medium text-foreground">Date d'ouverture</label><input type="date" value={appStartDate} onChange={e => setAppStartDate(e.target.value)} className={inputCls} /></div>
               <div className="space-y-2"><label className="text-sm font-medium text-foreground">Date de clôture</label><input type="date" value={appEndDate} onChange={e => setAppEndDate(e.target.value)} className={inputCls} /></div>

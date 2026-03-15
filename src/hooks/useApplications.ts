@@ -7,7 +7,7 @@ export function useApplications() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("applications")
-        .select("*, startups(name, sector), programs(name)")
+        .select("*, startups(name, sector), programs(name), projects(name)")
         .order("submitted_at", { ascending: false });
       if (error) throw error;
       return data;

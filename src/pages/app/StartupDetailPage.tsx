@@ -21,7 +21,7 @@ export default function StartupDetailPage() {
   const { data: risks } = useStartupRisks(id);
 
   if (isLoading) return <div className="p-8"><Skeleton className="h-8 w-64 mb-4" /><Skeleton className="h-[300px] rounded-xl" /></div>;
-  if (!startup) return <div className="text-center py-12 text-muted-foreground">Startup introuvable</div>;
+  if (!startup) return <div className="text-center py-12 text-muted-foreground">Entreprise introuvable</div>;
 
   const cohort = startup.cohorts;
   const project = cohort?.projects;

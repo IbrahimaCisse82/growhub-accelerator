@@ -28,7 +28,7 @@ const actionLabel: Record<string, string> = {
 };
 
 const entityLabel: Record<string, string> = {
-  projects: "Projet", startups: "Startup", grants: "Grant", programs: "Programme",
+  projects: "Projet", startups: "Entreprise", grants: "Grant", programs: "Programme",
   cohorts: "Cohorte", tasks: "Tâche", milestones: "Jalon", events: "Événement",
   coaching_sessions: "Session", courses: "Cours", risks: "Risque",
 };
@@ -84,7 +84,7 @@ export default function DashboardPage() {
                 { key: "name", label: "Projet" }, { key: "status", label: "Statut" }, { key: "progress", label: "%" },
               ]);
             }}>⤓ Exporter</GhButton>
-            <GhButton variant="primary" onClick={() => navigate("/app/startups")}>+ Créer</GhButton>
+            <GhButton variant="primary" onClick={() => navigate("/app/entreprises")}>+ Créer</GhButton>
           </>
         }
       />
@@ -93,7 +93,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         {isAdmin ? (
           <>
-            <div onClick={() => navigate("/app/startups")} className="cursor-pointer"><StatCard label="Startups Actives" value={loadingStartups ? "…" : String(startupsCount)} note="" icon="△" color="green" /></div>
+            <div onClick={() => navigate("/app/entreprises")} className="cursor-pointer"><StatCard label="Entreprises Actives" value={loadingStartups ? "…" : String(startupsCount)} note="" icon="△" color="green" /></div>
             <div onClick={() => navigate("/app/grants")} className="cursor-pointer"><StatCard label="Financements (XOF)" value={loadingGrants ? "…" : new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(totalFunding)} note={`${activeGrants.length} grants actifs`} icon="◎" color="blue" /></div>
             <div onClick={() => navigate("/app/projets")} className="cursor-pointer"><StatCard label="Projets" value={loadingProjects ? "…" : String(projects?.length ?? 0)} note="" icon="◑" color="amber" /></div>
             <div onClick={() => navigate("/app/cohortes")} className="cursor-pointer"><StatCard label="Cohortes actives" value={String(activeCohorts)} note="" icon="◉" color="purple" /></div>
@@ -101,13 +101,13 @@ export default function DashboardPage() {
         ) : isMentor ? (
           <>
             <StatCard label="Mes sessions" value={String(mySessions.length)} note={`${upcomingSessions.length} à venir`} icon="◎" color="blue" />
-            <StatCard label="Startups suivies" value={String(new Set(mySessions.map(s => s.startup_id)).size)} note="" icon="△" color="green" />
+            <StatCard label="Entreprises suivies" value={String(new Set(mySessions.map(s => s.startup_id)).size)} note="" icon="△" color="green" />
             <StatCard label="Sessions terminées" value={String(mySessions.filter(s => s.status === "completed").length)} note="" icon="◑" color="amber" />
             <StatCard label="Cours disponibles" value={String(courses?.filter(c => c.is_published).length ?? 0)} note="" icon="◇" color="purple" />
           </>
         ) : (
           <>
-            <StatCard label="Ma startup" value={myStartup?.name ?? "—"} note={myStartup?.stage ?? ""} icon="△" color="green" />
+            <StatCard label="Mon entreprise" value={myStartup?.name ?? "—"} note={myStartup?.stage ?? ""} icon="△" color="green" />
             <StatCard label="Score" value={myStartup?.score != null ? `${myStartup.score}/100` : "—"} note="" icon="◎" color="blue" />
             <StatCard label="Projets" value={String(projects?.filter(p => p.startup_id === myStartup?.id).length ?? 0)} note="" icon="◑" color="amber" />
             <StatCard label="Cours disponibles" value={String(courses?.filter(c => c.is_published).length ?? 0)} note="" icon="◇" color="purple" />
@@ -144,7 +144,7 @@ export default function DashboardPage() {
               <table className="w-full border-collapse text-[12.5px]">
                 <thead>
                   <tr className="bg-secondary">
-                    {["Projet", "Startup", "Programme", "Statut", "Avancement"].map((h) => (
+                    {["Projet", "Entreprise", "Programme", "Statut", "Avancement"].map((h) => (
                       <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>
                     ))}
                   </tr>

@@ -54,7 +54,7 @@ export default function CohortDetailPage() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
-        <StatCard label="Startups" value={String(startups?.length ?? 0)} note={`/ ${cohort.max_startups ?? "—"}`} color="green" />
+        <StatCard label="Entreprises" value={String(startups?.length ?? 0)} note={`/ ${cohort.max_startups ?? "—"}`} color="green" />
         <StatCard label="Projet" value={project?.name ?? "—"} note="" color="blue" />
         <StatCard label="Début" value={cohort.start_date ? new Date(cohort.start_date).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "—"} note="" color="amber" />
         <StatCard label="Candidatures" value={String(applications?.length ?? 0)} note="" color="purple" />
@@ -63,17 +63,17 @@ export default function CohortDetailPage() {
       {/* Startups */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display text-sm font-bold text-foreground">Startups de la cohorte</h3>
-          <GhButton variant="ghost" onClick={() => navigate("/app/startups")}>Voir tout →</GhButton>
+          <h3 className="font-display text-sm font-bold text-foreground">Entreprises de la cohorte</h3>
+          <GhButton variant="ghost" onClick={() => navigate("/app/entreprises")}>Voir tout →</GhButton>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {loadingStartups ? (
             Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[140px] rounded-xl" />)
           ) : startups?.length === 0 ? (
-            <div className="col-span-full text-center text-muted-foreground py-8 text-sm">Aucune startup dans cette cohorte</div>
+            <div className="col-span-full text-center text-muted-foreground py-8 text-sm">Aucune entreprise dans cette cohorte</div>
           ) : (
             startups?.map((s) => (
-              <div key={s.id} onClick={() => navigate(`/app/startups/${s.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
+              <div key={s.id} onClick={() => navigate(`/app/entreprises/${s.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
                 <div className="h-[3px] bg-primary" />
                 <div className="p-4">
                   <div className="font-display text-[14px] font-bold text-foreground">{s.name}</div>
@@ -100,11 +100,11 @@ export default function CohortDetailPage() {
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <table className="w-full border-collapse text-[12.5px]">
               <thead><tr className="bg-secondary">
-                {["Startup", "Étape", "Score", "Date"].map(h => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left">{h}</th>)}
+                {["Entreprise", "Étape", "Score", "Date"].map(h => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left">{h}</th>)}
               </tr></thead>
               <tbody>
                 {applications.map(a => (
-                  <tr key={a.id} className="hover:bg-secondary transition-colors cursor-pointer" onClick={() => a.startup_id && navigate(`/app/startups/${a.startup_id}`)}>
+                  <tr key={a.id} className="hover:bg-secondary transition-colors cursor-pointer" onClick={() => a.startup_id && navigate(`/app/entreprises/${a.startup_id}`)}>
                     <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{a.startups?.name ?? "—"}</td>
                     <td className="px-3.5 py-2.5 border-b border-border"><Pill color={appStepColor[a.status] ?? "gray"}>{a.status}</Pill></td>
                     <td className="px-3.5 py-2.5 border-b border-border font-mono text-primary">{a.score != null ? `${a.score}/100` : "—"}</td>

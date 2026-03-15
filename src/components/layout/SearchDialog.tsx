@@ -37,7 +37,7 @@ export default function SearchDialog({ open, onOpenChange }: { open: boolean; on
         supabase.from("courses").select("id, title").ilike("title", q).limit(3),
       ]);
       const r: SearchResult[] = [
-        ...(startups.data ?? []).map(s => ({ type: "Startup", id: s.id, name: s.name, subtitle: s.sector ?? undefined, path: `/app/startups/${s.id}` })),
+        ...(startups.data ?? []).map(s => ({ type: "Entreprise", id: s.id, name: s.name, subtitle: s.sector ?? undefined, path: `/app/entreprises/${s.id}` })),
         ...(programs.data ?? []).map(p => ({ type: "Programme", id: p.id, name: p.name, subtitle: p.code, path: `/app/programmes/${p.id}` })),
         ...(cohorts.data ?? []).map(c => ({ type: "Cohorte", id: c.id, name: c.name, path: `/app/cohortes/${c.id}` })),
         ...(projects.data ?? []).map(p => ({ type: "Projet", id: p.id, name: p.name, subtitle: p.code ?? undefined, path: `/app/projets` })),
@@ -74,7 +74,7 @@ export default function SearchDialog({ open, onOpenChange }: { open: boolean; on
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="w-full bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground"
-            placeholder="Rechercher startups, programmes, cohortes, grants, cours…"
+            placeholder="Rechercher entreprises, programmes, cohortes, grants, cours…"
           />
         </div>
         <div className="max-h-[300px] overflow-y-auto">

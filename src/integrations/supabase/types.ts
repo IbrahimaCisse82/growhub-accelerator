@@ -54,6 +54,7 @@ export type Database = {
           id: string
           motivation: string | null
           program_id: string | null
+          project_id: string | null
           reviewed_at: string | null
           score: number | null
           startup_id: string | null
@@ -70,6 +71,7 @@ export type Database = {
           id?: string
           motivation?: string | null
           program_id?: string | null
+          project_id?: string | null
           reviewed_at?: string | null
           score?: number | null
           startup_id?: string | null
@@ -86,6 +88,7 @@ export type Database = {
           id?: string
           motivation?: string | null
           program_id?: string | null
+          project_id?: string | null
           reviewed_at?: string | null
           score?: number | null
           startup_id?: string | null
@@ -106,6 +109,13 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
           {
