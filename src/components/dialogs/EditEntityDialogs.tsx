@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
+import { useAssignableUsers } from "@/hooks/useAssignableUsers";
 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 const textCls = "flex min-h-[80px] w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors resize-none";
@@ -15,10 +16,12 @@ const statusOptions = [
   { value: "cancelled", label: "Annulé" },
 ];
 
+// ─── Portfolio ────────────────────────────────────────────────
+
 interface EditPortfolioDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  portfolio: { id: string; name: string; code: string; description?: string | null; objectives?: string | null; status: string; start_date?: string | null; end_date?: string | null };
+  portfolio: { id: string; name: string; code: string; description?: string | null; objectives?: string | null; status: string; start_date?: string | null; end_date?: string | null; owner_id?: string | null };
 }
 
 export function EditPortfolioDialog({ open, onOpenChange, portfolio }: EditPortfolioDialogProps) {
@@ -29,12 +32,16 @@ export function EditPortfolioDialog({ open, onOpenChange, portfolio }: EditPortf
   const [status, setStatus] = useState(portfolio.status);
   const [startDate, setStartDate] = useState(portfolio.start_date ?? "");
   const [endDate, setEndDate] = useState(portfolio.end_date ?? "");
+  const [ownerId, setOwnerId] = useState(portfolio.owner_id ?? "");
   const qc = useQueryClient();
+  const { data: users } = useAssignableUsers();
+  const coordinators = users?.filter(u => u.roles.includes("coordinator") || u.roles.includes("super_admin")) ?? [];
 
   useEffect(() => {
     setName(portfolio.name); setCode(portfolio.code); setDescription(portfolio.description ?? "");
     setObjectives(portfolio.objectives ?? ""); setStatus(portfolio.status);
     setStartDate(portfolio.start_date ?? ""); setEndDate(portfolio.end_date ?? "");
+    setOwnerId(portfolio.owner_id ?? "");
   }, [portfolio]);
 
   const update = useMutation({
@@ -42,6 +49,7 @@ export function EditPortfolioDialog({ open, onOpenChange, portfolio }: EditPortf
       const { error } = await supabase.from("portfolios").update({
         name, code, description: description || null, objectives: objectives || null,
         status: status as any, start_date: startDate || null, end_date: endDate || null,
+        owner_id: ownerId || null,
       }).eq("id", portfolio.id);
       if (error) throw error;
     },
@@ -60,6 +68,13 @@ export function EditPortfolioDialog({ open, onOpenChange, portfolio }: EditPortf
           </div>
           <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Description</label><textarea value={description} onChange={e => setDescription(e.target.value)} className={textCls} /></div>
           <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Objectifs</label><textarea value={objectives} onChange={e => setObjectives(e.target.value)} className={textCls} /></div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">Coordinateur superviseur</label>
+            <select value={ownerId} onChange={e => setOwnerId(e.target.value)} className={inputCls}>
+              <option value="">— Non assigné —</option>
+              {coordinators.map(u => <option key={u.user_id} value={u.user_id}>{u.full_name} ({u.email})</option>)}
+            </select>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Statut</label><select value={status} onChange={e => setStatus(e.target.value)} className={inputCls}>{statusOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
             <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Début</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputCls} /></div>
@@ -74,10 +89,12 @@ export function EditPortfolioDialog({ open, onOpenChange, portfolio }: EditPortf
   );
 }
 
+// ─── Program ────────────────────────────────────────────────
+
 interface EditProgramDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  program: { id: string; name: string; code: string; description?: string | null; funder?: string | null; status: string; start_date?: string | null; end_date?: string | null; budget_total?: number | null; currency?: string | null };
+  program: { id: string; name: string; code: string; description?: string | null; funder?: string | null; status: string; start_date?: string | null; end_date?: string | null; budget_total?: number | null; currency?: string | null; coordinator_id?: string | null };
 }
 
 export function EditProgramDialog({ open, onOpenChange, program }: EditProgramDialogProps) {
@@ -90,13 +107,17 @@ export function EditProgramDialog({ open, onOpenChange, program }: EditProgramDi
   const [endDate, setEndDate] = useState(program.end_date ?? "");
   const [budgetTotal, setBudgetTotal] = useState(String(program.budget_total ?? ""));
   const [currency, setCurrency] = useState(program.currency ?? "XOF");
+  const [coordinatorId, setCoordinatorId] = useState(program.coordinator_id ?? "");
   const qc = useQueryClient();
+  const { data: users } = useAssignableUsers();
+  const coordinators = users?.filter(u => u.roles.includes("coordinator") || u.roles.includes("super_admin")) ?? [];
 
   useEffect(() => {
     setName(program.name); setCode(program.code); setDescription(program.description ?? "");
     setFunder(program.funder ?? ""); setStatus(program.status);
     setStartDate(program.start_date ?? ""); setEndDate(program.end_date ?? "");
     setBudgetTotal(String(program.budget_total ?? "")); setCurrency(program.currency ?? "XOF");
+    setCoordinatorId(program.coordinator_id ?? "");
   }, [program]);
 
   const update = useMutation({
@@ -105,6 +126,7 @@ export function EditProgramDialog({ open, onOpenChange, program }: EditProgramDi
         name, code, description: description || null, funder: funder || null,
         status: status as any, start_date: startDate || null, end_date: endDate || null,
         budget_total: budgetTotal ? parseFloat(budgetTotal) : null, currency,
+        coordinator_id: coordinatorId || null,
       }).eq("id", program.id);
       if (error) throw error;
     },
@@ -126,6 +148,13 @@ export function EditProgramDialog({ open, onOpenChange, program }: EditProgramDi
             <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Bailleur</label><input value={funder} onChange={e => setFunder(e.target.value)} className={inputCls} /></div>
             <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Statut</label><select value={status} onChange={e => setStatus(e.target.value)} className={inputCls}>{statusOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
           </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">Coordinateur superviseur</label>
+            <select value={coordinatorId} onChange={e => setCoordinatorId(e.target.value)} className={inputCls}>
+              <option value="">— Non assigné —</option>
+              {coordinators.map(u => <option key={u.user_id} value={u.user_id}>{u.full_name} ({u.email})</option>)}
+            </select>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Début</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputCls} /></div>
             <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Fin</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={inputCls} /></div>
@@ -140,10 +169,12 @@ export function EditProgramDialog({ open, onOpenChange, program }: EditProgramDi
   );
 }
 
+// ─── Project ────────────────────────────────────────────────
+
 interface EditProjectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  project: { id: string; name: string; code?: string | null; description?: string | null; status: string; start_date?: string | null; end_date?: string | null; budget?: number | null };
+  project: { id: string; name: string; code?: string | null; description?: string | null; status: string; start_date?: string | null; end_date?: string | null; budget?: number | null; owner_id?: string | null };
 }
 
 export function EditProjectDialog({ open, onOpenChange, project }: EditProjectDialogProps) {
@@ -154,12 +185,15 @@ export function EditProjectDialog({ open, onOpenChange, project }: EditProjectDi
   const [startDate, setStartDate] = useState(project.start_date ?? "");
   const [endDate, setEndDate] = useState(project.end_date ?? "");
   const [budget, setBudget] = useState(String(project.budget ?? ""));
+  const [ownerId, setOwnerId] = useState(project.owner_id ?? "");
   const qc = useQueryClient();
+  const { data: users } = useAssignableUsers();
+  const projectManagers = users?.filter(u => u.roles.includes("project_manager") || u.roles.includes("coordinator") || u.roles.includes("super_admin")) ?? [];
 
   useEffect(() => {
     setName(project.name); setCode(project.code ?? ""); setDescription(project.description ?? "");
     setStatus(project.status); setStartDate(project.start_date ?? ""); setEndDate(project.end_date ?? "");
-    setBudget(String(project.budget ?? ""));
+    setBudget(String(project.budget ?? "")); setOwnerId(project.owner_id ?? "");
   }, [project]);
 
   const update = useMutation({
@@ -167,7 +201,7 @@ export function EditProjectDialog({ open, onOpenChange, project }: EditProjectDi
       const { error } = await supabase.from("projects").update({
         name, code: code || null, description: description || null,
         status: status as any, start_date: startDate || null, end_date: endDate || null,
-        budget: budget ? parseFloat(budget) : null,
+        budget: budget ? parseFloat(budget) : null, owner_id: ownerId || null,
       }).eq("id", project.id);
       if (error) throw error;
     },
@@ -185,6 +219,13 @@ export function EditProjectDialog({ open, onOpenChange, project }: EditProjectDi
             <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Code</label><input value={code} onChange={e => setCode(e.target.value)} className={inputCls} /></div>
           </div>
           <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Description</label><textarea value={description} onChange={e => setDescription(e.target.value)} className={textCls} /></div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground">Chef de projet</label>
+            <select value={ownerId} onChange={e => setOwnerId(e.target.value)} className={inputCls}>
+              <option value="">— Non assigné —</option>
+              {projectManagers.map(u => <option key={u.user_id} value={u.user_id}>{u.full_name} ({u.email})</option>)}
+            </select>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Statut</label><select value={status} onChange={e => setStatus(e.target.value)} className={inputCls}>{statusOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}</select></div>
             <div className="space-y-1.5"><label className="text-xs font-medium text-foreground">Début</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputCls} /></div>
