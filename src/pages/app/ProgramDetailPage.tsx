@@ -58,7 +58,7 @@ export default function ProgramDetailPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
         <StatCard label="Budget Total" value={program.budget_total ? new Intl.NumberFormat("fr-FR").format(program.budget_total) : "—"} note={program.currency ?? "XOF"} color="blue" />
-        <StatCard label="Cohortes" value={String(cohorts?.length ?? 0)} note="" color="green" />
+        <StatCard label="Grants" value={String(grants?.length ?? 0)} note={totalGrantAmount > 0 ? formatXOF(totalGrantAmount) : ""} color="green" />
         <StatCard label="Grants" value={String(grants?.length ?? 0)} note={totalGrantAmount > 0 ? formatXOF(totalGrantAmount) : ""} color="amber" />
         <StatCard label="Événements" value={String(events?.length ?? 0)} note="" color="purple" />
       </div>
