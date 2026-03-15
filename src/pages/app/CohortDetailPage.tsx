@@ -54,7 +54,7 @@ export default function CohortDetailPage() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
-        <StatCard label="Startups" value={String(startups?.length ?? 0)} note={`/ ${cohort.max_startups ?? "—"}`} color="green" />
+        <StatCard label="Entreprises" value={String(startups?.length ?? 0)} note={`/ ${cohort.max_startups ?? "—"}`} color="green" />
         <StatCard label="Projet" value={project?.name ?? "—"} note="" color="blue" />
         <StatCard label="Début" value={cohort.start_date ? new Date(cohort.start_date).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "—"} note="" color="amber" />
         <StatCard label="Candidatures" value={String(applications?.length ?? 0)} note="" color="purple" />
