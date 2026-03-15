@@ -117,6 +117,11 @@ export default function ProjetsPage() {
                     <td className="px-4 py-3 text-xs font-mono text-foreground">{p.budget ? `${Number(p.budget).toLocaleString("fr-FR")} XOF` : "—"}</td>
                     <td className="px-4 py-3">
                       <div className="flex gap-1.5">
+                        {vs === "draft" && (
+                          <GhButton size="sm" variant="secondary" onClick={(e) => { e.stopPropagation(); navigate(`/app/projets/nouveau?id=${p.id}`); }}>
+                            Continuer ✏️
+                          </GhButton>
+                        )}
                         {vs === "pending_review" && (
                           <GhButton size="sm" variant="accent" onClick={(e) => { e.stopPropagation(); validateProject.mutate(p.id); }}>
                             Valider
