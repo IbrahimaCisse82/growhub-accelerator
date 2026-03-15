@@ -26,6 +26,7 @@ export default function PortfolioDetailPage() {
   const { isAdmin } = useAuth();
   const { data: portfolio, isLoading } = usePortfolio(id);
   const { data: programs, isLoading: loadingPrograms } = usePortfolioPrograms(id);
+  const { data: coordinator } = useUserProfile(portfolio?.owner_id);
   const [editOpen, setEditOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
 
