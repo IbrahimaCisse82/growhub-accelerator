@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import AppSidebar from "./AppSidebar";
 import AppTopbar from "./AppTopbar";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -8,6 +9,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 export default function AppLayout() {
   const isMobile = useIsMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useRealtimeNotifications();
 
   return (
     <div className="min-h-screen relative z-[1]">
