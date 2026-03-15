@@ -24,7 +24,8 @@ export default function StartupDetailPage() {
   if (!startup) return <div className="text-center py-12 text-muted-foreground">Startup introuvable</div>;
 
   const cohort = startup.cohorts;
-  const program = cohort?.programs;
+  const project = cohort?.projects;
+  const program = project?.programs;
   const portfolio = program?.portfolios;
 
   const crumbs = [
