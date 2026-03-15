@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AppBreadcrumb from "@/components/shared/AppBreadcrumb";
@@ -7,6 +8,9 @@ import GhButton from "@/components/shared/GhButton";
 import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProgram, useProgramProjects, useProgramGrants, useProgramEvents } from "@/hooks/usePrograms";
+import { useAuth } from "@/hooks/useAuth";
+import { EditProgramDialog } from "@/components/dialogs/EditEntityDialogs";
+import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
