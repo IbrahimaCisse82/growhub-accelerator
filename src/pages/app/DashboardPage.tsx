@@ -107,7 +107,7 @@ export default function DashboardPage() {
           </>
         ) : (
           <>
-            <StatCard label="Ma startup" value={myStartup?.name ?? "—"} note={myStartup?.stage ?? ""} icon="△" color="green" />
+            <StatCard label="Mon entreprise" value={myStartup?.name ?? "—"} note={myStartup?.stage ?? ""} icon="△" color="green" />
             <StatCard label="Score" value={myStartup?.score != null ? `${myStartup.score}/100` : "—"} note="" icon="◎" color="blue" />
             <StatCard label="Projets" value={String(projects?.filter(p => p.startup_id === myStartup?.id).length ?? 0)} note="" icon="◑" color="amber" />
             <StatCard label="Cours disponibles" value={String(courses?.filter(c => c.is_published).length ?? 0)} note="" icon="◇" color="purple" />
