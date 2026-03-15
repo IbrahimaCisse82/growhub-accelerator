@@ -33,7 +33,7 @@ export default function CreateStartupDialog({ children, cohortId }: { children: 
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="bg-card border-border">
-        <DialogHeader><DialogTitle className="font-display">Nouvelle startup</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle className="font-display">Nouvelle entreprise</DialogTitle></DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-4">
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Nom *</label><input value={name} onChange={e => setName(e.target.value)} required className={inputCls} /></div>
           <div className="grid grid-cols-2 gap-3">
