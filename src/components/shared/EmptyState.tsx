@@ -1,3 +1,4 @@
+// EmptyState component
 import GhButton from "./GhButton";
 
 interface EmptyStateProps {
