@@ -22,7 +22,7 @@ export function usePortfolio(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("portfolios")
-        .select("*, coordinator:profiles!portfolios_owner_id_fkey(full_name, email)")
+        .select("*")
         .eq("id", id!)
         .single();
       if (error) throw error;
