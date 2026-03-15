@@ -28,7 +28,7 @@ const actionLabel: Record<string, string> = {
 };
 
 const entityLabel: Record<string, string> = {
-  projects: "Projet", startups: "Startup", grants: "Grant", programs: "Programme",
+  projects: "Projet", startups: "Entreprise", grants: "Grant", programs: "Programme",
   cohorts: "Cohorte", tasks: "Tâche", milestones: "Jalon", events: "Événement",
   coaching_sessions: "Session", courses: "Cours", risks: "Risque",
 };
