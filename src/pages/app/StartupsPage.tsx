@@ -34,7 +34,7 @@ export default function StartupsPage() {
           <GhButton variant="ghost" onClick={() => filtered && exportToPDF("Startups", filtered, exportCols)}>⎙ PDF</GhButton>
           <CreateStartupDialog><GhButton>+ Ajouter</GhButton></CreateStartupDialog>
         </>} />
-      <GhCard title="Toutes les startups" badge={String(filtered?.length ?? 0)} noPadding>
+      <GhCard title="Toutes les entreprises" badge={String(filtered?.length ?? 0)} noPadding>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[12.5px]">
             <thead><tr className="bg-surface-2">{["Startup", "Secteur", "Cohorte", "Stade", "Score", "Pays", ""].map((h) => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>)}</tr></thead>
