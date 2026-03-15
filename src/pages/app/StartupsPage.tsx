@@ -27,7 +27,7 @@ export default function StartupsPage() {
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <SectionHeader title="Startups" subtitle="Répertoire et suivi des entreprises accompagnées"
+      <SectionHeader title="Entreprises" subtitle="Répertoire et suivi des entreprises accompagnées"
         actions={<>
           <input className="bg-surface-2 border border-border rounded-lg px-3 py-[7px] text-[12.5px] text-foreground outline-none focus:border-primary/50 w-[140px] sm:w-[200px] placeholder:text-muted-foreground" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} />
           <GhButton variant="ghost" onClick={() => filtered && exportToCSV(filtered, "startups", exportCols)}>⤓ CSV</GhButton>
