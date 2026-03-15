@@ -63,8 +63,8 @@ export default function CohortDetailPage() {
       {/* Startups */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display text-sm font-bold text-foreground">Startups de la cohorte</h3>
-          <GhButton variant="ghost" onClick={() => navigate("/app/startups")}>Voir tout →</GhButton>
+          <h3 className="font-display text-sm font-bold text-foreground">Entreprises de la cohorte</h3>
+          <GhButton variant="ghost" onClick={() => navigate("/app/entreprises")}>Voir tout →</GhButton>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {loadingStartups ? (
