@@ -238,7 +238,7 @@ export type Database = {
           id: string
           max_startups: number | null
           name: string
-          program_id: string | null
+          project_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
           updated_at: string
@@ -250,7 +250,7 @@ export type Database = {
           id?: string
           max_startups?: number | null
           name: string
-          program_id?: string | null
+          project_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
@@ -262,17 +262,17 @@ export type Database = {
           id?: string
           max_startups?: number | null
           name?: string
-          program_id?: string | null
+          project_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "cohorts_program_id_fkey"
-            columns: ["program_id"]
+            foreignKeyName: "cohorts_project_id_fkey"
+            columns: ["project_id"]
             isOneToOne: false
-            referencedRelation: "programs"
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
