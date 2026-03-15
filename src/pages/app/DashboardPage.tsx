@@ -93,7 +93,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         {isAdmin ? (
           <>
-            <div onClick={() => navigate("/app/startups")} className="cursor-pointer"><StatCard label="Startups Actives" value={loadingStartups ? "…" : String(startupsCount)} note="" icon="△" color="green" /></div>
+            <div onClick={() => navigate("/app/entreprises")} className="cursor-pointer"><StatCard label="Entreprises Actives" value={loadingStartups ? "…" : String(startupsCount)} note="" icon="△" color="green" /></div>
             <div onClick={() => navigate("/app/grants")} className="cursor-pointer"><StatCard label="Financements (XOF)" value={loadingGrants ? "…" : new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(totalFunding)} note={`${activeGrants.length} grants actifs`} icon="◎" color="blue" /></div>
             <div onClick={() => navigate("/app/projets")} className="cursor-pointer"><StatCard label="Projets" value={loadingProjects ? "…" : String(projects?.length ?? 0)} note="" icon="◑" color="amber" /></div>
             <div onClick={() => navigate("/app/cohortes")} className="cursor-pointer"><StatCard label="Cohortes actives" value={String(activeCohorts)} note="" icon="◉" color="purple" /></div>
