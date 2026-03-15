@@ -187,6 +187,9 @@ export default function ProgramDetailPage() {
           </div>
         </div>
       )}
+
+      <EditProgramDialog open={editOpen} onOpenChange={setEditOpen} program={program} />
+      <ValidateEntityDialog open={validateOpen} onOpenChange={setValidateOpen} entityType="programs" entityId={program.id} entityName={program.name} />
     </motion.div>
   );
 }

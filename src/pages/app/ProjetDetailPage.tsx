@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import WorkPackageCard from "@/components/projects/WorkPackageCard";
 import { buildWorkPackages } from "@/lib/workPackageUtils";
+import { useAuth } from "@/hooks/useAuth";
+import { EditProjectDialog } from "@/components/dialogs/EditEntityDialogs";
+import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
 
 const statusMap: Record<string, { label: string; color: "green" | "blue" | "amber" | "gray" }> = {
   active: { label: "Actif", color: "green" },
