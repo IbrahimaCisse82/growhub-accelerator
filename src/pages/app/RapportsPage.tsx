@@ -10,7 +10,7 @@ import { useCohorts } from "@/hooks/useCohorts";
 import { exportToJSON, exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 const reports = [
-  { id: "startups", title: "Rapport Startups", description: "Vue d'ensemble des startups accompagnées, secteurs, stades et scores", icon: "△" },
+  { id: "startups", title: "Rapport Entreprises", description: "Vue d'ensemble des entreprises accompagnées, secteurs, stades et scores", icon: "△" },
   { id: "financial", title: "Rapport Financier", description: "Synthèse des grants, budgets, décaissements et taux d'utilisation", icon: "◎" },
   { id: "programs", title: "Rapport Programmes", description: "Performance des programmes, cohortes et taux de complétion", icon: "◇" },
   { id: "impact", title: "Rapport d'Impact", description: "Métriques d'impact : emplois créés, levées de fonds, croissance", icon: "◈" },
