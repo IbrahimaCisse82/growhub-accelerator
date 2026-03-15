@@ -46,7 +46,7 @@ export default function AnalyticsPage() {
       <SectionHeader title="Analytics" subtitle="Performances et métriques de la plateforme"
         actions={<GhButton variant="ghost" onClick={() => {
           const summary = [
-            { metric: "Startups", value: startupsCount ?? 0 },
+            { metric: "Entreprises", value: startupsCount ?? 0 },
             { metric: "Financement total", value: totalFunding },
             { metric: "Cohortes", value: cohorts?.length ?? 0 },
             { metric: "Sessions coaching", value: totalSessions },
