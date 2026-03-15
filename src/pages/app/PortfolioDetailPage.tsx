@@ -59,10 +59,15 @@ export default function PortfolioDetailPage() {
         }
       />
 
-      <div className="grid grid-cols-3 gap-3.5 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Code</div>
           <div className="text-foreground font-semibold">{portfolio.code}</div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Coordinateur</div>
+          <div className="text-foreground font-semibold">{coordinator?.full_name ?? "Non assigné"}</div>
+          {coordinator?.email && <div className="text-[10px] text-muted-foreground mt-0.5">{coordinator.email}</div>}
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Période</div>

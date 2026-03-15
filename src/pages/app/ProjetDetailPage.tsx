@@ -157,6 +157,9 @@ export default function ProjetDetailPage() {
               {project.programs?.name && (
                 <p className="text-xs text-muted-foreground">Programme : <span className="text-foreground font-medium">{project.programs.name}</span></p>
               )}
+              {projectManager && (
+                <p className="text-xs text-muted-foreground">Chef de projet : <span className="text-foreground font-medium">{projectManager.full_name}</span></p>
+              )}
             </div>
             <div className="flex gap-2 shrink-0">
               {isAdmin && (

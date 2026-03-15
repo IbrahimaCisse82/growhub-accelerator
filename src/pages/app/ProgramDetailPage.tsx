@@ -61,7 +61,7 @@ export default function ProgramDetailPage() {
       <AppBreadcrumb items={crumbs} />
       <SectionHeader
         title={program.name}
-        subtitle={`${program.code} ${program.funder ? `· Bailleur : ${program.funder}` : ""}`}
+        subtitle={`${program.code} ${program.funder ? `· Bailleur : ${program.funder}` : ""} ${coordinator ? `· Coordinateur : ${coordinator.full_name}` : ""}`}
         actions={
           <div className="flex items-center gap-2">
             <Pill color={st.color}>● {st.label}</Pill>
