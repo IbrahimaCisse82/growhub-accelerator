@@ -8,6 +8,7 @@ import { usePrograms } from "@/hooks/usePrograms";
 import { useGrants } from "@/hooks/useGrants";
 import { toast } from "sonner";
 import GhButton from "@/components/shared/GhButton";
+import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 const textareaCls = inputCls + " h-24 resize-none";
@@ -16,35 +17,30 @@ const helpCls = "text-[11px] text-muted-foreground mt-1";
 
 const STEPS = [
   { key: "info", label: "Informations", icon: "📋" },
-  { key: "logframe", label: "Cadre logique", icon: "🎯" },
+  { key: "logframe", label: "Cadre logique & WP", icon: "🎯" },
   { key: "toc", label: "Théorie du changement", icon: "🔄" },
-  { key: "kpi", label: "Indicateurs KPI", icon: "📊" },
+  { key: "kpi-milestones", label: "Indicateurs & Jalons", icon: "📊" },
   { key: "budget", label: "Budget", icon: "💰" },
   { key: "validate", label: "Validation", icon: "✅" },
 ];
 
-// --- JSON Array Editor ---
-function ArrayEditor({ items, onChange, placeholder }: { items: string[]; onChange: (v: string[]) => void; placeholder: string }) {
-  const add = () => onChange([...items, ""]);
-  const update = (i: number, v: string) => { const n = [...items]; n[i] = v; onChange(n); };
-  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
-
-  return (
-    <div className="space-y-2">
-      {items.map((item, i) => (
-        <div key={i} className="flex gap-2">
-          <input value={item} onChange={e => update(i, e.target.value)} placeholder={`${placeholder} ${i + 1}`} className={inputCls} />
-          <button type="button" onClick={() => remove(i)} className="text-destructive text-xs px-2 hover:bg-destructive/10 rounded-lg transition-colors">✕</button>
-        </div>
-      ))}
-      <button type="button" onClick={add} className="text-xs text-primary font-semibold hover:underline">+ Ajouter</button>
-    </div>
-  );
+// --- Work Package Draft ---
+interface WpDraft {
+  title: string;
+  objective: string;
+  activities: string[];
+  results: string[];
 }
 
-// --- KPI Row ---
-interface KpiRow { name: string; category: string; unit: string; baseline: number; target: number; frequency: string; source: string; responsible: string }
-const emptyKpi = (): KpiRow => ({ name: "", category: "output", unit: "", baseline: 0, target: 0, frequency: "quarterly", source: "", responsible: "" });
+const emptyWp = (): WpDraft => ({ title: "", objective: "", activities: [""], results: [""] });
+
+// --- KPI per WP ---
+interface KpiRow { name: string; category: string; unit: string; baseline: number; target: number; frequency: string; source: string; responsible: string; wpIndex: number }
+const emptyKpi = (wpIndex: number): KpiRow => ({ name: "", category: "output", unit: "", baseline: 0, target: 0, frequency: "quarterly", source: "", responsible: "", wpIndex });
+
+// --- Milestone per WP ---
+interface MilestoneDraft { title: string; dueDate: string; wpIndex: number }
+const emptyMilestone = (wpIndex: number): MilestoneDraft => ({ title: "", dueDate: "", wpIndex });
 
 // --- Budget Line (GTS Format) ---
 interface BudgetLine { code: string; desc: string; unit: string; qty: number; montant: number; alloc: number; section: "A" | "B" }
@@ -62,6 +58,73 @@ const DEFAULT_BUDGET_LINES: BudgetLine[] = [
 const lineTotal = (l: BudgetLine) => (l.qty || 0) * (l.montant || 0) * ((l.alloc || 100) / 100);
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
+// --- Array Editor ---
+function ArrayEditor({ items, onChange, placeholder }: { items: string[]; onChange: (v: string[]) => void; placeholder: string }) {
+  const add = () => onChange([...items, ""]);
+  const update = (i: number, v: string) => { const n = [...items]; n[i] = v; onChange(n); };
+  const remove = (i: number) => onChange(items.filter((_, idx) => idx !== i));
+  return (
+    <div className="space-y-2">
+      {items.map((item, i) => (
+        <div key={i} className="flex gap-2">
+          <input value={item} onChange={e => update(i, e.target.value)} placeholder={`${placeholder} ${i + 1}`} className={inputCls} />
+          <button type="button" onClick={() => remove(i)} className="text-destructive text-xs px-2 hover:bg-destructive/10 rounded-lg transition-colors">✕</button>
+        </div>
+      ))}
+      <button type="button" onClick={add} className="text-xs text-primary font-semibold hover:underline">+ Ajouter</button>
+    </div>
+  );
+}
+
+// --- WP prefix helpers ---
+function flattenWpActivities(wps: WpDraft[]): string[] {
+  return wps.flatMap((wp, i) => wp.activities.filter(Boolean).map((a, j) => `A${i + 1}.${j + 1} ${a}`));
+}
+function flattenWpResults(wps: WpDraft[]): string[] {
+  return wps.flatMap((wp, i) => wp.results.filter(Boolean).map((r, j) => `R${i + 1}.${j + 1} ${r}`));
+}
+function flattenWpObjectives(wps: WpDraft[]): string[] {
+  return wps.map(wp => wp.title ? `${wp.title}: ${wp.objective}` : wp.objective);
+}
+
+// Parse existing data back into WPs
+function parseWpsFromLogframe(logframe: { specific_objectives?: unknown; activities?: unknown; expected_results?: unknown }): WpDraft[] {
+  const objectives = toArr(logframe.specific_objectives);
+  if (objectives.length === 0) return [emptyWp()];
+
+  return objectives.map((obj, idx) => {
+    const wpNum = idx + 1;
+    let title = "";
+    let objective = obj;
+    const colonIdx = obj.indexOf(":");
+    if (colonIdx > 0 && colonIdx < 80) {
+      title = obj.substring(0, colonIdx).trim();
+      objective = obj.substring(colonIdx + 1).trim();
+    }
+
+    const activities = toArr(logframe.activities)
+      .filter(a => new RegExp(`^A${wpNum}\\.\\d`, "i").test(a.trim()))
+      .map(a => a.replace(/^A\d+\.\d+\s*/i, "").trim());
+    const results = toArr(logframe.expected_results)
+      .filter(r => new RegExp(`^R${wpNum}\\.\\d`, "i").test(r.trim()))
+      .map(r => r.replace(/^R\d+\.\d+\s*/i, "").trim());
+
+    return {
+      title,
+      objective,
+      activities: activities.length > 0 ? activities : [""],
+      results: results.length > 0 ? results : [""],
+    };
+  });
+}
+
+function toArr(val: unknown): string[] {
+  if (!Array.isArray(val)) return [];
+  return val.map(v => typeof v === "string" ? v : JSON.stringify(v));
+}
+
+const wpColors = ["from-primary/80 to-primary", "from-accent/80 to-accent", "from-emerald-500/80 to-emerald-600", "from-amber-500/80 to-amber-600", "from-violet-500/80 to-violet-600", "from-rose-500/80 to-rose-600"];
+
 export default function ProjectWizardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [step, setStep] = useState(0);
@@ -73,7 +136,7 @@ export default function ProjectWizardPage() {
   const { data: grants } = useGrants();
   const qc = useQueryClient();
 
-  // Step 1: Info
+  // Step 0: Info
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
@@ -82,15 +145,13 @@ export default function ProjectWizardPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
 
-  // Step 2: Cadre logique
+  // Step 1: Cadre logique + WPs
   const [overallObjective, setOverallObjective] = useState("");
-  const [specificObjectives, setSpecificObjectives] = useState<string[]>([""]);
-  const [expectedResults, setExpectedResults] = useState<string[]>([""]);
-  const [lfActivities, setLfActivities] = useState<string[]>([""]);
+  const [wps, setWps] = useState<WpDraft[]>([emptyWp()]);
   const [assumptions, setAssumptions] = useState("");
   const [preConditions, setPreConditions] = useState("");
 
-  // Step 3: Théorie du changement
+  // Step 2: Théorie du changement
   const [tocInputs, setTocInputs] = useState<string[]>([""]);
   const [tocActivities, setTocActivities] = useState<string[]>([""]);
   const [tocOutputs, setTocOutputs] = useState<string[]>([""]);
@@ -99,10 +160,11 @@ export default function ProjectWizardPage() {
   const [tocAssumptions, setTocAssumptions] = useState<string[]>([""]);
   const [tocRisks, setTocRisks] = useState<string[]>([""]);
 
-  // Step 4: KPIs
-  const [kpis, setKpis] = useState<KpiRow[]>([emptyKpi()]);
+  // Step 3: KPIs & Milestones per WP
+  const [kpis, setKpis] = useState<KpiRow[]>([emptyKpi(0)]);
+  const [milestones, setMilestones] = useState<MilestoneDraft[]>([emptyMilestone(0)]);
 
-  // Step 5: Budget (GTS format)
+  // Step 4: Budget
   const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([...DEFAULT_BUDGET_LINES]);
 
   const linesA = budgetLines.filter(l => l.section === "A");
@@ -111,7 +173,7 @@ export default function ProjectWizardPage() {
   const totalB = linesB.reduce((s, l) => s + lineTotal(l), 0);
   const totalBudget = totalA + totalB;
 
-  // --- Load existing draft project ---
+  // --- Load existing draft ---
   const { data: existingProject } = useQuery({
     queryKey: ["project-draft", projectId],
     queryFn: async () => {
@@ -153,6 +215,16 @@ export default function ProjectWizardPage() {
     enabled: !!projectId,
   });
 
+  const { data: existingMilestones } = useQuery({
+    queryKey: ["project-milestones-draft", projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      const { data } = await supabase.from("milestones").select("*").eq("project_id", projectId).order("due_date");
+      return data;
+    },
+    enabled: !!projectId,
+  });
+
   const { data: existingBudgetLines } = useQuery({
     queryKey: ["project-budget-lines", projectId],
     queryFn: async () => {
@@ -163,7 +235,7 @@ export default function ProjectWizardPage() {
     enabled: !!projectId,
   });
 
-  // Hydrate form from existing data
+  // Hydrate
   useEffect(() => {
     if (existingProject) {
       setName(existingProject.name || "");
@@ -178,14 +250,10 @@ export default function ProjectWizardPage() {
   useEffect(() => {
     if (existingLogframe) {
       setOverallObjective(existingLogframe.overall_objective || "");
-      const so = existingLogframe.specific_objectives as string[] | null;
-      setSpecificObjectives(so && so.length > 0 ? so : [""]);
-      const er = existingLogframe.expected_results as string[] | null;
-      setExpectedResults(er && er.length > 0 ? er : [""]);
-      const ac = existingLogframe.activities as string[] | null;
-      setLfActivities(ac && ac.length > 0 ? ac : [""]);
       setAssumptions(existingLogframe.assumptions || "");
       setPreConditions(existingLogframe.pre_conditions || "");
+      const parsed = parseWpsFromLogframe(existingLogframe);
+      setWps(parsed);
     }
   }, [existingLogframe]);
 
@@ -209,13 +277,34 @@ export default function ProjectWizardPage() {
 
   useEffect(() => {
     if (existingKpis && existingKpis.length > 0) {
-      setKpis(existingKpis.map(k => ({
-        name: k.name, category: k.category || "output", unit: k.unit || "",
-        baseline: Number(k.baseline_value) || 0, target: Number(k.target_value) || 0,
-        frequency: k.frequency || "quarterly", source: k.data_source || "", responsible: k.responsible || "",
-      })));
+      setKpis(existingKpis.map(k => {
+        // Detect WP index from name prefix
+        const match = k.name.match(/^I(\d+)\.\d+\s*/i);
+        const wpIdx = match ? parseInt(match[1]) - 1 : 0;
+        return {
+          name: k.name.replace(/^I\d+\.\d+\s*/i, "").trim(),
+          category: k.category || "output", unit: k.unit || "",
+          baseline: Number(k.baseline_value) || 0, target: Number(k.target_value) || 0,
+          frequency: k.frequency || "quarterly", source: k.data_source || "",
+          responsible: k.responsible || "", wpIndex: wpIdx,
+        };
+      }));
     }
   }, [existingKpis]);
+
+  useEffect(() => {
+    if (existingMilestones && existingMilestones.length > 0) {
+      setMilestones(existingMilestones.map(m => {
+        const match = m.title.match(/^M(\d+)\.\d+\s*/i);
+        const wpIdx = match ? parseInt(match[1]) - 1 : 0;
+        return {
+          title: m.title.replace(/^M\d+\.\d+\s*/i, "").trim(),
+          dueDate: m.due_date || "",
+          wpIndex: wpIdx,
+        };
+      }));
+    }
+  }, [existingMilestones]);
 
   useEffect(() => {
     if (existingBudgetLines && existingBudgetLines.length > 0) {
@@ -227,191 +316,171 @@ export default function ProjectWizardPage() {
     }
   }, [existingBudgetLines]);
 
-  // --- Detect which step to resume at ---
+  // Resume step
   useEffect(() => {
-    if (!projectId) return;
-    // Determine the furthest completed step
-    if (existingProject) {
-      let resumeStep = 1; // step 0 done since project exists
-      if (existingLogframe) resumeStep = 2;
-      if (existingToc) resumeStep = 3;
-      if (existingKpis && existingKpis.length > 0) resumeStep = 4;
-      if (existingBudgetLines && existingBudgetLines.length > 0) resumeStep = 5;
-      setStep(resumeStep);
-    }
+    if (!projectId || !existingProject) return;
+    let resumeStep = 1;
+    if (existingLogframe) resumeStep = 2;
+    if (existingToc) resumeStep = 3;
+    if (existingKpis && existingKpis.length > 0) resumeStep = 4;
+    if (existingBudgetLines && existingBudgetLines.length > 0) resumeStep = 5;
+    setStep(resumeStep);
   }, [projectId, existingProject, existingLogframe, existingToc, existingKpis, existingBudgetLines]);
 
   const canNext = () => {
     if (step === 0) return name && programId;
-    if (step === 1) return overallObjective;
+    if (step === 1) return overallObjective && wps.some(wp => wp.objective);
     if (step === 2) return tocImpact;
     if (step === 3) return kpis.some(k => k.name);
     if (step === 4) return budgetLines.some(b => b.desc && (b.qty > 0 || b.montant > 0));
     return true;
   };
 
-  // --- Save step 0: Create or update project ---
+  // WP helpers
+  const updateWp = (idx: number, partial: Partial<WpDraft>) => {
+    const n = [...wps]; n[idx] = { ...n[idx], ...partial }; setWps(n);
+  };
+  const addWp = () => setWps([...wps, emptyWp()]);
+  const removeWp = (idx: number) => {
+    if (wps.length <= 1) return;
+    setWps(wps.filter((_, i) => i !== idx));
+    setKpis(kpis.filter(k => k.wpIndex !== idx).map(k => ({ ...k, wpIndex: k.wpIndex > idx ? k.wpIndex - 1 : k.wpIndex })));
+    setMilestones(milestones.filter(m => m.wpIndex !== idx).map(m => ({ ...m, wpIndex: m.wpIndex > idx ? m.wpIndex - 1 : m.wpIndex })));
+  };
+
+  // --- Save functions ---
   const saveStep0 = async () => {
     if (projectId) {
-      const { error } = await supabase.from("projects").update({
+      await supabase.from("projects").update({
         name, code: code || null, description: description || null,
         program_id: programId, start_date: startDate || null, end_date: endDate || null,
-      }).eq("id", projectId);
-      if (error) throw error;
+      }).eq("id", projectId).throwOnError();
       return projectId;
     } else {
-      const { data, error } = await supabase.from("projects").insert({
+      const { data } = await supabase.from("projects").insert({
         name, code: code || null, description: description || null,
         program_id: programId, owner_id: user?.id,
         start_date: startDate || null, end_date: endDate || null,
         status: "draft", validation_status: "draft",
-      }).select("id").single();
-      if (error) throw error;
+      }).select("id").single().throwOnError();
       return data.id;
     }
   };
 
-  // --- Save step 1: Logical framework ---
   const saveStep1 = async (pid: string) => {
     const payload = {
       project_id: pid,
       overall_objective: overallObjective,
-      specific_objectives: specificObjectives.filter(Boolean),
-      expected_results: expectedResults.filter(Boolean),
-      activities: lfActivities.filter(Boolean),
+      specific_objectives: flattenWpObjectives(wps),
+      expected_results: flattenWpResults(wps),
+      activities: flattenWpActivities(wps),
       assumptions: assumptions || null,
       pre_conditions: preConditions || null,
     };
     if (existingLogframe) {
-      const { error } = await supabase.from("logical_frameworks").update(payload).eq("project_id", pid);
-      if (error) throw error;
+      await supabase.from("logical_frameworks").update(payload).eq("project_id", pid).throwOnError();
     } else {
-      const { error } = await supabase.from("logical_frameworks").insert(payload);
-      if (error) throw error;
+      await supabase.from("logical_frameworks").insert(payload).throwOnError();
     }
   };
 
-  // --- Save step 2: Theory of change ---
   const saveStep2 = async (pid: string) => {
     const payload = {
       project_id: pid,
-      inputs: tocInputs.filter(Boolean),
-      activities: tocActivities.filter(Boolean),
-      outputs: tocOutputs.filter(Boolean),
-      outcomes: tocOutcomes.filter(Boolean),
-      impact: tocImpact,
-      assumptions: tocAssumptions.filter(Boolean),
-      risks: tocRisks.filter(Boolean),
+      inputs: tocInputs.filter(Boolean), activities: tocActivities.filter(Boolean),
+      outputs: tocOutputs.filter(Boolean), outcomes: tocOutcomes.filter(Boolean),
+      impact: tocImpact, assumptions: tocAssumptions.filter(Boolean), risks: tocRisks.filter(Boolean),
     };
     if (existingToc) {
-      const { error } = await supabase.from("theory_of_change").update(payload).eq("project_id", pid);
-      if (error) throw error;
+      await supabase.from("theory_of_change").update(payload).eq("project_id", pid).throwOnError();
     } else {
-      const { error } = await supabase.from("theory_of_change").insert(payload);
-      if (error) throw error;
+      await supabase.from("theory_of_change").insert(payload).throwOnError();
     }
   };
 
-  // --- Save step 3: KPIs ---
   const saveStep3 = async (pid: string) => {
-    // Delete existing and re-insert
+    // KPIs
     await supabase.from("project_indicators").delete().eq("project_id", pid);
     const validKpis = kpis.filter(k => k.name);
     if (validKpis.length > 0) {
-      const { error } = await supabase.from("project_indicators").insert(
-        validKpis.map(k => ({
-          project_id: pid, name: k.name, category: k.category,
-          unit: k.unit || null, baseline_value: k.baseline, target_value: k.target,
-          frequency: k.frequency, data_source: k.source || null, responsible: k.responsible || null,
-        }))
-      );
-      if (error) throw error;
+      const kpiCounters: Record<number, number> = {};
+      await supabase.from("project_indicators").insert(
+        validKpis.map(k => {
+          kpiCounters[k.wpIndex] = (kpiCounters[k.wpIndex] || 0) + 1;
+          return {
+            project_id: pid,
+            name: `I${k.wpIndex + 1}.${kpiCounters[k.wpIndex]} ${k.name}`,
+            category: k.category, unit: k.unit || null,
+            baseline_value: k.baseline, target_value: k.target,
+            frequency: k.frequency, data_source: k.source || null,
+            responsible: k.responsible || null,
+          };
+        })
+      ).throwOnError();
+    }
+    // Milestones
+    await supabase.from("milestones").delete().eq("project_id", pid);
+    const validMilestones = milestones.filter(m => m.title);
+    if (validMilestones.length > 0) {
+      const mCounters: Record<number, number> = {};
+      await supabase.from("milestones").insert(
+        validMilestones.map(m => {
+          mCounters[m.wpIndex] = (mCounters[m.wpIndex] || 0) + 1;
+          return {
+            project_id: pid,
+            title: `M${m.wpIndex + 1}.${mCounters[m.wpIndex]} ${m.title}`,
+            due_date: m.dueDate || null,
+            status: "pending",
+          };
+        })
+      ).throwOnError();
     }
   };
 
-  // --- Save step 4: Budget lines ---
   const saveStep4 = async (pid: string) => {
-    // Delete existing and re-insert
     await supabase.from("project_budget_lines").delete().eq("project_id", pid);
     const validBudget = budgetLines.filter(b => b.desc);
     if (validBudget.length > 0) {
-      const { error } = await supabase.from("project_budget_lines").insert(
+      await supabase.from("project_budget_lines").insert(
         validBudget.map(b => ({
           project_id: pid, category: b.section === "A" ? "operational" : "management",
           label: b.desc, code: b.code, section: b.section,
-          unit: b.unit || null, quantity: b.qty, unit_cost: b.montant,
-          allocation_pct: b.alloc, funding_source: null,
+          unit: b.unit || null, quantity: b.qty, unit_cost: b.montant, allocation_pct: b.alloc, funding_source: null,
         }))
-      );
-      if (error) throw error;
+      ).throwOnError();
     }
-    // Update project budget total
     await supabase.from("projects").update({ budget: totalBudget }).eq("id", pid);
-
-    // Link to grant if selected
     if (grantId) {
-      const { data: existingBudget } = await supabase.from("budgets").select("id").eq("project_id", pid).eq("grant_id", grantId).maybeSingle();
-      if (!existingBudget) {
-        await supabase.from("budgets").insert({
-          project_id: pid, grant_id: grantId,
-          category: "projet", label: `Budget ${name}`,
-          amount_planned: totalBudget, amount_spent: 0,
-        });
+      const { data: eb } = await supabase.from("budgets").select("id").eq("project_id", pid).eq("grant_id", grantId).maybeSingle();
+      if (!eb) {
+        await supabase.from("budgets").insert({ project_id: pid, grant_id: grantId, category: "projet", label: `Budget ${name}`, amount_planned: totalBudget, amount_spent: 0 });
       } else {
-        await supabase.from("budgets").update({ amount_planned: totalBudget }).eq("id", existingBudget.id);
+        await supabase.from("budgets").update({ amount_planned: totalBudget }).eq("id", eb.id);
       }
     }
   };
 
-  // --- Handle "Suivant" click ---
   const handleNext = async () => {
     setSaving(true);
     try {
       let pid = projectId;
-
-      if (step === 0) {
-        pid = await saveStep0();
-        setProjectId(pid);
-        setSearchParams({ id: pid });
-        qc.invalidateQueries({ queryKey: ["project-draft", pid] });
-      } else if (step === 1 && pid) {
-        await saveStep1(pid);
-        qc.invalidateQueries({ queryKey: ["project-logframe", pid] });
-      } else if (step === 2 && pid) {
-        await saveStep2(pid);
-        qc.invalidateQueries({ queryKey: ["project-toc", pid] });
-      } else if (step === 3 && pid) {
-        await saveStep3(pid);
-        qc.invalidateQueries({ queryKey: ["project-kpis", pid] });
-      } else if (step === 4 && pid) {
-        await saveStep4(pid);
-        qc.invalidateQueries({ queryKey: ["project-budget-lines", pid] });
-      }
-
+      if (step === 0) { pid = await saveStep0(); setProjectId(pid); setSearchParams({ id: pid }); qc.invalidateQueries({ queryKey: ["project-draft", pid] }); }
+      else if (step === 1 && pid) { await saveStep1(pid); qc.invalidateQueries({ queryKey: ["project-logframe", pid] }); }
+      else if (step === 2 && pid) { await saveStep2(pid); qc.invalidateQueries({ queryKey: ["project-toc", pid] }); }
+      else if (step === 3 && pid) { await saveStep3(pid); qc.invalidateQueries({ queryKey: ["project-kpis", pid] }); qc.invalidateQueries({ queryKey: ["project-milestones-draft", pid] }); }
+      else if (step === 4 && pid) { await saveStep4(pid); qc.invalidateQueries({ queryKey: ["project-budget-lines", pid] }); }
       toast.success("Données enregistrées ✓");
       setStep(step + 1);
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setSaving(false);
-    }
+    } catch (e) { toast.error((e as Error).message); }
+    finally { setSaving(false); }
   };
 
-  // --- Submit final ---
   const submitProject = useMutation({
     mutationFn: async () => {
       if (!projectId) throw new Error("Projet introuvable");
-      const { error } = await supabase.from("projects").update({
-        validation_status: "pending_review",
-        budget: totalBudget,
-      }).eq("id", projectId);
-      if (error) throw error;
+      await supabase.from("projects").update({ validation_status: "pending_review", budget: totalBudget }).eq("id", projectId).throwOnError();
     },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["projects"] });
-      toast.success("Projet soumis pour validation !");
-      navigate("/app/projets");
-    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["projects"] }); toast.success("Projet soumis pour validation !"); navigate("/app/projets"); },
     onError: (e) => toast.error((e as Error).message),
   });
 
@@ -429,15 +498,12 @@ export default function ProjectWizardPage() {
       {/* Stepper */}
       <div className="flex items-center gap-1 mb-8 bg-card border border-border rounded-xl p-2">
         {STEPS.map((s, i) => (
-          <button
-            key={s.key}
-            onClick={() => i <= step && setStep(i)}
+          <button key={s.key} onClick={() => i <= step && setStep(i)}
             className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
               i === step ? "bg-primary text-primary-foreground shadow-sm" :
               i < step ? "bg-surface-2 text-foreground cursor-pointer hover:bg-surface-3" :
               "text-muted-foreground cursor-default"
-            }`}
-          >
+            }`}>
             <span>{s.icon}</span>
             <span className="hidden lg:inline">{s.label}</span>
             <span className="lg:hidden">{i + 1}</span>
@@ -481,36 +547,33 @@ export default function ProjectWizardPage() {
             </div>
           )}
 
-          {/* STEP 1: Cadre logique */}
+          {/* STEP 1: Cadre logique + Work Packages */}
           {step === 1 && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Cadre logique</h2>
-                <p className={helpCls}>Le cadre logique (LogFrame) structure la logique d'intervention du projet selon la méthodologie des bailleurs internationaux : objectif global → objectifs spécifiques → résultats attendus → activités.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">Cadre logique & Work Packages</h2>
+                <p className={helpCls}>Structurez la logique d'intervention en Work Packages. Chaque WP regroupe un objectif spécifique, ses activités et ses résultats attendus.</p>
               </div>
               <div className="space-y-2">
                 <label className={labelCls}>Objectif global (impact) *</label>
-                <textarea value={overallObjective} onChange={e => setOverallObjective(e.target.value)} required className={textareaCls} placeholder="Ex: Contribuer à la réduction de la pauvreté par le développement de l'entrepreneuriat innovant en Afrique de l'Ouest" />
-                <p className={helpCls}>L'objectif de développement de haut niveau auquel le projet contribue.</p>
+                <textarea value={overallObjective} onChange={e => setOverallObjective(e.target.value)} required className={textareaCls} placeholder="Ex: Contribuer à la réduction de la pauvreté par le développement de l'entrepreneuriat innovant" />
               </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Objectifs spécifiques</label>
-                <p className={helpCls}>Les effets directs du projet sur les bénéficiaires.</p>
-                <ArrayEditor items={specificObjectives} onChange={setSpecificObjectives} placeholder="Objectif spécifique" />
+
+              {/* Work Packages */}
+              <div className="space-y-4">
+                {wps.map((wp, idx) => (
+                  <WpEditor key={idx} wp={wp} index={idx} total={wps.length}
+                    onChange={(partial) => updateWp(idx, partial)}
+                    onRemove={() => removeWp(idx)} />
+                ))}
+                <button type="button" onClick={addWp} className="w-full border-2 border-dashed border-border rounded-xl py-3 text-sm text-primary font-semibold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+                  <Plus className="w-4 h-4" /> Ajouter un Work Package
+                </button>
               </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Résultats attendus</label>
-                <p className={helpCls}>Les produits/livrables concrets que le projet doit produire.</p>
-                <ArrayEditor items={expectedResults} onChange={setExpectedResults} placeholder="Résultat" />
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Activités principales</label>
-                <p className={helpCls}>Les actions concrètes à mener pour atteindre les résultats.</p>
-                <ArrayEditor items={lfActivities} onChange={setLfActivities} placeholder="Activité" />
-              </div>
+
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><label className={labelCls}>Hypothèses / Risques</label><textarea value={assumptions} onChange={e => setAssumptions(e.target.value)} className={textareaCls} placeholder="Conditions externes nécessaires à la réussite du projet…" /></div>
-                <div className="space-y-2"><label className={labelCls}>Pré-conditions</label><textarea value={preConditions} onChange={e => setPreConditions(e.target.value)} className={textareaCls} placeholder="Conditions préalables au démarrage du projet…" /></div>
+                <div className="space-y-2"><label className={labelCls}>Hypothèses</label><textarea value={assumptions} onChange={e => setAssumptions(e.target.value)} className={textareaCls} placeholder="Conditions externes nécessaires…" /></div>
+                <div className="space-y-2"><label className={labelCls}>Pré-conditions</label><textarea value={preConditions} onChange={e => setPreConditions(e.target.value)} className={textareaCls} placeholder="Conditions préalables au démarrage…" /></div>
               </div>
             </div>
           )}
@@ -520,9 +583,8 @@ export default function ProjectWizardPage() {
             <div className="space-y-5">
               <div>
                 <h2 className="text-lg font-display font-bold text-foreground">Théorie du changement</h2>
-                <p className={helpCls}>La chaîne de résultats décrit comment les ressources investies (intrants) se transforment en activités, puis en extrants, effets et impact. C'est le récit logique du changement que votre projet vise à produire.</p>
+                <p className={helpCls}>La chaîne de résultats décrit comment les ressources se transforment en impact.</p>
               </div>
-              {/* Visual chain */}
               <div className="flex items-center gap-2 py-3 overflow-x-auto">
                 {["Intrants", "Activités", "Extrants", "Effets", "Impact"].map((label, i) => (
                   <div key={label} className="flex items-center gap-2">
@@ -531,11 +593,11 @@ export default function ProjectWizardPage() {
                   </div>
                 ))}
               </div>
-              <div className="space-y-2"><label className={labelCls}>Intrants (Ressources)</label><p className={helpCls}>Ressources humaines, financières, matérielles mobilisées.</p><ArrayEditor items={tocInputs} onChange={setTocInputs} placeholder="Intrant" /></div>
-              <div className="space-y-2"><label className={labelCls}>Activités</label><p className={helpCls}>Actions réalisées grâce aux intrants.</p><ArrayEditor items={tocActivities} onChange={setTocActivities} placeholder="Activité" /></div>
-              <div className="space-y-2"><label className={labelCls}>Extrants (Outputs)</label><p className={helpCls}>Produits/services directement issus des activités.</p><ArrayEditor items={tocOutputs} onChange={setTocOutputs} placeholder="Extrant" /></div>
-              <div className="space-y-2"><label className={labelCls}>Effets (Outcomes)</label><p className={helpCls}>Changements à moyen terme chez les bénéficiaires.</p><ArrayEditor items={tocOutcomes} onChange={setTocOutcomes} placeholder="Effet" /></div>
-              <div className="space-y-2"><label className={labelCls}>Impact *</label><textarea value={tocImpact} onChange={e => setTocImpact(e.target.value)} required className={textareaCls} placeholder="Le changement transformationnel à long terme visé par le projet…" /><p className={helpCls}>Le changement systémique à long terme auquel le projet contribue.</p></div>
+              <div className="space-y-2"><label className={labelCls}>Intrants</label><ArrayEditor items={tocInputs} onChange={setTocInputs} placeholder="Intrant" /></div>
+              <div className="space-y-2"><label className={labelCls}>Activités</label><ArrayEditor items={tocActivities} onChange={setTocActivities} placeholder="Activité" /></div>
+              <div className="space-y-2"><label className={labelCls}>Extrants (Outputs)</label><ArrayEditor items={tocOutputs} onChange={setTocOutputs} placeholder="Extrant" /></div>
+              <div className="space-y-2"><label className={labelCls}>Effets (Outcomes)</label><ArrayEditor items={tocOutcomes} onChange={setTocOutcomes} placeholder="Effet" /></div>
+              <div className="space-y-2"><label className={labelCls}>Impact *</label><textarea value={tocImpact} onChange={e => setTocImpact(e.target.value)} required className={textareaCls} placeholder="Le changement transformationnel à long terme…" /></div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><label className={labelCls}>Hypothèses</label><ArrayEditor items={tocAssumptions} onChange={setTocAssumptions} placeholder="Hypothèse" /></div>
                 <div className="space-y-2"><label className={labelCls}>Risques</label><ArrayEditor items={tocRisks} onChange={setTocRisks} placeholder="Risque" /></div>
@@ -543,54 +605,89 @@ export default function ProjectWizardPage() {
             </div>
           )}
 
-          {/* STEP 3: KPIs */}
+          {/* STEP 3: KPIs & Milestones per WP */}
           {step === 3 && (
-            <div className="space-y-5">
+            <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Indicateurs de performance (KPI)</h2>
-                <p className={helpCls}>Définissez des indicateurs mesurables pour chaque niveau de la chaîne de résultats. Chaque indicateur doit être SMART : Spécifique, Mesurable, Atteignable, Pertinent, Temporel.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">Indicateurs & Jalons par Work Package</h2>
+                <p className={helpCls}>Définissez des indicateurs SMART et des jalons pour chaque WP.</p>
               </div>
-              <div className="space-y-4">
-                {kpis.map((kpi, i) => (
-                  <div key={i} className="border border-border rounded-lg p-4 bg-surface-2 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-foreground">Indicateur {i + 1}</span>
-                      {kpis.length > 1 && <button type="button" onClick={() => setKpis(kpis.filter((_, idx) => idx !== i))} className="text-destructive text-xs hover:underline">Supprimer</button>}
+
+              {wps.map((wp, wpIdx) => (
+                <div key={wpIdx} className="border border-border rounded-xl overflow-hidden">
+                  <div className="flex items-center gap-3 px-4 py-3 bg-secondary/50">
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${wpColors[wpIdx % wpColors.length]} flex items-center justify-center text-white font-bold text-xs shrink-0`}>
+                      WP{wpIdx + 1}
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2 space-y-1"><label className="text-[11px] text-muted-foreground">Nom *</label><input value={kpi.name} onChange={e => { const n = [...kpis]; n[i] = { ...n[i], name: e.target.value }; setKpis(n); }} className={inputCls} placeholder="Ex: Nombre de startups incubées" /></div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Catégorie</label>
-                        <select value={kpi.category} onChange={e => { const n = [...kpis]; n[i] = { ...n[i], category: e.target.value }; setKpis(n); }} className={inputCls}>
-                          <option value="input">Intrant</option><option value="activity">Activité</option><option value="output">Extrant</option><option value="outcome">Effet</option><option value="impact">Impact</option>
-                        </select>
-                      </div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Unité</label><input value={kpi.unit} onChange={e => { const n = [...kpis]; n[i] = { ...n[i], unit: e.target.value }; setKpis(n); }} className={inputCls} placeholder="%, nombre, XOF…" /></div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Valeur de référence</label><input type="number" value={kpi.baseline} onChange={e => { const n = [...kpis]; n[i] = { ...n[i], baseline: Number(e.target.value) }; setKpis(n); }} className={inputCls} /></div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Cible</label><input type="number" value={kpi.target} onChange={e => { const n = [...kpis]; n[i] = { ...n[i], target: Number(e.target.value) }; setKpis(n); }} className={inputCls} /></div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Fréquence</label>
-                        <select value={kpi.frequency} onChange={e => { const n = [...kpis]; n[i] = { ...n[i], frequency: e.target.value }; setKpis(n); }} className={inputCls}>
-                          <option value="monthly">Mensuelle</option><option value="quarterly">Trimestrielle</option><option value="biannual">Semestrielle</option><option value="annual">Annuelle</option>
-                        </select>
-                      </div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Source de données</label><input value={kpi.source} onChange={e => { const n = [...kpis]; n[i] = { ...n[i], source: e.target.value }; setKpis(n); }} className={inputCls} placeholder="Rapports, enquêtes…" /></div>
-                      <div className="space-y-1"><label className="text-[11px] text-muted-foreground">Responsable</label><input value={kpi.responsible} onChange={e => { const n = [...kpis]; n[i] = { ...n[i], responsible: e.target.value }; setKpis(n); }} className={inputCls} /></div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-foreground truncate">{wp.title || `Work Package ${wpIdx + 1}`}</div>
                     </div>
                   </div>
-                ))}
-                <button type="button" onClick={() => setKpis([...kpis, emptyKpi()])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un indicateur</button>
-              </div>
+
+                  <div className="p-4 space-y-4">
+                    {/* KPIs for this WP */}
+                    <div>
+                      <label className="text-xs font-bold text-foreground uppercase tracking-wider">Indicateurs</label>
+                      <div className="space-y-3 mt-2">
+                        {kpis.filter(k => k.wpIndex === wpIdx).map((kpi, i) => {
+                          const globalIdx = kpis.indexOf(kpi);
+                          return (
+                            <div key={globalIdx} className="border border-border rounded-lg p-3 bg-surface-2 space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-[11px] font-mono text-muted-foreground">I{wpIdx + 1}.{i + 1}</span>
+                                <button type="button" onClick={() => setKpis(kpis.filter((_, j) => j !== globalIdx))} className="text-destructive text-xs hover:underline">Supprimer</button>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2">
+                                <div className="col-span-2"><input value={kpi.name} onChange={e => { const n = [...kpis]; n[globalIdx] = { ...n[globalIdx], name: e.target.value }; setKpis(n); }} className={inputCls} placeholder="Nom de l'indicateur *" /></div>
+                                <select value={kpi.category} onChange={e => { const n = [...kpis]; n[globalIdx] = { ...n[globalIdx], category: e.target.value }; setKpis(n); }} className={inputCls}>
+                                  <option value="input">Intrant</option><option value="activity">Activité</option><option value="output">Extrant</option><option value="outcome">Effet</option><option value="impact">Impact</option>
+                                </select>
+                                <input value={kpi.unit} onChange={e => { const n = [...kpis]; n[globalIdx] = { ...n[globalIdx], unit: e.target.value }; setKpis(n); }} className={inputCls} placeholder="Unité" />
+                                <input type="number" value={kpi.baseline} onChange={e => { const n = [...kpis]; n[globalIdx] = { ...n[globalIdx], baseline: Number(e.target.value) }; setKpis(n); }} className={inputCls} placeholder="Réf." />
+                                <input type="number" value={kpi.target} onChange={e => { const n = [...kpis]; n[globalIdx] = { ...n[globalIdx], target: Number(e.target.value) }; setKpis(n); }} className={inputCls} placeholder="Cible" />
+                                <select value={kpi.frequency} onChange={e => { const n = [...kpis]; n[globalIdx] = { ...n[globalIdx], frequency: e.target.value }; setKpis(n); }} className={inputCls}>
+                                  <option value="monthly">Mensuelle</option><option value="quarterly">Trimestrielle</option><option value="biannual">Semestrielle</option><option value="annual">Annuelle</option>
+                                </select>
+                                <input value={kpi.responsible} onChange={e => { const n = [...kpis]; n[globalIdx] = { ...n[globalIdx], responsible: e.target.value }; setKpis(n); }} className={inputCls} placeholder="Responsable" />
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <button type="button" onClick={() => setKpis([...kpis, emptyKpi(wpIdx)])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un indicateur</button>
+                      </div>
+                    </div>
+
+                    {/* Milestones for this WP */}
+                    <div>
+                      <label className="text-xs font-bold text-foreground uppercase tracking-wider">Jalons</label>
+                      <div className="space-y-2 mt-2">
+                        {milestones.filter(m => m.wpIndex === wpIdx).map((m, i) => {
+                          const globalIdx = milestones.indexOf(m);
+                          return (
+                            <div key={globalIdx} className="flex gap-2 items-center">
+                              <span className="text-[11px] font-mono text-muted-foreground shrink-0 w-8">M{wpIdx + 1}.{i + 1}</span>
+                              <input value={m.title} onChange={e => { const n = [...milestones]; n[globalIdx] = { ...n[globalIdx], title: e.target.value }; setMilestones(n); }} className={inputCls} placeholder="Titre du jalon" />
+                              <input type="date" value={m.dueDate} onChange={e => { const n = [...milestones]; n[globalIdx] = { ...n[globalIdx], dueDate: e.target.value }; setMilestones(n); }} className={inputCls + " w-40 shrink-0"} />
+                              <button type="button" onClick={() => setMilestones(milestones.filter((_, j) => j !== globalIdx))} className="text-destructive text-xs px-2 hover:bg-destructive/10 rounded-lg">✕</button>
+                            </div>
+                          );
+                        })}
+                        <button type="button" onClick={() => setMilestones([...milestones, emptyMilestone(wpIdx)])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un jalon</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
-          {/* STEP 4: Budget — Annexe 1b (GTS Format) */}
+          {/* STEP 4: Budget */}
           {step === 4 && (
             <div className="space-y-5">
               <div>
                 <h2 className="text-lg font-display font-bold text-foreground">Budget — Annexe 1b</h2>
-                <p className={helpCls}>Répartition détaillée du budget selon la structure budgétaire des bailleurs. Formule : Qté × Montant unitaire × Allocation%. Modifiez les cellules directement.</p>
+                <p className={helpCls}>Répartition détaillée du budget. Formule : Qté × Montant unitaire × Allocation%.</p>
               </div>
-
-              {/* Metrics */}
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-surface-2 border border-border rounded-lg p-3">
                   <div className="text-[10px] font-mono uppercase text-muted-foreground">Coûts opérationnels (A)</div>
@@ -605,8 +702,6 @@ export default function ProjectWizardPage() {
                   <div className="text-base font-mono font-bold text-primary mt-1">{fmt(totalBudget)} €</div>
                 </div>
               </div>
-
-              {/* Budget table */}
               <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full text-[12px]">
@@ -623,64 +718,28 @@ export default function ProjectWizardPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {/* Section A */}
                       <tr><td colSpan={8} className="px-3 py-2 bg-primary/10 text-primary font-mono text-[10px] font-bold uppercase tracking-wider">A — Coûts opérationnels</td></tr>
-                      {linesA.map((line, i) => {
-                        const idx = budgetLines.indexOf(line);
-                        return (
-                          <tr key={`a-${i}`} className="border-b border-border hover:bg-secondary/50">
-                            <td className="px-3 py-1"><span className="font-mono text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">{line.code}</span></td>
-                            <td className="px-1 py-1"><input value={line.desc} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], desc: e.target.value }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary focus:ring-1 focus:ring-primary rounded px-2 py-1 text-[12px] text-foreground outline-none" /></td>
-                            <td className="px-1 py-1"><input value={line.unit} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], unit: e.target.value }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-foreground outline-none" /></td>
-                            <td className="px-1 py-1"><input type="number" value={line.qty} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], qty: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
-                            <td className="px-1 py-1"><input type="number" value={line.montant} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], montant: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
-                            <td className="px-1 py-1"><input type="number" value={line.alloc} min={0} max={100} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], alloc: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
-                            <td className="px-3 py-1 text-right"><span className="font-mono text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded">{fmt(lineTotal(line))}</span></td>
-                            <td className="px-1 py-1"><button onClick={() => setBudgetLines(budgetLines.filter((_, j) => j !== idx))} className="text-destructive hover:bg-destructive/10 rounded px-1 text-sm">×</button></td>
-                          </tr>
-                        );
-                      })}
+                      {linesA.map((line, i) => <BudgetRow key={`a-${i}`} line={line} idx={budgetLines.indexOf(line)} budgetLines={budgetLines} setBudgetLines={setBudgetLines} />)}
                       <tr><td colSpan={6} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">Sous-total A</td><td className="px-3 py-1.5 text-right font-mono text-[12px] font-bold text-foreground">{fmt(totalA)} €</td><td></td></tr>
-
-                      {/* Section B */}
                       <tr><td colSpan={8} className="px-3 py-2 bg-accent/10 text-accent-foreground font-mono text-[10px] font-bold uppercase tracking-wider">B — Frais de gestion</td></tr>
-                      {linesB.map((line, i) => {
-                        const idx = budgetLines.indexOf(line);
-                        return (
-                          <tr key={`b-${i}`} className="border-b border-border hover:bg-secondary/50">
-                            <td className="px-3 py-1"><span className="font-mono text-[11px] bg-accent/10 text-accent-foreground px-1.5 py-0.5 rounded font-semibold">{line.code}</span></td>
-                            <td className="px-1 py-1"><input value={line.desc} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], desc: e.target.value }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-foreground outline-none" /></td>
-                            <td className="px-1 py-1"><input value={line.unit} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], unit: e.target.value }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-foreground outline-none" /></td>
-                            <td className="px-1 py-1"><input type="number" value={line.qty} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], qty: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
-                            <td className="px-1 py-1"><input type="number" value={line.montant} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], montant: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
-                            <td className="px-1 py-1"><input type="number" value={line.alloc} min={0} max={100} onChange={e => { const n = [...budgetLines]; n[idx] = { ...n[idx], alloc: Number(e.target.value) }; setBudgetLines(n); }} className="w-full bg-transparent border border-transparent hover:border-border focus:border-primary rounded px-2 py-1 text-[12px] text-right font-mono text-foreground outline-none" /></td>
-                            <td className="px-3 py-1 text-right"><span className="font-mono text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded">{fmt(lineTotal(line))}</span></td>
-                            <td className="px-1 py-1"><button onClick={() => setBudgetLines(budgetLines.filter((_, j) => j !== idx))} className="text-destructive hover:bg-destructive/10 rounded px-1 text-sm">×</button></td>
-                          </tr>
-                        );
-                      })}
+                      {linesB.map((line, i) => <BudgetRow key={`b-${i}`} line={line} idx={budgetLines.indexOf(line)} budgetLines={budgetLines} setBudgetLines={setBudgetLines} />)}
                       <tr><td colSpan={6} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">Sous-total B</td><td className="px-3 py-1.5 text-right font-mono text-[12px] font-bold text-foreground">{fmt(totalB)} €</td><td></td></tr>
-
-                      {/* Grand total */}
                       <tr className="bg-foreground/5">
                         <td colSpan={6} className="px-3 py-2.5 text-right text-xs font-bold text-foreground uppercase">Total général</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-sm font-bold text-primary">{fmt(totalBudget)} €</td>
-                        <td></td>
+                        <td className="px-3 py-2.5 text-right font-mono text-sm font-bold text-primary">{fmt(totalBudget)} €</td><td></td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                {/* Add buttons */}
                 <div className="border-t border-border border-dashed flex">
                   <button onClick={() => setBudgetLines([...budgetLines, { code: `A1.X.${linesA.length + 1}`, desc: "Nouveau poste", unit: "—", qty: 0, montant: 0, alloc: 100, section: "A" }])} className="flex-1 py-2.5 text-xs text-primary font-semibold hover:bg-primary/5 transition-colors">+ Coût opérationnel (A)</button>
                   <div className="w-px bg-border" />
                   <button onClick={() => setBudgetLines([...budgetLines, { code: `B.${linesB.length + 1}`, desc: "Nouveau poste", unit: "forfait", qty: 1, montant: 0, alloc: 100, section: "B" }])} className="flex-1 py-2.5 text-xs text-accent-foreground font-semibold hover:bg-accent/5 transition-colors">+ Frais gestion (B)</button>
                 </div>
               </div>
-
               {grantId && (
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-                  <p className="text-xs text-foreground">🔗 Ce budget sera automatiquement lié à la subvention <strong>{grants?.find(g => g.id === grantId)?.name}</strong> pour le suivi financier.</p>
+                  <p className="text-xs text-foreground">🔗 Ce budget sera automatiquement lié à la subvention <strong>{grants?.find(g => g.id === grantId)?.name}</strong>.</p>
                 </div>
               )}
             </div>
@@ -691,10 +750,8 @@ export default function ProjectWizardPage() {
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-display font-bold text-foreground">Récapitulatif et validation</h2>
-                <p className={helpCls}>Vérifiez les informations avant de soumettre le projet pour validation. Une fois validé, vous pourrez ouvrir les candidatures.</p>
+                <p className={helpCls}>Vérifiez les informations avant de soumettre le projet.</p>
               </div>
-
-              {/* Summary cards */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
                   <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">📋 Projet</div>
@@ -703,31 +760,25 @@ export default function ProjectWizardPage() {
                   {startDate && <div className="text-[10px] font-mono text-muted-foreground mt-2">{startDate} → {endDate || "…"}</div>}
                 </div>
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">🎯 Cadre logique</div>
-                  <div className="text-xs text-foreground line-clamp-2">{overallObjective}</div>
-                  <div className="text-[10px] text-muted-foreground mt-1">{specificObjectives.filter(Boolean).length} obj. spécifiques · {expectedResults.filter(Boolean).length} résultats · {lfActivities.filter(Boolean).length} activités</div>
+                  <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">📦 Work Packages</div>
+                  <div className="text-sm font-bold text-foreground">{wps.length} WP{wps.length > 1 ? "s" : ""}</div>
+                  <div className="text-[10px] text-muted-foreground mt-1">
+                    {wps.map((wp, i) => `WP${i + 1}: ${wp.title || "Sans titre"}`).join(" · ")}
+                  </div>
                 </div>
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">🔄 Théorie du changement</div>
-                  <div className="text-xs text-foreground line-clamp-2">{tocImpact}</div>
-                  <div className="text-[10px] text-muted-foreground mt-1">{tocInputs.filter(Boolean).length} intrants → {tocOutputs.filter(Boolean).length} extrants → {tocOutcomes.filter(Boolean).length} effets</div>
+                  <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">📊 Indicateurs & Jalons</div>
+                  <div className="text-sm font-bold text-foreground">{kpis.filter(k => k.name).length} KPIs · {milestones.filter(m => m.title).length} Jalons</div>
                 </div>
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">📊 Indicateurs</div>
-                  <div className="text-sm font-bold text-foreground">{kpis.filter(k => k.name).length} KPIs</div>
-                  <div className="text-[10px] text-muted-foreground mt-1">{kpis.filter(k => k.category === "output").length} extrants · {kpis.filter(k => k.category === "outcome").length} effets · {kpis.filter(k => k.category === "impact").length} impact</div>
+                  <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">💰 Budget</div>
+                  <div className="text-lg font-display font-bold text-primary">{fmt(totalBudget)} €</div>
+                  <div className="text-[10px] text-muted-foreground">{budgetLines.filter(b => b.desc).length} lignes · A: {fmt(totalA)} € · B: {fmt(totalB)} €</div>
                 </div>
               </div>
-
-              <div className="bg-surface-2 border border-border rounded-lg p-4">
-                <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">💰 Budget</div>
-                <div className="text-lg font-display font-bold text-primary">{fmt(totalBudget)} €</div>
-                <div className="text-[10px] text-muted-foreground">{budgetLines.filter(b => b.desc).length} lignes · A: {fmt(totalA)} € · B: {fmt(totalB)} €{grantId ? ` · Lié à ${grants?.find(g => g.id === grantId)?.name}` : ""}</div>
-              </div>
-
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                 <p className="text-xs text-foreground font-semibold mb-1">📌 Prochaines étapes</p>
-                <p className="text-xs text-muted-foreground">Le projet sera soumis en statut « En attente de validation ». Une fois validé par un coordinateur, vous pourrez ouvrir les candidatures pour recruter des startups.</p>
+                <p className="text-xs text-muted-foreground">Le projet sera soumis en statut « En attente de validation ». Une fois validé, vous pourrez ouvrir les candidatures.</p>
               </div>
             </div>
           )}
@@ -752,5 +803,81 @@ export default function ProjectWizardPage() {
         </div>
       </div>
     </motion.div>
+  );
+}
+
+/* ── Sub-components ── */
+
+function WpEditor({ wp, index, total, onChange, onRemove }: {
+  wp: WpDraft; index: number; total: number;
+  onChange: (partial: Partial<WpDraft>) => void; onRemove: () => void;
+}) {
+  const [open, setOpen] = useState(true);
+  const gradient = wpColors[index % wpColors.length];
+
+  return (
+    <div className="border border-border rounded-xl overflow-hidden">
+      <button type="button" onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-3 px-4 py-3 bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer">
+        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-xs shrink-0`}>
+          WP{index + 1}
+        </div>
+        <div className="flex-1 text-left min-w-0">
+          <span className="text-sm font-bold text-foreground truncate block">{wp.title || `Work Package ${index + 1}`}</span>
+        </div>
+        {total > 1 && (
+          <button type="button" onClick={e => { e.stopPropagation(); onRemove(); }} className="text-destructive hover:bg-destructive/10 rounded p-1">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
+        {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+      </button>
+
+      {open && (
+        <div className="p-4 space-y-4 border-t border-border">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-[11px] text-muted-foreground font-medium">Titre du WP *</label>
+              <input value={wp.title} onChange={e => onChange({ title: e.target.value })} className={inputCls}
+                placeholder={`Ex: Renforcement des compétences`} />
+            </div>
+            <div className="space-y-1 col-span-2 sm:col-span-1">
+              <label className="text-[11px] text-muted-foreground font-medium">Objectif spécifique *</label>
+              <textarea value={wp.objective} onChange={e => onChange({ objective: e.target.value })}
+                className={inputCls + " h-20 resize-none"} placeholder="Objectif de ce Work Package…" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-[11px] text-muted-foreground font-medium">Activités</label>
+            <ArrayEditor items={wp.activities} onChange={a => onChange({ activities: a })} placeholder={`A${index + 1}.X`} />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[11px] text-muted-foreground font-medium">Résultats attendus</label>
+            <ArrayEditor items={wp.results} onChange={r => onChange({ results: r })} placeholder={`R${index + 1}.X`} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function BudgetRow({ line, idx, budgetLines, setBudgetLines }: {
+  line: BudgetLine; idx: number; budgetLines: BudgetLine[]; setBudgetLines: (v: BudgetLine[]) => void;
+}) {
+  const cellCls = "w-full bg-transparent border border-transparent hover:border-border focus:border-primary focus:ring-1 focus:ring-primary rounded px-2 py-1 text-[12px] text-foreground outline-none";
+  const update = (partial: Partial<BudgetLine>) => {
+    const n = [...budgetLines]; n[idx] = { ...n[idx], ...partial }; setBudgetLines(n);
+  };
+  return (
+    <tr className="border-b border-border hover:bg-secondary/50">
+      <td className="px-3 py-1"><span className="font-mono text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">{line.code}</span></td>
+      <td className="px-1 py-1"><input value={line.desc} onChange={e => update({ desc: e.target.value })} className={cellCls} /></td>
+      <td className="px-1 py-1"><input value={line.unit} onChange={e => update({ unit: e.target.value })} className={cellCls} /></td>
+      <td className="px-1 py-1"><input type="number" value={line.qty} onChange={e => update({ qty: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
+      <td className="px-1 py-1"><input type="number" value={line.montant} onChange={e => update({ montant: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
+      <td className="px-1 py-1"><input type="number" value={line.alloc} min={0} max={100} onChange={e => update({ alloc: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
+      <td className="px-3 py-1 text-right"><span className="font-mono text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded">{fmt(lineTotal(line))}</span></td>
+      <td className="px-1 py-1"><button onClick={() => setBudgetLines(budgetLines.filter((_, j) => j !== idx))} className="text-destructive hover:bg-destructive/10 rounded px-1 text-sm">×</button></td>
+    </tr>
   );
 }
