@@ -8,6 +8,7 @@ import GhButton from "@/components/shared/GhButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortfolio, usePortfolioPrograms } from "@/hooks/usePortfolios";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useAssignableUsers";
 import { EditPortfolioDialog } from "@/components/dialogs/EditEntityDialogs";
 import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
 
@@ -25,6 +26,7 @@ export default function PortfolioDetailPage() {
   const { isAdmin } = useAuth();
   const { data: portfolio, isLoading } = usePortfolio(id);
   const { data: programs, isLoading: loadingPrograms } = usePortfolioPrograms(id);
+  const { data: coordinator } = useUserProfile(portfolio?.owner_id);
   const [editOpen, setEditOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
 
@@ -57,10 +59,15 @@ export default function PortfolioDetailPage() {
         }
       />
 
-      <div className="grid grid-cols-3 gap-3.5 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Code</div>
           <div className="text-foreground font-semibold">{portfolio.code}</div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Coordinateur</div>
+          <div className="text-foreground font-semibold">{coordinator?.full_name ?? "Non assigné"}</div>
+          {coordinator?.email && <div className="text-[10px] text-muted-foreground mt-0.5">{coordinator.email}</div>}
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Période</div>

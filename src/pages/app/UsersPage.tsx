@@ -14,13 +14,13 @@ import InviteUserDialog from "@/components/dialogs/InviteUserDialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const roleLabels: Record<string, string> = {
-  super_admin: "Super Admin", coordinator: "Coordinateur", mentor: "Mentor",
+  super_admin: "Super Admin", coordinator: "Coordinateur", project_manager: "Chef de projet", mentor: "Mentor",
   entrepreneur: "Entrepreneur", evaluator: "Évaluateur", investor: "Investisseur", funder: "Bailleur",
 };
 const roleColors: Record<string, "green" | "blue" | "purple" | "amber" | "rose" | "gray"> = {
-  super_admin: "rose", coordinator: "purple", mentor: "blue", entrepreneur: "green", evaluator: "amber", investor: "blue", funder: "amber",
+  super_admin: "rose", coordinator: "purple", project_manager: "blue", mentor: "blue", entrepreneur: "green", evaluator: "amber", investor: "blue", funder: "amber",
 };
-const allRoles = ["super_admin", "coordinator", "mentor", "entrepreneur", "evaluator", "investor", "funder"];
+const allRoles = ["super_admin", "coordinator", "project_manager", "mentor", "entrepreneur", "evaluator", "investor", "funder"];
 
 export default function UsersPage() {
   const { user } = useAuth();

@@ -29,6 +29,7 @@ interface InviteUserDialogProps {
 const allRoles = [
   { value: "super_admin", label: "Super Admin" },
   { value: "coordinator", label: "Coordinateur" },
+  { value: "project_manager", label: "Chef de projet" },
   { value: "mentor", label: "Mentor" },
   { value: "entrepreneur", label: "Entrepreneur" },
   { value: "evaluator", label: "Évaluateur" },

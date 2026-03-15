@@ -9,6 +9,7 @@ import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProgram, useProgramProjects, useProgramGrants, useProgramEvents } from "@/hooks/usePrograms";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useAssignableUsers";
 import { EditProgramDialog } from "@/components/dialogs/EditEntityDialogs";
 import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
 import { format } from "date-fns";
@@ -38,6 +39,7 @@ export default function ProgramDetailPage() {
   const { data: projects, isLoading: loadingProjects } = useProgramProjects(id);
   const { data: grants } = useProgramGrants(id);
   const { data: events } = useProgramEvents(id);
+  const { data: coordinator } = useUserProfile(program?.coordinator_id);
   const [editOpen, setEditOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
 
@@ -59,7 +61,7 @@ export default function ProgramDetailPage() {
       <AppBreadcrumb items={crumbs} />
       <SectionHeader
         title={program.name}
-        subtitle={`${program.code} ${program.funder ? `· Bailleur : ${program.funder}` : ""}`}
+        subtitle={`${program.code} ${program.funder ? `· Bailleur : ${program.funder}` : ""} ${coordinator ? `· Coordinateur : ${coordinator.full_name}` : ""}`}
         actions={
           <div className="flex items-center gap-2">
             <Pill color={st.color}>● {st.label}</Pill>

@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import WorkPackageCard from "@/components/projects/WorkPackageCard";
 import { buildWorkPackages } from "@/lib/workPackageUtils";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useAssignableUsers";
 import { EditProjectDialog } from "@/components/dialogs/EditEntityDialogs";
 import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
 
@@ -111,6 +112,7 @@ export default function ProjetDetailPage() {
   const { data: indicators } = useProjectIndicators(id);
   const { data: budgetLines } = useProjectBudgetLines(id);
   const { data: milestones } = useProjectMilestones(id);
+  const { data: projectManager } = useUserProfile(project?.owner_id);
   const [descExpanded, setDescExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
@@ -154,6 +156,9 @@ export default function ProjetDetailPage() {
               <h1 className="font-display text-xl sm:text-2xl font-extrabold text-foreground leading-tight">{project.name}</h1>
               {project.programs?.name && (
                 <p className="text-xs text-muted-foreground">Programme : <span className="text-foreground font-medium">{project.programs.name}</span></p>
+              )}
+              {projectManager && (
+                <p className="text-xs text-muted-foreground">Chef de projet : <span className="text-foreground font-medium">{projectManager.full_name}</span></p>
               )}
             </div>
             <div className="flex gap-2 shrink-0">

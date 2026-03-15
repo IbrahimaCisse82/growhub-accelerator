@@ -1333,6 +1333,7 @@ export type Database = {
         Row: {
           budget_total: number | null
           code: string
+          coordinator_id: string | null
           created_at: string
           currency: string | null
           description: string | null
@@ -1348,6 +1349,7 @@ export type Database = {
         Insert: {
           budget_total?: number | null
           code: string
+          coordinator_id?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
@@ -1363,6 +1365,7 @@ export type Database = {
         Update: {
           budget_total?: number | null
           code?: string
+          coordinator_id?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
@@ -2023,6 +2026,7 @@ export type Database = {
         | "evaluator"
         | "investor"
         | "funder"
+        | "project_manager"
       application_status:
         | "submitted"
         | "screening"
@@ -2184,6 +2188,7 @@ export const Constants = {
         "evaluator",
         "investor",
         "funder",
+        "project_manager",
       ],
       application_status: [
         "submitted",
