@@ -47,6 +47,22 @@ export function useProjectCohorts(projectId: string | undefined) {
   });
 }
 
+export function useProgramProjects(programId: string | undefined) {
+  return useQuery({
+    queryKey: ["program-projects", programId],
+    enabled: !!programId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*, startups(name)")
+        .eq("program_id", programId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
 export function useProgramGrants(programId: string | undefined) {
   return useQuery({
     queryKey: ["program-grants", programId],
