@@ -6,7 +6,7 @@ import Pill from "@/components/shared/Pill";
 import GhButton from "@/components/shared/GhButton";
 import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProgram, useProgramCohorts, useProgramGrants, useProgramEvents } from "@/hooks/usePrograms";
+import { useProgram, useProgramGrants, useProgramEvents } from "@/hooks/usePrograms";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -30,7 +30,7 @@ export default function ProgramDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: program, isLoading } = useProgram(id);
-  const { data: cohorts, isLoading: loadingCohorts } = useProgramCohorts(id);
+  
   const { data: grants } = useProgramGrants(id);
   const { data: events } = useProgramEvents(id);
 
@@ -58,7 +58,7 @@ export default function ProgramDetailPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
         <StatCard label="Budget Total" value={program.budget_total ? new Intl.NumberFormat("fr-FR").format(program.budget_total) : "—"} note={program.currency ?? "XOF"} color="blue" />
-        <StatCard label="Cohortes" value={String(cohorts?.length ?? 0)} note="" color="green" />
+        <StatCard label="Grants" value={String(grants?.length ?? 0)} note={totalGrantAmount > 0 ? formatXOF(totalGrantAmount) : ""} color="green" />
         <StatCard label="Grants" value={String(grants?.length ?? 0)} note={totalGrantAmount > 0 ? formatXOF(totalGrantAmount) : ""} color="amber" />
         <StatCard label="Événements" value={String(events?.length ?? 0)} note="" color="purple" />
       </div>
@@ -70,37 +70,8 @@ export default function ProgramDetailPage() {
         </div>
       )}
 
-      {/* Cohortes */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display text-sm font-bold text-foreground">Cohortes du programme</h3>
-          <GhButton variant="ghost" onClick={() => navigate("/app/cohortes")}>Voir tout →</GhButton>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {loadingCohorts ? (
-            Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[140px] rounded-xl" />)
-          ) : cohorts?.length === 0 ? (
-            <div className="col-span-full text-center text-muted-foreground py-8 text-sm">Aucune cohorte rattachée</div>
-          ) : (
-            cohorts?.map((c) => {
-              const cst = statusMap[c.status] ?? statusMap.draft;
-              return (
-                <div key={c.id} onClick={() => navigate(`/app/cohortes/${c.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
-                  <div className={`h-[3px] ${cst.color === "green" ? "bg-primary" : cst.color === "blue" ? "bg-accent" : "bg-muted"}`} />
-                  <div className="p-4">
-                    <div className="font-display text-[14px] font-bold text-foreground">{c.name}</div>
-                    <div className="text-[11px] text-muted-foreground mt-1">Max {c.max_startups ?? "—"} startups</div>
-                  </div>
-                  <div className="px-4 py-2 bg-secondary border-t border-border flex justify-between items-center">
-                    <Pill color={cst.color}>● {cst.label}</Pill>
-                    <GhButton variant="ghost">→</GhButton>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
+
+
 
       {/* Grants */}
       {grants && grants.length > 0 && (

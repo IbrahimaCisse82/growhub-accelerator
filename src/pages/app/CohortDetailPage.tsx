@@ -32,13 +32,15 @@ export default function CohortDetailPage() {
   if (!cohort) return <div className="text-center py-12 text-muted-foreground">Cohorte introuvable</div>;
 
   const st = statusMap[cohort.status] ?? statusMap.draft;
-  const program = cohort.programs;
+  const project = cohort.projects;
+  const program = project?.programs;
   const portfolio = program?.portfolios;
 
   const crumbs = [
     { label: "Portefeuilles", href: "/app/portefeuilles" },
     ...(portfolio ? [{ label: portfolio.name, href: `/app/portefeuilles/${portfolio.id}` }] : []),
     ...(program ? [{ label: program.name, href: `/app/programmes/${program.id}` }] : []),
+    ...(project ? [{ label: project.name, href: `/app/projets/${project.id}` }] : []),
     { label: cohort.name },
   ];
 
@@ -53,7 +55,7 @@ export default function CohortDetailPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
         <StatCard label="Startups" value={String(startups?.length ?? 0)} note={`/ ${cohort.max_startups ?? "—"}`} color="green" />
-        <StatCard label="Programme" value={program?.name ?? "—"} note="" color="blue" />
+        <StatCard label="Projet" value={project?.name ?? "—"} note="" color="blue" />
         <StatCard label="Début" value={cohort.start_date ? new Date(cohort.start_date).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "—"} note="" color="amber" />
         <StatCard label="Candidatures" value={String(applications?.length ?? 0)} note="" color="purple" />
       </div>
