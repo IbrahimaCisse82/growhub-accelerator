@@ -101,7 +101,7 @@ export default function DashboardPage() {
         ) : isMentor ? (
           <>
             <StatCard label="Mes sessions" value={String(mySessions.length)} note={`${upcomingSessions.length} à venir`} icon="◎" color="blue" />
-            <StatCard label="Startups suivies" value={String(new Set(mySessions.map(s => s.startup_id)).size)} note="" icon="△" color="green" />
+            <StatCard label="Entreprises suivies" value={String(new Set(mySessions.map(s => s.startup_id)).size)} note="" icon="△" color="green" />
             <StatCard label="Sessions terminées" value={String(mySessions.filter(s => s.status === "completed").length)} note="" icon="◑" color="amber" />
             <StatCard label="Cours disponibles" value={String(courses?.filter(c => c.is_published).length ?? 0)} note="" icon="◇" color="purple" />
           </>
