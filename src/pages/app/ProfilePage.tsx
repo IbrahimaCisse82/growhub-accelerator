@@ -10,7 +10,7 @@ import { toast } from "@/hooks/use-toast";
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-secondary px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 
 const roleLabels: Record<string, string> = {
-  super_admin: "Super Admin", coordinator: "Coordinateur", mentor: "Mentor",
+  super_admin: "Super Admin", coordinator: "Coordinateur", project_manager: "Chef de projet", mentor: "Mentor",
   entrepreneur: "Entrepreneur", evaluator: "Évaluateur", investor: "Investisseur", funder: "Bailleur",
 };
 
