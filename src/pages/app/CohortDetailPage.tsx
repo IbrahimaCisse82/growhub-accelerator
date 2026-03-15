@@ -73,7 +73,7 @@ export default function CohortDetailPage() {
             <div className="col-span-full text-center text-muted-foreground py-8 text-sm">Aucune entreprise dans cette cohorte</div>
           ) : (
             startups?.map((s) => (
-              <div key={s.id} onClick={() => navigate(`/app/startups/${s.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
+              <div key={s.id} onClick={() => navigate(`/app/entreprises/${s.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
                 <div className="h-[3px] bg-primary" />
                 <div className="p-4">
                   <div className="font-display text-[14px] font-bold text-foreground">{s.name}</div>
