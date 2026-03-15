@@ -112,6 +112,7 @@ export default function ProjetDetailPage() {
   const { data: indicators } = useProjectIndicators(id);
   const { data: budgetLines } = useProjectBudgetLines(id);
   const { data: milestones } = useProjectMilestones(id);
+  const { data: projectManager } = useUserProfile(project?.owner_id);
   const [descExpanded, setDescExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
