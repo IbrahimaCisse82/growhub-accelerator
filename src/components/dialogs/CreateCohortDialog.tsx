@@ -32,10 +32,10 @@ export default function CreateCohortDialog({ children, projectId }: { children: 
         <form onSubmit={(e) => { e.preventDefault(); create.mutate(); }} className="space-y-4">
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Nom *</label><input value={name} onChange={e => setName(e.target.value)} required className={inputCls} /></div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Programme</label>
+            <label className="text-sm font-medium text-foreground">Projet</label>
             <select value={pId} onChange={e => setPId(e.target.value)} className={inputCls}>
               <option value="">Aucun</option>
-              {programs?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {projects?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Max startups</label><input type="number" value={maxStartups} onChange={e => setMaxStartups(e.target.value)} className={inputCls} /></div>

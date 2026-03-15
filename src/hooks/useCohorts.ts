@@ -7,7 +7,7 @@ export function useCohorts() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cohorts")
-        .select("*, programs(name, funder)")
+        .select("*, projects(name, code)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;

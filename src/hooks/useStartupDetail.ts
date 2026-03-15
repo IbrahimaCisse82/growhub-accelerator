@@ -8,7 +8,7 @@ export function useStartup(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("startups")
-        .select("*, cohorts(id, name, program_id, programs(id, name, portfolio_id, portfolios(id, name)))")
+        .select("*, cohorts(id, name, project_id, projects(id, name, programs(id, name, portfolios(id, name))))")
         .eq("id", id!)
         .single();
       if (error) throw error;

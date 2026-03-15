@@ -31,15 +31,15 @@ export function useProgram(id: string | undefined) {
   });
 }
 
-export function useProgramCohorts(programId: string | undefined) {
+export function useProjectCohorts(projectId: string | undefined) {
   return useQuery({
-    queryKey: ["program-cohorts", programId],
-    enabled: !!programId,
+    queryKey: ["project-cohorts", projectId],
+    enabled: !!projectId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cohorts")
         .select("*")
-        .eq("program_id", programId!)
+        .eq("project_id", projectId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;

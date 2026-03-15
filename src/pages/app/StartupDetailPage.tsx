@@ -32,6 +32,7 @@ export default function StartupDetailPage() {
     { label: "Portefeuilles", href: "/app/portefeuilles" },
     ...(portfolio ? [{ label: portfolio.name, href: `/app/portefeuilles/${portfolio.id}` }] : []),
     ...(program ? [{ label: program.name, href: `/app/programmes/${program.id}` }] : []),
+    ...(project ? [{ label: project.name, href: `/app/projets/${project.id}` }] : []),
     ...(cohort ? [{ label: cohort.name, href: `/app/cohortes/${cohort.id}` }] : []),
     { label: startup.name },
   ];
