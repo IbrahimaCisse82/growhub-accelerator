@@ -70,7 +70,7 @@ export default function CohortDetailPage() {
           {loadingStartups ? (
             Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[140px] rounded-xl" />)
           ) : startups?.length === 0 ? (
-            <div className="col-span-full text-center text-muted-foreground py-8 text-sm">Aucune startup dans cette cohorte</div>
+            <div className="col-span-full text-center text-muted-foreground py-8 text-sm">Aucune entreprise dans cette cohorte</div>
           ) : (
             startups?.map((s) => (
               <div key={s.id} onClick={() => navigate(`/app/startups/${s.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
