@@ -6,7 +6,7 @@ import Pill from "@/components/shared/Pill";
 import GhButton from "@/components/shared/GhButton";
 import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProgram, useProgramGrants, useProgramEvents } from "@/hooks/usePrograms";
+import { useProgram, useProgramProjects, useProgramGrants, useProgramEvents } from "@/hooks/usePrograms";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -30,7 +30,7 @@ export default function ProgramDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: program, isLoading } = useProgram(id);
-  
+  const { data: projects, isLoading: loadingProjects } = useProgramProjects(id);
   const { data: grants } = useProgramGrants(id);
   const { data: events } = useProgramEvents(id);
 
@@ -58,7 +58,7 @@ export default function ProgramDetailPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
         <StatCard label="Budget Total" value={program.budget_total ? new Intl.NumberFormat("fr-FR").format(program.budget_total) : "—"} note={program.currency ?? "XOF"} color="blue" />
-        <StatCard label="Grants" value={String(grants?.length ?? 0)} note={totalGrantAmount > 0 ? formatXOF(totalGrantAmount) : ""} color="green" />
+        <StatCard label="Projets" value={String(projects?.length ?? 0)} note="" color="green" />
         <StatCard label="Grants" value={String(grants?.length ?? 0)} note={totalGrantAmount > 0 ? formatXOF(totalGrantAmount) : ""} color="amber" />
         <StatCard label="Événements" value={String(events?.length ?? 0)} note="" color="purple" />
       </div>
@@ -70,8 +70,46 @@ export default function ProgramDetailPage() {
         </div>
       )}
 
-
-
+      {/* Projets */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-display text-sm font-bold text-foreground">Projets du programme</h3>
+          <GhButton variant="ghost" onClick={() => navigate("/app/projets")}>Voir tout →</GhButton>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {loadingProjects ? (
+            Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-[140px] rounded-xl" />)
+          ) : projects?.length === 0 ? (
+            <div className="col-span-full text-center text-muted-foreground py-8 text-sm">Aucun projet rattaché</div>
+          ) : (
+            projects?.map((p) => {
+              const pst = statusMap[p.status] ?? statusMap.draft;
+              return (
+                <div key={p.id} onClick={() => navigate(`/app/projets/${p.id}`)} className="bg-card border border-border rounded-xl overflow-hidden hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer">
+                  <div className={`h-[3px] ${pst.color === "green" ? "bg-primary" : pst.color === "blue" ? "bg-accent" : pst.color === "amber" ? "bg-gh-amber" : "bg-muted"}`} />
+                  <div className="p-4">
+                    <div className="font-display text-[14px] font-bold text-foreground">{p.name}</div>
+                    <div className="text-[11px] text-muted-foreground mt-0.5">{p.startups?.name ?? "—"} {p.code ? `· ${p.code}` : ""}</div>
+                    <div className="mt-2.5">
+                      <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                        <span>Avancement</span>
+                        <span className="font-mono">{p.progress ?? 0}%</span>
+                      </div>
+                      <div className="h-1 bg-muted rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${p.progress ?? 0}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="px-4 py-2 bg-secondary border-t border-border flex justify-between items-center">
+                    <Pill color={pst.color}>● {pst.label}</Pill>
+                    <GhButton variant="ghost">→</GhButton>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
 
       {/* Grants */}
       {grants && grants.length > 0 && (
@@ -89,7 +127,7 @@ export default function ProgramDetailPage() {
                 {grants.map(g => {
                   const pct = g.amount_total > 0 ? Math.round(((g.amount_disbursed ?? 0) / g.amount_total) * 100) : 0;
                   return (
-                    <tr key={g.id} className="hover:bg-secondary transition-colors cursor-pointer" onClick={() => navigate("/app/grants")}>
+                    <tr key={g.id} className="hover:bg-secondary transition-colors cursor-pointer" onClick={() => navigate(`/app/grants/${g.id}`)}>
                       <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{g.name}</td>
                       <td className="px-3.5 py-2.5 border-b border-border font-mono text-muted-foreground">{g.code}</td>
                       <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{formatXOF(g.amount_total)}</td>
