@@ -30,7 +30,7 @@ export default function ProgramDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: program, isLoading } = useProgram(id);
-  const { data: cohorts, isLoading: loadingCohorts } = useProgramCohorts(id);
+  
   const { data: grants } = useProgramGrants(id);
   const { data: events } = useProgramEvents(id);
 
