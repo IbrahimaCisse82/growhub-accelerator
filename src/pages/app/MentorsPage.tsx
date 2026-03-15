@@ -35,7 +35,7 @@ export default function MentorsPage() {
           ))
         ) : mentors?.length === 0 ? (
           <div className="col-span-full">
-            <EmptyState icon="🧑‍🏫" title="Aucun mentor" description="Invitez des experts pour accompagner vos startups" actionLabel="+ Inviter" />
+            <EmptyState icon="🧑‍🏫" title="Aucun mentor" description="Invitez des experts pour accompagner vos entreprises" actionLabel="+ Inviter" />
           </div>
         ) : (
           mentors?.map((m, idx) => {

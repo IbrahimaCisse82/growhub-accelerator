@@ -55,7 +55,7 @@ export default function AnalyticsPage() {
           exportToPDF("Analytics — GrowHub", summary, [{ key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" }]);
         }}>⎙ PDF</GhButton>} />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
-        <StatCard label="Startups totales" value={String(startupsCount ?? 0)} note="" color="green" />
+        <StatCard label="Entreprises totales" value={String(startupsCount ?? 0)} note="" color="green" />
         <StatCard label="Financement total" value={new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(totalFunding)} note="XOF" color="blue" />
         <StatCard label="Cohortes" value={String(cohorts?.length ?? 0)} note={`${cohorts?.filter(c => c.status === "active").length ?? 0} actives`} color="amber" />
         <StatCard label="Sessions coaching" value={String(totalSessions)} note={`${completedSessions} terminées`} color="purple" />

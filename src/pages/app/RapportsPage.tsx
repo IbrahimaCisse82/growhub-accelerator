@@ -66,7 +66,7 @@ export default function RapportsPage() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader title="Rapports" subtitle="Génération et export de rapports" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
-        <StatCard label="Startups" value={String(startupsCount ?? 0)} note="" color="green" />
+        <StatCard label="Entreprises" value={String(startupsCount ?? 0)} note="" color="green" />
         <StatCard label="Grants actifs" value={String(activeGrants.length)} note="" color="blue" />
         <StatCard label="Projets" value={String(projects?.length ?? 0)} note="" color="amber" />
         <StatCard label="Cohortes" value={String(cohorts?.length ?? 0)} note="" color="purple" />

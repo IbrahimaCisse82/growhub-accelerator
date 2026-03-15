@@ -31,7 +31,7 @@ export default function StartupsPage() {
         actions={<>
           <input className="bg-surface-2 border border-border rounded-lg px-3 py-[7px] text-[12.5px] text-foreground outline-none focus:border-primary/50 w-[140px] sm:w-[200px] placeholder:text-muted-foreground" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} />
           <GhButton variant="ghost" onClick={() => filtered && exportToCSV(filtered, "startups", exportCols)}>⤓ CSV</GhButton>
-          <GhButton variant="ghost" onClick={() => filtered && exportToPDF("Startups", filtered, exportCols)}>⎙ PDF</GhButton>
+          <GhButton variant="ghost" onClick={() => filtered && exportToPDF("Entreprises", filtered, exportCols)}>⎙ PDF</GhButton>
           <CreateStartupDialog><GhButton>+ Ajouter</GhButton></CreateStartupDialog>
         </>} />
       <GhCard title="Toutes les entreprises" badge={String(filtered?.length ?? 0)} noPadding>
