@@ -60,7 +60,19 @@ export default function ProgramDetailPage() {
       <SectionHeader
         title={program.name}
         subtitle={`${program.code} ${program.funder ? `· Bailleur : ${program.funder}` : ""}`}
-        actions={<Pill color={st.color}>● {st.label}</Pill>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Pill color={st.color}>● {st.label}</Pill>
+            {isAdmin && (
+              <>
+                <GhButton variant="secondary" size="sm" onClick={() => setEditOpen(true)}>Modifier ✏️</GhButton>
+                {program.status !== "active" && (
+                  <GhButton variant="primary" size="sm" onClick={() => setValidateOpen(true)}>Valider ✓</GhButton>
+                )}
+              </>
+            )}
+          </div>
+        }
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
