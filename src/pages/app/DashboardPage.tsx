@@ -84,7 +84,7 @@ export default function DashboardPage() {
                 { key: "name", label: "Projet" }, { key: "status", label: "Statut" }, { key: "progress", label: "%" },
               ]);
             }}>⤓ Exporter</GhButton>
-            <GhButton variant="primary" onClick={() => navigate("/app/startups")}>+ Créer</GhButton>
+            <GhButton variant="primary" onClick={() => navigate("/app/entreprises")}>+ Créer</GhButton>
           </>
         }
       />
