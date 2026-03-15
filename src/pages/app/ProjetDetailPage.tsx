@@ -104,6 +104,7 @@ function useProjectMilestones(id: string | undefined) {
 export default function ProjetDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const { data: project, isLoading } = useProjectDetail(id);
   const { data: logFrame } = useProjectLogFrame(id);
   const { data: toc } = useProjectTheoryOfChange(id);
@@ -111,6 +112,8 @@ export default function ProjetDetailPage() {
   const { data: budgetLines } = useProjectBudgetLines(id);
   const { data: milestones } = useProjectMilestones(id);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [validateOpen, setValidateOpen] = useState(false);
 
   if (isLoading) return (
     <div className="space-y-4">
