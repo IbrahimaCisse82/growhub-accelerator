@@ -100,7 +100,7 @@ export default function CohortDetailPage() {
           <div className="bg-card border border-border rounded-xl overflow-hidden">
             <table className="w-full border-collapse text-[12.5px]">
               <thead><tr className="bg-secondary">
-                {["Startup", "Étape", "Score", "Date"].map(h => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left">{h}</th>)}
+                {["Entreprise", "Étape", "Score", "Date"].map(h => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left">{h}</th>)}
               </tr></thead>
               <tbody>
                 {applications.map(a => (
