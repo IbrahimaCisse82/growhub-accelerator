@@ -22,7 +22,7 @@ const sizeClasses = {
 export default function GhButton({ variant = "primary", size = "sm", className = "", children, ...props }: GhButtonProps) {
   return (
     <button
-      className={`inline-flex items-center gap-1.5 rounded-lg font-body font-semibold cursor-pointer transition-all whitespace-nowrap ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center gap-1.5 rounded-lg font-body font-semibold cursor-pointer transition-all whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
       {...props}
     >
       {children}
