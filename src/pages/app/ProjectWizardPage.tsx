@@ -388,11 +388,8 @@ export default function ProjectWizardPage() {
       outputs: tocOutputs.filter(Boolean), outcomes: tocOutcomes.filter(Boolean),
       impact: tocImpact, assumptions: tocAssumptions.filter(Boolean), risks: tocRisks.filter(Boolean),
     };
-    if (existingToc) {
-      await supabase.from("theory_of_change").update(payload).eq("project_id", pid).throwOnError();
-    } else {
-      await supabase.from("theory_of_change").insert(payload).throwOnError();
-    }
+    // Use upsert to avoid RLS conflicts when existingToc state is stale
+    await supabase.from("theory_of_change").upsert(payload, { onConflict: "project_id" }).throwOnError();
   };
 
   const saveStep3 = async (pid: string) => {
