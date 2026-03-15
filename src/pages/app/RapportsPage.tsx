@@ -42,7 +42,7 @@ export default function RapportsPage() {
       ]);
     } else if (reportId === "programs" && cohorts) {
       exportToCSV(cohorts, `rapport-programmes-${new Date().toISOString().slice(0, 10)}`, [
-        { key: "name", label: "Nom" }, { key: "status", label: "Statut" }, { key: "max_startups", label: "Max Startups" },
+        { key: "name", label: "Nom" }, { key: "status", label: "Statut" }, { key: "max_startups", label: "Max Entreprises" },
       ]);
     } else {
       handleExportJSON(reportId);
