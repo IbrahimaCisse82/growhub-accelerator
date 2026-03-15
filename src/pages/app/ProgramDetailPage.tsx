@@ -33,10 +33,13 @@ function formatXOF(n: number) { return new Intl.NumberFormat("fr-FR").format(n) 
 export default function ProgramDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const { data: program, isLoading } = useProgram(id);
   const { data: projects, isLoading: loadingProjects } = useProgramProjects(id);
   const { data: grants } = useProgramGrants(id);
   const { data: events } = useProgramEvents(id);
+  const [editOpen, setEditOpen] = useState(false);
+  const [validateOpen, setValidateOpen] = useState(false);
 
   if (isLoading) return <div className="p-8"><Skeleton className="h-8 w-64 mb-4" /><Skeleton className="h-[300px] rounded-xl" /></div>;
   if (!program) return <div className="text-center py-12 text-muted-foreground">Programme introuvable</div>;
