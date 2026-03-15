@@ -15,7 +15,7 @@ const stageColor: Record<string, "green" | "blue" | "amber" | "gray"> = { mvp: "
 function getPillColor(value: string | null, map: Record<string, any>, fallback = "gray" as const) { return !value ? fallback : map[value.toLowerCase()] ?? fallback; }
 
 const exportCols = [
-  { key: "name", label: "Startup" }, { key: "sector", label: "Secteur" }, { key: "stage", label: "Stade" },
+  { key: "name", label: "Entreprise" }, { key: "sector", label: "Secteur" }, { key: "stage", label: "Stade" },
   { key: "score", label: "Score" }, { key: "country", label: "Pays" }, { key: "city", label: "Ville" },
 ];
 

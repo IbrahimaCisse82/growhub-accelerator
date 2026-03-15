@@ -74,7 +74,7 @@ export default function SearchDialog({ open, onOpenChange }: { open: boolean; on
             value={query}
             onChange={e => setQuery(e.target.value)}
             className="w-full bg-transparent text-foreground text-sm outline-none placeholder:text-muted-foreground"
-            placeholder="Rechercher startups, programmes, cohortes, grants, cours…"
+            placeholder="Rechercher entreprises, programmes, cohortes, grants, cours…"
           />
         </div>
         <div className="max-h-[300px] overflow-y-auto">

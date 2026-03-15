@@ -41,7 +41,7 @@ const navGroups: NavGroup[] = [
     label: "Accélération",
     items: [
       { label: "Candidatures", icon: "✦", path: "/app/candidatures", badgeKey: "pendingApps", badgeType: "alert" },
-      { label: "Startups", icon: "△", path: "/app/startups", badgeKey: "startups" },
+      { label: "Entreprises", icon: "△", path: "/app/entreprises", badgeKey: "startups" },
       { label: "Cohortes", icon: "◉", path: "/app/cohortes", badgeKey: "activeCohorts" },
     ],
   },

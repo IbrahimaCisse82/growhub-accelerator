@@ -104,7 +104,7 @@ export default function CohortDetailPage() {
               </tr></thead>
               <tbody>
                 {applications.map(a => (
-                  <tr key={a.id} className="hover:bg-secondary transition-colors cursor-pointer" onClick={() => a.startup_id && navigate(`/app/startups/${a.startup_id}`)}>
+                  <tr key={a.id} className="hover:bg-secondary transition-colors cursor-pointer" onClick={() => a.startup_id && navigate(`/app/entreprises/${a.startup_id}`)}>
                     <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{a.startups?.name ?? "—"}</td>
                     <td className="px-3.5 py-2.5 border-b border-border"><Pill color={appStepColor[a.status] ?? "gray"}>{a.status}</Pill></td>
                     <td className="px-3.5 py-2.5 border-b border-border font-mono text-primary">{a.score != null ? `${a.score}/100` : "—"}</td>

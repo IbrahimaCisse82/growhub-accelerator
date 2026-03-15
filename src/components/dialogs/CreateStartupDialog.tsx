@@ -25,7 +25,7 @@ export default function CreateStartupDialog({ children, cohortId }: { children: 
       });
       if (error) throw error;
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["startups"] }); qc.invalidateQueries({ queryKey: ["cohort-startups"] }); setOpen(false); setName(""); setSector(""); setStage(""); setCity(""); setDescription(""); toast({ title: "Startup créée" }); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["startups"] }); qc.invalidateQueries({ queryKey: ["cohort-startups"] }); setOpen(false); setName(""); setSector(""); setStage(""); setCity(""); setDescription(""); toast({ title: "Entreprise créée" }); },
     onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
   });
 
