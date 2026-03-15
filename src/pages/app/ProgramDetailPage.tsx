@@ -39,6 +39,7 @@ export default function ProgramDetailPage() {
   const { data: projects, isLoading: loadingProjects } = useProgramProjects(id);
   const { data: grants } = useProgramGrants(id);
   const { data: events } = useProgramEvents(id);
+  const { data: coordinator } = useUserProfile(program?.coordinator_id);
   const [editOpen, setEditOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
 
