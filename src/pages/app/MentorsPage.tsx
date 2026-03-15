@@ -25,7 +25,7 @@ export default function MentorsPage() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader
         title="Mentors"
-        subtitle="Réseau d'experts et matching avec les startups"
+        subtitle="Réseau d'experts et matching avec les entreprises"
         actions={<GhButton>+ Inviter mentor</GhButton>}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
