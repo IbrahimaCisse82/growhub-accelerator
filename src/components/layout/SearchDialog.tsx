@@ -37,7 +37,7 @@ export default function SearchDialog({ open, onOpenChange }: { open: boolean; on
         supabase.from("courses").select("id, title").ilike("title", q).limit(3),
       ]);
       const r: SearchResult[] = [
-        ...(startups.data ?? []).map(s => ({ type: "Startup", id: s.id, name: s.name, subtitle: s.sector ?? undefined, path: `/app/startups/${s.id}` })),
+        ...(startups.data ?? []).map(s => ({ type: "Entreprise", id: s.id, name: s.name, subtitle: s.sector ?? undefined, path: `/app/entreprises/${s.id}` })),
         ...(programs.data ?? []).map(p => ({ type: "Programme", id: p.id, name: p.name, subtitle: p.code, path: `/app/programmes/${p.id}` })),
         ...(cohorts.data ?? []).map(c => ({ type: "Cohorte", id: c.id, name: c.name, path: `/app/cohortes/${c.id}` })),
         ...(projects.data ?? []).map(p => ({ type: "Projet", id: p.id, name: p.name, subtitle: p.code ?? undefined, path: `/app/projets` })),
