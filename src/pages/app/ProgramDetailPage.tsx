@@ -9,6 +9,7 @@ import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProgram, useProgramProjects, useProgramGrants, useProgramEvents } from "@/hooks/usePrograms";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useAssignableUsers";
 import { EditProgramDialog } from "@/components/dialogs/EditEntityDialogs";
 import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
 import { format } from "date-fns";
