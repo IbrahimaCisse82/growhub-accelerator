@@ -37,7 +37,7 @@ export default function StartupsPage() {
       <GhCard title="Toutes les entreprises" badge={String(filtered?.length ?? 0)} noPadding>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[12.5px]">
-            <thead><tr className="bg-surface-2">{["Startup", "Secteur", "Cohorte", "Stade", "Score", "Pays", ""].map((h) => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>)}</tr></thead>
+            <thead><tr className="bg-surface-2">{["Entreprise", "Secteur", "Cohorte", "Stade", "Score", "Pays", ""].map((h) => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>)}</tr></thead>
             <tbody>
               {isLoading ? Array.from({ length: 5 }).map((_, i) => <tr key={i}>{Array.from({ length: 7 }).map((_, j) => <td key={j} className="px-3.5 py-2.5 border-b border-border"><Skeleton className="h-4 w-20" /></td>)}</tr>) : filtered?.length === 0 ? (
                 <tr><td colSpan={7} className="px-3.5 py-8 text-center text-muted-foreground text-sm">Aucune startup</td></tr>
