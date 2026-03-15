@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
+import { useRealtimeNotifications } from "@/hooks/useRealtimeNotifications";
 import AppSidebar from "./AppSidebar";
 import AppTopbar from "./AppTopbar";
 import { useIsMobile } from "@/hooks/use-mobile";
