@@ -19,7 +19,7 @@ const statusMap: Record<string, { label: string; color: "green" | "blue" | "ambe
 
 const exportCols = [
   { key: "name", label: "Nom" }, { key: "status", label: "Statut" },
-  { key: "max_startups", label: "Max Startups" }, { key: "start_date", label: "Début" }, { key: "end_date", label: "Fin" },
+  { key: "max_startups", label: "Max Entreprises" }, { key: "start_date", label: "Début" }, { key: "end_date", label: "Fin" },
 ];
 
 export default function CohortesPage() {

@@ -10,7 +10,7 @@ import { useCohorts } from "@/hooks/useCohorts";
 import { exportToJSON, exportToCSV, exportToPDF } from "@/lib/exportUtils";
 
 const reports = [
-  { id: "startups", title: "Rapport Startups", description: "Vue d'ensemble des startups accompagnées, secteurs, stades et scores", icon: "△" },
+  { id: "startups", title: "Rapport Entreprises", description: "Vue d'ensemble des entreprises accompagnées, secteurs, stades et scores", icon: "△" },
   { id: "financial", title: "Rapport Financier", description: "Synthèse des grants, budgets, décaissements et taux d'utilisation", icon: "◎" },
   { id: "programs", title: "Rapport Programmes", description: "Performance des programmes, cohortes et taux de complétion", icon: "◇" },
   { id: "impact", title: "Rapport d'Impact", description: "Métriques d'impact : emplois créés, levées de fonds, croissance", icon: "◈" },
@@ -42,7 +42,7 @@ export default function RapportsPage() {
       ]);
     } else if (reportId === "programs" && cohorts) {
       exportToCSV(cohorts, `rapport-programmes-${new Date().toISOString().slice(0, 10)}`, [
-        { key: "name", label: "Nom" }, { key: "status", label: "Statut" }, { key: "max_startups", label: "Max Startups" },
+        { key: "name", label: "Nom" }, { key: "status", label: "Statut" }, { key: "max_startups", label: "Max Entreprises" },
       ]);
     } else {
       handleExportJSON(reportId);
@@ -66,7 +66,7 @@ export default function RapportsPage() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader title="Rapports" subtitle="Génération et export de rapports" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
-        <StatCard label="Startups" value={String(startupsCount ?? 0)} note="" color="green" />
+        <StatCard label="Entreprises" value={String(startupsCount ?? 0)} note="" color="green" />
         <StatCard label="Grants actifs" value={String(activeGrants.length)} note="" color="blue" />
         <StatCard label="Projets" value={String(projects?.length ?? 0)} note="" color="amber" />
         <StatCard label="Cohortes" value={String(cohorts?.length ?? 0)} note="" color="purple" />

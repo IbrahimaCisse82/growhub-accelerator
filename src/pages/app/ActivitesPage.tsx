@@ -11,7 +11,7 @@ const actionLabels: Record<string, string> = {
 };
 
 const entityLabels: Record<string, string> = {
-  startup: "Startup", program: "Programme", cohort: "Cohorte", project: "Projet",
+  startup: "Entreprise", program: "Programme", cohort: "Cohorte", project: "Projet",
   grant: "Grant", event: "Événement", user: "Utilisateur", course: "Cours",
 };
 
