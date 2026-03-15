@@ -76,6 +76,7 @@ const App = () => (
               <Route path="lms" element={<LmsPage />} />
               <Route path="projets" element={<ProjetsPage />} />
               <Route path="projets/nouveau" element={<ProjectWizardPage />} />
+              <Route path="projets/:id" element={<ProjetDetailPage />} />
               <Route path="jalons" element={<JalonsPage />} />
               <Route path="taches" element={<TachesPage />} />
               <Route path="gantt" element={<GanttPage />} />
