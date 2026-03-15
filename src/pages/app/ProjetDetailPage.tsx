@@ -282,11 +282,12 @@ export default function ProjetDetailPage() {
           ) : <Empty text="Aucune ligne budgétaire" />}
         </TabsContent>
       </Tabs>
+
+      <EditProjectDialog open={editOpen} onOpenChange={setEditOpen} project={project} />
+      <ValidateEntityDialog open={validateOpen} onOpenChange={setValidateOpen} entityType="projects" entityId={project.id} entityName={project.name} />
     </motion.div>
   );
 }
-
-/* ── Sub-components ── */
 
 function StatBox({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (
