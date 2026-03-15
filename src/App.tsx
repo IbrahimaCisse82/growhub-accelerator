@@ -24,6 +24,7 @@ import MentorsPage from "@/pages/app/MentorsPage";
 import CoachingPage from "@/pages/app/CoachingPage";
 import LmsPage from "@/pages/app/LmsPage";
 import ProjetsPage from "@/pages/app/ProjetsPage";
+import ProjetDetailPage from "@/pages/app/ProjetDetailPage";
 import JalonsPage from "@/pages/app/JalonsPage";
 import TachesPage from "@/pages/app/TachesPage";
 import ProjectWizardPage from "@/pages/app/ProjectWizardPage";
@@ -75,6 +76,7 @@ const App = () => (
               <Route path="lms" element={<LmsPage />} />
               <Route path="projets" element={<ProjetsPage />} />
               <Route path="projets/nouveau" element={<ProjectWizardPage />} />
+              <Route path="projets/:id" element={<ProjetDetailPage />} />
               <Route path="jalons" element={<JalonsPage />} />
               <Route path="taches" element={<TachesPage />} />
               <Route path="gantt" element={<GanttPage />} />
