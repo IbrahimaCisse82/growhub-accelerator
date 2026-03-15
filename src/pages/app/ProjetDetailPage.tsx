@@ -11,6 +11,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import WorkPackageCard from "@/components/projects/WorkPackageCard";
 import { buildWorkPackages } from "@/lib/workPackageUtils";
+import { useAuth } from "@/hooks/useAuth";
+import { EditProjectDialog } from "@/components/dialogs/EditEntityDialogs";
+import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
 
 const statusMap: Record<string, { label: string; color: "green" | "blue" | "amber" | "gray" }> = {
   active: { label: "Actif", color: "green" },
@@ -101,6 +104,7 @@ function useProjectMilestones(id: string | undefined) {
 export default function ProjetDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const { data: project, isLoading } = useProjectDetail(id);
   const { data: logFrame } = useProjectLogFrame(id);
   const { data: toc } = useProjectTheoryOfChange(id);
@@ -108,6 +112,8 @@ export default function ProjetDetailPage() {
   const { data: budgetLines } = useProjectBudgetLines(id);
   const { data: milestones } = useProjectMilestones(id);
   const [descExpanded, setDescExpanded] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [validateOpen, setValidateOpen] = useState(false);
 
   if (isLoading) return (
     <div className="space-y-4">
@@ -151,9 +157,21 @@ export default function ProjetDetailPage() {
               )}
             </div>
             <div className="flex gap-2 shrink-0">
+              {isAdmin && (
+                <>
+                  <GhButton size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
+                    Modifier ✏️
+                  </GhButton>
+                  {project.validation_status !== "validated" && (
+                    <GhButton size="sm" variant="primary" onClick={() => setValidateOpen(true)}>
+                      Valider ✓
+                    </GhButton>
+                  )}
+                </>
+              )}
               {(project.validation_status === "draft" || project.validation_status === "pending_review") && (
-                <GhButton size="sm" variant="secondary" onClick={() => navigate(`/app/projets/nouveau?id=${project.id}`)}>
-                  Modifier ✏️
+                <GhButton size="sm" variant="ghost" onClick={() => navigate(`/app/projets/nouveau?id=${project.id}`)}>
+                  Wizard ↗
                 </GhButton>
               )}
             </div>
@@ -264,11 +282,12 @@ export default function ProjetDetailPage() {
           ) : <Empty text="Aucune ligne budgétaire" />}
         </TabsContent>
       </Tabs>
+
+      <EditProjectDialog open={editOpen} onOpenChange={setEditOpen} project={project} />
+      <ValidateEntityDialog open={validateOpen} onOpenChange={setValidateOpen} entityType="projects" entityId={project.id} entityName={project.name} />
     </motion.div>
   );
 }
-
-/* ── Sub-components ── */
 
 function StatBox({ icon, label, value }: { icon: string; label: string; value: string }) {
   return (

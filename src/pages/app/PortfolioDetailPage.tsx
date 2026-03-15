@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AppBreadcrumb from "@/components/shared/AppBreadcrumb";
@@ -6,6 +7,9 @@ import Pill from "@/components/shared/Pill";
 import GhButton from "@/components/shared/GhButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortfolio, usePortfolioPrograms } from "@/hooks/usePortfolios";
+import { useAuth } from "@/hooks/useAuth";
+import { EditPortfolioDialog } from "@/components/dialogs/EditEntityDialogs";
+import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
 
 const statusMap: Record<string, { label: string; color: "green" | "blue" | "amber" | "gray" }> = {
   active: { label: "Actif", color: "green" },
@@ -18,8 +22,11 @@ const statusMap: Record<string, { label: string; color: "green" | "blue" | "ambe
 export default function PortfolioDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const { data: portfolio, isLoading } = usePortfolio(id);
   const { data: programs, isLoading: loadingPrograms } = usePortfolioPrograms(id);
+  const [editOpen, setEditOpen] = useState(false);
+  const [validateOpen, setValidateOpen] = useState(false);
 
   if (isLoading) return <div className="p-8"><Skeleton className="h-8 w-64 mb-4" /><Skeleton className="h-[300px] rounded-xl" /></div>;
   if (!portfolio) return <div className="text-center py-12 text-muted-foreground">Portefeuille introuvable</div>;
@@ -35,7 +42,19 @@ export default function PortfolioDetailPage() {
       <SectionHeader
         title={portfolio.name}
         subtitle={portfolio.description ?? portfolio.code}
-        actions={<Pill color={st.color}>● {st.label}</Pill>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Pill color={st.color}>● {st.label}</Pill>
+            {isAdmin && (
+              <>
+                <GhButton variant="secondary" size="sm" onClick={() => setEditOpen(true)}>Modifier ✏️</GhButton>
+                {portfolio.status !== "active" && (
+                  <GhButton variant="primary" size="sm" onClick={() => setValidateOpen(true)}>Valider ✓</GhButton>
+                )}
+              </>
+            )}
+          </div>
+        }
       />
 
       <div className="grid grid-cols-3 gap-3.5 mb-6">
@@ -89,6 +108,9 @@ export default function PortfolioDetailPage() {
           })
         )}
       </div>
+
+      <EditPortfolioDialog open={editOpen} onOpenChange={setEditOpen} portfolio={portfolio} />
+      <ValidateEntityDialog open={validateOpen} onOpenChange={setValidateOpen} entityType="portfolios" entityId={portfolio.id} entityName={portfolio.name} />
     </motion.div>
   );
 }

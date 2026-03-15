@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AppBreadcrumb from "@/components/shared/AppBreadcrumb";
@@ -7,6 +8,9 @@ import GhButton from "@/components/shared/GhButton";
 import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useProgram, useProgramProjects, useProgramGrants, useProgramEvents } from "@/hooks/usePrograms";
+import { useAuth } from "@/hooks/useAuth";
+import { EditProgramDialog } from "@/components/dialogs/EditEntityDialogs";
+import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -29,10 +33,13 @@ function formatXOF(n: number) { return new Intl.NumberFormat("fr-FR").format(n) 
 export default function ProgramDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { isAdmin } = useAuth();
   const { data: program, isLoading } = useProgram(id);
   const { data: projects, isLoading: loadingProjects } = useProgramProjects(id);
   const { data: grants } = useProgramGrants(id);
   const { data: events } = useProgramEvents(id);
+  const [editOpen, setEditOpen] = useState(false);
+  const [validateOpen, setValidateOpen] = useState(false);
 
   if (isLoading) return <div className="p-8"><Skeleton className="h-8 w-64 mb-4" /><Skeleton className="h-[300px] rounded-xl" /></div>;
   if (!program) return <div className="text-center py-12 text-muted-foreground">Programme introuvable</div>;
@@ -53,7 +60,19 @@ export default function ProgramDetailPage() {
       <SectionHeader
         title={program.name}
         subtitle={`${program.code} ${program.funder ? `· Bailleur : ${program.funder}` : ""}`}
-        actions={<Pill color={st.color}>● {st.label}</Pill>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Pill color={st.color}>● {st.label}</Pill>
+            {isAdmin && (
+              <>
+                <GhButton variant="secondary" size="sm" onClick={() => setEditOpen(true)}>Modifier ✏️</GhButton>
+                {program.status !== "active" && (
+                  <GhButton variant="primary" size="sm" onClick={() => setValidateOpen(true)}>Valider ✓</GhButton>
+                )}
+              </>
+            )}
+          </div>
+        }
       />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
@@ -168,6 +187,9 @@ export default function ProgramDetailPage() {
           </div>
         </div>
       )}
+
+      <EditProgramDialog open={editOpen} onOpenChange={setEditOpen} program={program} />
+      <ValidateEntityDialog open={validateOpen} onOpenChange={setValidateOpen} entityType="programs" entityId={program.id} entityName={program.name} />
     </motion.div>
   );
 }
