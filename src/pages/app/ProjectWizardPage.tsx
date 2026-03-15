@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePrograms } from "@/hooks/usePrograms";
@@ -63,7 +63,10 @@ const lineTotal = (l: BudgetLine) => (l.qty || 0) * (l.montant || 0) * ((l.alloc
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
 export default function ProjectWizardPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [step, setStep] = useState(0);
+  const [projectId, setProjectId] = useState<string | null>(searchParams.get("id"));
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: programs } = usePrograms();
@@ -108,6 +111,136 @@ export default function ProjectWizardPage() {
   const totalB = linesB.reduce((s, l) => s + lineTotal(l), 0);
   const totalBudget = totalA + totalB;
 
+  // --- Load existing draft project ---
+  const { data: existingProject } = useQuery({
+    queryKey: ["project-draft", projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      const { data, error } = await supabase.from("projects").select("*").eq("id", projectId).single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!projectId,
+  });
+
+  const { data: existingLogframe } = useQuery({
+    queryKey: ["project-logframe", projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      const { data } = await supabase.from("logical_frameworks").select("*").eq("project_id", projectId).maybeSingle();
+      return data;
+    },
+    enabled: !!projectId,
+  });
+
+  const { data: existingToc } = useQuery({
+    queryKey: ["project-toc", projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      const { data } = await supabase.from("theory_of_change").select("*").eq("project_id", projectId).maybeSingle();
+      return data;
+    },
+    enabled: !!projectId,
+  });
+
+  const { data: existingKpis } = useQuery({
+    queryKey: ["project-kpis", projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      const { data } = await supabase.from("project_indicators").select("*").eq("project_id", projectId);
+      return data;
+    },
+    enabled: !!projectId,
+  });
+
+  const { data: existingBudgetLines } = useQuery({
+    queryKey: ["project-budget-lines", projectId],
+    queryFn: async () => {
+      if (!projectId) return null;
+      const { data } = await supabase.from("project_budget_lines").select("*").eq("project_id", projectId);
+      return data;
+    },
+    enabled: !!projectId,
+  });
+
+  // Hydrate form from existing data
+  useEffect(() => {
+    if (existingProject) {
+      setName(existingProject.name || "");
+      setCode(existingProject.code || "");
+      setDescription(existingProject.description || "");
+      setProgramId(existingProject.program_id || "");
+      setStartDate(existingProject.start_date || "");
+      setEndDate(existingProject.end_date || "");
+    }
+  }, [existingProject]);
+
+  useEffect(() => {
+    if (existingLogframe) {
+      setOverallObjective(existingLogframe.overall_objective || "");
+      const so = existingLogframe.specific_objectives as string[] | null;
+      setSpecificObjectives(so && so.length > 0 ? so : [""]);
+      const er = existingLogframe.expected_results as string[] | null;
+      setExpectedResults(er && er.length > 0 ? er : [""]);
+      const ac = existingLogframe.activities as string[] | null;
+      setLfActivities(ac && ac.length > 0 ? ac : [""]);
+      setAssumptions(existingLogframe.assumptions || "");
+      setPreConditions(existingLogframe.pre_conditions || "");
+    }
+  }, [existingLogframe]);
+
+  useEffect(() => {
+    if (existingToc) {
+      const inp = existingToc.inputs as string[] | null;
+      setTocInputs(inp && inp.length > 0 ? inp : [""]);
+      const act = existingToc.activities as string[] | null;
+      setTocActivities(act && act.length > 0 ? act : [""]);
+      const out = existingToc.outputs as string[] | null;
+      setTocOutputs(out && out.length > 0 ? out : [""]);
+      const oc = existingToc.outcomes as string[] | null;
+      setTocOutcomes(oc && oc.length > 0 ? oc : [""]);
+      setTocImpact(existingToc.impact || "");
+      const as_ = existingToc.assumptions as string[] | null;
+      setTocAssumptions(as_ && as_.length > 0 ? as_ : [""]);
+      const ri = existingToc.risks as string[] | null;
+      setTocRisks(ri && ri.length > 0 ? ri : [""]);
+    }
+  }, [existingToc]);
+
+  useEffect(() => {
+    if (existingKpis && existingKpis.length > 0) {
+      setKpis(existingKpis.map(k => ({
+        name: k.name, category: k.category || "output", unit: k.unit || "",
+        baseline: Number(k.baseline_value) || 0, target: Number(k.target_value) || 0,
+        frequency: k.frequency || "quarterly", source: k.data_source || "", responsible: k.responsible || "",
+      })));
+    }
+  }, [existingKpis]);
+
+  useEffect(() => {
+    if (existingBudgetLines && existingBudgetLines.length > 0) {
+      setBudgetLines(existingBudgetLines.map(b => ({
+        code: b.code || "", desc: b.label, unit: b.unit || "—",
+        qty: Number(b.quantity) || 0, montant: Number(b.unit_cost) || 0,
+        alloc: Number(b.allocation_pct) || 100, section: (b.section === "B" ? "B" : "A") as "A" | "B",
+      })));
+    }
+  }, [existingBudgetLines]);
+
+  // --- Detect which step to resume at ---
+  useEffect(() => {
+    if (!projectId) return;
+    // Determine the furthest completed step
+    if (existingProject) {
+      let resumeStep = 1; // step 0 done since project exists
+      if (existingLogframe) resumeStep = 2;
+      if (existingToc) resumeStep = 3;
+      if (existingKpis && existingKpis.length > 0) resumeStep = 4;
+      if (existingBudgetLines && existingBudgetLines.length > 0) resumeStep = 5;
+      setStep(resumeStep);
+    }
+  }, [projectId, existingProject, existingLogframe, existingToc, existingKpis, existingBudgetLines]);
+
   const canNext = () => {
     if (step === 0) return name && programId;
     if (step === 1) return overallObjective;
@@ -117,84 +250,166 @@ export default function ProjectWizardPage() {
     return true;
   };
 
-  const createProject = useMutation({
-    mutationFn: async () => {
-      // 1. Create project
-      const { data: project, error: pe } = await supabase.from("projects").insert({
+  // --- Save step 0: Create or update project ---
+  const saveStep0 = async () => {
+    if (projectId) {
+      const { error } = await supabase.from("projects").update({
+        name, code: code || null, description: description || null,
+        program_id: programId, start_date: startDate || null, end_date: endDate || null,
+      }).eq("id", projectId);
+      if (error) throw error;
+      return projectId;
+    } else {
+      const { data, error } = await supabase.from("projects").insert({
         name, code: code || null, description: description || null,
         program_id: programId, owner_id: user?.id,
         start_date: startDate || null, end_date: endDate || null,
-        budget: totalBudget,
-        validation_status: "pending_review",
-      }).select().single();
-      if (pe) throw pe;
+        status: "draft", validation_status: "draft",
+      }).select("id").single();
+      if (error) throw error;
+      return data.id;
+    }
+  };
 
-      // 2. Logical framework
-      const { error: lfe } = await supabase.from("logical_frameworks").insert({
-        project_id: project.id,
-        overall_objective: overallObjective,
-        specific_objectives: specificObjectives.filter(Boolean),
-        expected_results: expectedResults.filter(Boolean),
-        activities: lfActivities.filter(Boolean),
-        assumptions: assumptions || null,
-        pre_conditions: preConditions || null,
-      });
-      if (lfe) throw lfe;
+  // --- Save step 1: Logical framework ---
+  const saveStep1 = async (pid: string) => {
+    const payload = {
+      project_id: pid,
+      overall_objective: overallObjective,
+      specific_objectives: specificObjectives.filter(Boolean),
+      expected_results: expectedResults.filter(Boolean),
+      activities: lfActivities.filter(Boolean),
+      assumptions: assumptions || null,
+      pre_conditions: preConditions || null,
+    };
+    if (existingLogframe) {
+      const { error } = await supabase.from("logical_frameworks").update(payload).eq("project_id", pid);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from("logical_frameworks").insert(payload);
+      if (error) throw error;
+    }
+  };
 
-      // 3. Theory of change
-      const { error: toce } = await supabase.from("theory_of_change").insert({
-        project_id: project.id,
-        inputs: tocInputs.filter(Boolean),
-        activities: tocActivities.filter(Boolean),
-        outputs: tocOutputs.filter(Boolean),
-        outcomes: tocOutcomes.filter(Boolean),
-        impact: tocImpact,
-        assumptions: tocAssumptions.filter(Boolean),
-        risks: tocRisks.filter(Boolean),
-      });
-      if (toce) throw toce;
+  // --- Save step 2: Theory of change ---
+  const saveStep2 = async (pid: string) => {
+    const payload = {
+      project_id: pid,
+      inputs: tocInputs.filter(Boolean),
+      activities: tocActivities.filter(Boolean),
+      outputs: tocOutputs.filter(Boolean),
+      outcomes: tocOutcomes.filter(Boolean),
+      impact: tocImpact,
+      assumptions: tocAssumptions.filter(Boolean),
+      risks: tocRisks.filter(Boolean),
+    };
+    if (existingToc) {
+      const { error } = await supabase.from("theory_of_change").update(payload).eq("project_id", pid);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from("theory_of_change").insert(payload);
+      if (error) throw error;
+    }
+  };
 
-      // 4. KPIs
-      const validKpis = kpis.filter(k => k.name);
-      if (validKpis.length > 0) {
-        const { error: ke } = await supabase.from("project_indicators").insert(
-          validKpis.map(k => ({
-            project_id: project.id, name: k.name, category: k.category,
-            unit: k.unit || null, baseline_value: k.baseline, target_value: k.target,
-            frequency: k.frequency, data_source: k.source || null, responsible: k.responsible || null,
-          }))
-        );
-        if (ke) throw ke;
-      }
+  // --- Save step 3: KPIs ---
+  const saveStep3 = async (pid: string) => {
+    // Delete existing and re-insert
+    await supabase.from("project_indicators").delete().eq("project_id", pid);
+    const validKpis = kpis.filter(k => k.name);
+    if (validKpis.length > 0) {
+      const { error } = await supabase.from("project_indicators").insert(
+        validKpis.map(k => ({
+          project_id: pid, name: k.name, category: k.category,
+          unit: k.unit || null, baseline_value: k.baseline, target_value: k.target,
+          frequency: k.frequency, data_source: k.source || null, responsible: k.responsible || null,
+        }))
+      );
+      if (error) throw error;
+    }
+  };
 
-      // 5. Budget lines (GTS format)
-      const validBudget = budgetLines.filter(b => b.desc);
-      if (validBudget.length > 0) {
-        const { error: be } = await supabase.from("project_budget_lines").insert(
-          validBudget.map(b => ({
-            project_id: project.id, category: b.section === "A" ? "operational" : "management",
-            label: b.desc, code: b.code, section: b.section,
-            unit: b.unit || null, quantity: b.qty, unit_cost: b.montant,
-            allocation_pct: b.alloc, funding_source: null,
-          }))
-        );
-        if (be) throw be;
-      }
+  // --- Save step 4: Budget lines ---
+  const saveStep4 = async (pid: string) => {
+    // Delete existing and re-insert
+    await supabase.from("project_budget_lines").delete().eq("project_id", pid);
+    const validBudget = budgetLines.filter(b => b.desc);
+    if (validBudget.length > 0) {
+      const { error } = await supabase.from("project_budget_lines").insert(
+        validBudget.map(b => ({
+          project_id: pid, category: b.section === "A" ? "operational" : "management",
+          label: b.desc, code: b.code, section: b.section,
+          unit: b.unit || null, quantity: b.qty, unit_cost: b.montant,
+          allocation_pct: b.alloc, funding_source: null,
+        }))
+      );
+      if (error) throw error;
+    }
+    // Update project budget total
+    await supabase.from("projects").update({ budget: totalBudget }).eq("id", pid);
 
-      // 6. Link to grant if selected
-      if (grantId) {
+    // Link to grant if selected
+    if (grantId) {
+      const { data: existingBudget } = await supabase.from("budgets").select("id").eq("project_id", pid).eq("grant_id", grantId).maybeSingle();
+      if (!existingBudget) {
         await supabase.from("budgets").insert({
-          project_id: project.id, grant_id: grantId,
+          project_id: pid, grant_id: grantId,
           category: "projet", label: `Budget ${name}`,
           amount_planned: totalBudget, amount_spent: 0,
         });
+      } else {
+        await supabase.from("budgets").update({ amount_planned: totalBudget }).eq("id", existingBudget.id);
+      }
+    }
+  };
+
+  // --- Handle "Suivant" click ---
+  const handleNext = async () => {
+    setSaving(true);
+    try {
+      let pid = projectId;
+
+      if (step === 0) {
+        pid = await saveStep0();
+        setProjectId(pid);
+        setSearchParams({ id: pid });
+        qc.invalidateQueries({ queryKey: ["project-draft", pid] });
+      } else if (step === 1 && pid) {
+        await saveStep1(pid);
+        qc.invalidateQueries({ queryKey: ["project-logframe", pid] });
+      } else if (step === 2 && pid) {
+        await saveStep2(pid);
+        qc.invalidateQueries({ queryKey: ["project-toc", pid] });
+      } else if (step === 3 && pid) {
+        await saveStep3(pid);
+        qc.invalidateQueries({ queryKey: ["project-kpis", pid] });
+      } else if (step === 4 && pid) {
+        await saveStep4(pid);
+        qc.invalidateQueries({ queryKey: ["project-budget-lines", pid] });
       }
 
-      return project;
+      toast.success("Données enregistrées ✓");
+      setStep(step + 1);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // --- Submit final ---
+  const submitProject = useMutation({
+    mutationFn: async () => {
+      if (!projectId) throw new Error("Projet introuvable");
+      const { error } = await supabase.from("projects").update({
+        validation_status: "pending_review",
+        budget: totalBudget,
+      }).eq("id", projectId);
+      if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["projects"] });
-      toast.success("Projet créé et soumis pour validation !");
+      toast.success("Projet soumis pour validation !");
       navigate("/app/projets");
     },
     onError: (e) => toast.error((e as Error).message),
@@ -205,7 +420,10 @@ export default function ProjectWizardPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-xl font-display font-bold text-foreground">Créer un projet</h1>
-        <p className="text-sm text-muted-foreground mt-1">Parcours structuré selon les standards des bailleurs de fonds</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Parcours structuré selon les standards des bailleurs de fonds
+          {projectId && <span className="ml-2 text-primary font-mono text-[10px]">Brouillon enregistré</span>}
+        </p>
       </div>
 
       {/* Stepper */}
@@ -523,12 +741,12 @@ export default function ProjectWizardPage() {
         </GhButton>
         <div className="flex gap-2">
           {step < STEPS.length - 1 ? (
-            <GhButton onClick={() => setStep(step + 1)} disabled={!canNext()} size="md">
-              Suivant →
+            <GhButton onClick={handleNext} disabled={!canNext() || saving} size="md">
+              {saving ? "Enregistrement…" : "Suivant →"}
             </GhButton>
           ) : (
-            <GhButton onClick={() => createProject.mutate()} disabled={createProject.isPending} size="md">
-              {createProject.isPending ? "Création…" : "Soumettre le projet ✓"}
+            <GhButton onClick={() => submitProject.mutate()} disabled={submitProject.isPending} size="md">
+              {submitProject.isPending ? "Soumission…" : "Soumettre le projet ✓"}
             </GhButton>
           )}
         </div>
