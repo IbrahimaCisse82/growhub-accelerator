@@ -6,7 +6,7 @@ import Pill from "@/components/shared/Pill";
 import GhButton from "@/components/shared/GhButton";
 import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProgram, useProgramCohorts, useProgramGrants, useProgramEvents } from "@/hooks/usePrograms";
+import { useProgram, useProgramGrants, useProgramEvents } from "@/hooks/usePrograms";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
