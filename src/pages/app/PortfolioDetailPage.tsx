@@ -8,6 +8,7 @@ import GhButton from "@/components/shared/GhButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortfolio, usePortfolioPrograms } from "@/hooks/usePortfolios";
 import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/hooks/useAssignableUsers";
 import { EditPortfolioDialog } from "@/components/dialogs/EditEntityDialogs";
 import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
 
