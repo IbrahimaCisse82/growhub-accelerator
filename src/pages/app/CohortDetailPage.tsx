@@ -32,13 +32,15 @@ export default function CohortDetailPage() {
   if (!cohort) return <div className="text-center py-12 text-muted-foreground">Cohorte introuvable</div>;
 
   const st = statusMap[cohort.status] ?? statusMap.draft;
-  const program = cohort.programs;
+  const project = cohort.projects;
+  const program = project?.programs;
   const portfolio = program?.portfolios;
 
   const crumbs = [
     { label: "Portefeuilles", href: "/app/portefeuilles" },
     ...(portfolio ? [{ label: portfolio.name, href: `/app/portefeuilles/${portfolio.id}` }] : []),
     ...(program ? [{ label: program.name, href: `/app/programmes/${program.id}` }] : []),
+    ...(project ? [{ label: project.name, href: `/app/projets/${project.id}` }] : []),
     { label: cohort.name },
   ];
 
