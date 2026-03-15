@@ -377,11 +377,8 @@ export default function ProjectWizardPage() {
       assumptions: assumptions || null,
       pre_conditions: preConditions || null,
     };
-    if (existingLogframe) {
-      await supabase.from("logical_frameworks").update(payload).eq("project_id", pid).throwOnError();
-    } else {
-      await supabase.from("logical_frameworks").insert(payload).throwOnError();
-    }
+    // Use upsert to avoid RLS conflicts when existingLogframe state is stale
+    await supabase.from("logical_frameworks").upsert(payload, { onConflict: "project_id" }).throwOnError();
   };
 
   const saveStep2 = async (pid: string) => {
