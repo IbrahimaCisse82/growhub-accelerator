@@ -48,6 +48,9 @@ const RapportsPage = lazy(() => import("@/pages/app/RapportsPage"));
 const UsersPage = lazy(() => import("@/pages/app/UsersPage"));
 const ProfilePage = lazy(() => import("@/pages/app/ProfilePage"));
 const ActivitesPage = lazy(() => import("@/pages/app/ActivitesPage"));
+const PartnersPage = lazy(() => import("@/pages/app/PartnersPage"));
+const SurveysPage = lazy(() => import("@/pages/app/SurveysPage"));
+const AlumniPage = lazy(() => import("@/pages/app/AlumniPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
