@@ -168,10 +168,11 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = {
+      const payload: any = {
         grant_id: grantId, label, amount: parseFloat(amount) || 0, transaction_date: date,
         budget_code: budgetCode || null, vendor: vendor || null, reference: reference || null,
         description: description || null, category: category || null, receipt_url: receiptUrl, created_by: userId ?? null,
+        exchange_rate: parseFloat(exchangeRate) || 1, amount_local: parseFloat(amountLocal) || 0,
       };
       if (isEdit) {
         const { error } = await supabase.from("grant_transactions").update(payload).eq("id", editData.id);
