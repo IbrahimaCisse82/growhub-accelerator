@@ -11,7 +11,7 @@ import { lazy, Suspense } from "react";
 
 // Auth pages (small, loaded eagerly)
 import LoginPage from "@/pages/auth/LoginPage";
-import SignupPage from "@/pages/auth/SignupPage";
+// SignupPage removed — access by invitation only
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
