@@ -27,6 +27,8 @@ import GrantIndicatorsTab from "@/components/grants/GrantIndicatorsTab";
 import GrantActivitiesTab from "@/components/grants/GrantActivitiesTab";
 import GrantBudgetChart from "@/components/grants/GrantBudgetChart";
 import GrantAlertsPanel from "@/components/grants/GrantAlertsPanel";
+import GrantAddendumTab, { useGrantAddendums } from "@/components/grants/GrantAddendumTab";
+import GrantFicheRecapTab from "@/components/grants/GrantFicheRecapTab";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
