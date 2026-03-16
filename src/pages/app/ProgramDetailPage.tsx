@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useAssignableUsers";
 import { EditProgramDialog } from "@/components/dialogs/EditEntityDialogs";
 import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
+import EntityDocumentsTab from "@/components/shared/EntityDocumentsTab";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
