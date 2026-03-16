@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import WorkPackageCard from "@/components/projects/WorkPackageCard";
 import { buildWorkPackages } from "@/lib/workPackageUtils";
+import EntityDocumentsTab from "@/components/shared/EntityDocumentsTab";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useAssignableUsers";
 import { EditProjectDialog } from "@/components/dialogs/EditEntityDialogs";
