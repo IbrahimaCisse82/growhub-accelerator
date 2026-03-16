@@ -1,15 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/useAuth";
 
 export function useSurveys() {
+  const { isAdmin } = useAuth();
   return useQuery({
-    queryKey: ["surveys"],
+    queryKey: ["surveys", isAdmin],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("surveys")
         .select("*, programs(name)")
         .order("created_at", { ascending: false });
+      // Non-admins only see active surveys
+      if (!isAdmin) {
+        query = query.eq("is_active", true);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
