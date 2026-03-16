@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useAssignableUsers";
 import { EditProgramDialog } from "@/components/dialogs/EditEntityDialogs";
 import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
+import EntityDocumentsTab from "@/components/shared/EntityDocumentsTab";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -189,6 +190,11 @@ export default function ProgramDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Documents */}
+      <div className="mb-6">
+        <EntityDocumentsTab entityType="program" entityId={program.id} label="Documents du programme" />
+      </div>
 
       <EditProgramDialog open={editOpen} onOpenChange={setEditOpen} program={program} />
       <ValidateEntityDialog open={validateOpen} onOpenChange={setValidateOpen} entityType="programs" entityId={program.id} entityName={program.name} />

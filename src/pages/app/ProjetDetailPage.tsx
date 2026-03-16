@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import WorkPackageCard from "@/components/projects/WorkPackageCard";
 import { buildWorkPackages } from "@/lib/workPackageUtils";
+import EntityDocumentsTab from "@/components/shared/EntityDocumentsTab";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useAssignableUsers";
 import { EditProjectDialog } from "@/components/dialogs/EditEntityDialogs";
@@ -225,6 +226,7 @@ export default function ProjetDetailPage() {
           <TabsTrigger value="workpackages">Work Packages ({workPackages.length})</TabsTrigger>
           <TabsTrigger value="toc">Théorie du changement</TabsTrigger>
           <TabsTrigger value="budget">Budget ({budgetLines?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="documents">📁 Documents</TabsTrigger>
         </TabsList>
 
         {/* Work Packages tab */}
@@ -285,6 +287,9 @@ export default function ProjetDetailPage() {
               </table>
             </div>
           ) : <Empty text="Aucune ligne budgétaire" />}
+        </TabsContent>
+        <TabsContent value="documents" className="mt-4">
+          <EntityDocumentsTab entityType="project" entityId={project.id} label="Documents du projet" />
         </TabsContent>
       </Tabs>
 

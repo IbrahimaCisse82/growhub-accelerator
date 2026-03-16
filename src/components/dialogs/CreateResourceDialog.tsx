@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,11 +15,36 @@ export default function CreateResourceDialog({ children }: { children: React.Rea
   const [category, setCategory] = useState("");
   const [type, setType] = useState("document");
   const [fileUrl, setFileUrl] = useState("");
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [programId, setProgramId] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const { user } = useAuth();
   const qc = useQueryClient();
   const { data: programs } = usePrograms();
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `resources/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from("resources").upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("resources").getPublicUrl(path);
+      setFileUrl(urlData.publicUrl);
+      setFileName(file.name);
+      toast({ title: "Fichier uploadé" });
+    } catch (err) {
+      toast({ title: "Erreur upload", description: (err as Error).message, variant: "destructive" });
+    } finally { setUploading(false); }
+  };
+
+  const reset = () => {
+    setTitle(""); setDescription(""); setCategory(""); setType("document"); setFileUrl(""); setFileName(null); setProgramId(""); setIsPublic(false);
+  };
 
   const create = useMutation({
     mutationFn: async () => {
@@ -32,14 +57,14 @@ export default function CreateResourceDialog({ children }: { children: React.Rea
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["resources"] });
-      setOpen(false); setTitle(""); setDescription(""); setCategory(""); setType("document"); setFileUrl(""); setProgramId(""); setIsPublic(false);
+      setOpen(false); reset();
       toast({ title: "✓ Ressource ajoutée" });
     },
     onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
   });
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { if (o) reset(); setOpen(o); }}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="bg-card border-border">
         <DialogHeader><DialogTitle className="font-display">Nouvelle ressource</DialogTitle></DialogHeader>
@@ -59,10 +84,25 @@ export default function CreateResourceDialog({ children }: { children: React.Rea
               {programs?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div className="space-y-2"><label className="text-sm font-medium text-foreground">URL du fichier</label><input value={fileUrl} onChange={e => setFileUrl(e.target.value)} className={inputCls} placeholder="https://..." /></div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Fichier</label>
+            {fileUrl && fileName ? (
+              <div className="flex items-center gap-2 text-sm">
+                <span className="text-primary truncate flex-1">📎 {fileName}</span>
+                <button type="button" onClick={() => { setFileUrl(""); setFileName(null); }} className="text-destructive text-xs hover:underline">Retirer</button>
+              </div>
+            ) : (
+              <div>
+                <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt,image/*" onChange={handleFileUpload} className="hidden" />
+                <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading} className={`${inputCls} justify-center items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground`}>
+                  {uploading ? "Upload en cours…" : "📎 Choisir un fichier"}
+                </button>
+              </div>
+            )}
+          </div>
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Description</label><textarea value={description} onChange={e => setDescription(e.target.value)} className={inputCls + " h-16 resize-none"} /></div>
           <label className="flex items-center gap-2 text-sm text-foreground"><input type="checkbox" checked={isPublic} onChange={e => setIsPublic(e.target.checked)} className="rounded" /> Public</label>
-          <button type="submit" disabled={create.isPending} className="w-full h-10 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50">
+          <button type="submit" disabled={create.isPending || uploading} className="w-full h-10 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:brightness-110 transition-all disabled:opacity-50">
             {create.isPending ? "Ajout…" : "Ajouter"}
           </button>
         </form>

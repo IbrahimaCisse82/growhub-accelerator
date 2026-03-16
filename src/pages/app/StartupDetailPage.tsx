@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStartup, useStartupMembers, useStartupProjects, useStartupSessions, useStartupRisks } from "@/hooks/useStartupDetail";
 import StartupKpiTab from "@/components/startups/StartupKpiTab";
+import EntityDocumentsTab from "@/components/shared/EntityDocumentsTab";
 
 const riskColor: Record<string, "green" | "amber" | "rose" | "gray"> = { low: "green", medium: "amber", high: "rose", critical: "rose" };
 const sessionColor: Record<string, "green" | "amber" | "blue" | "gray"> = { planned: "amber", confirmed: "blue", completed: "green", cancelled: "gray", in_progress: "blue" };
@@ -104,6 +105,7 @@ export default function StartupDetailPage() {
           <TabsTrigger value="kpis">📊 KPIs</TabsTrigger>
           <TabsTrigger value="projects">Projets ({projects?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="sessions">Coaching ({sessions?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="documents">📁 Documents</TabsTrigger>
           {risks && risks.length > 0 && <TabsTrigger value="risks">Risques ({risks.length})</TabsTrigger>}
         </TabsList>
 
@@ -191,6 +193,10 @@ export default function StartupDetailPage() {
             </div>
           </TabsContent>
         )}
+
+        <TabsContent value="documents" className="mt-4">
+          <EntityDocumentsTab entityType="startup" entityId={startup.id} label="Documents de l'entreprise" />
+        </TabsContent>
       </Tabs>
     </motion.div>
   );

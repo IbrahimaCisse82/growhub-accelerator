@@ -475,6 +475,51 @@ export type Database = {
           },
         ]
       }
+      entity_documents: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          entity_id: string
+          entity_type: string
+          file_name: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          entity_id: string
+          entity_type: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          entity_id?: string
+          entity_type?: string
+          file_name?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+        }
+        Relationships: []
+      }
       event_registrations: {
         Row: {
           event_id: string
