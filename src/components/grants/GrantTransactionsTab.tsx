@@ -126,6 +126,8 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
   const [category, setCategory] = useState("");
   const [uploading, setUploading] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [exchangeRate, setExchangeRate] = useState("1");
+  const [amountLocal, setAmountLocal] = useState("");
   const isEdit = !!editData;
 
   const handleOpenChange = (o: boolean) => {
@@ -135,9 +137,12 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
       setBudgetCode(editData.budget_code ?? ""); setVendor(editData.vendor ?? "");
       setReference(editData.reference ?? ""); setDescription(editData.description ?? "");
       setCategory(editData.category ?? ""); setReceiptUrl(editData.receipt_url ?? null);
+      setExchangeRate(String((editData as any).exchange_rate ?? "1"));
+      setAmountLocal(String((editData as any).amount_local ?? ""));
     } else if (o) {
       setLabel(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
       setBudgetCode(""); setVendor(""); setReference(""); setDescription(""); setCategory(""); setReceiptUrl(null);
+      setExchangeRate("1"); setAmountLocal("");
     }
     onOpenChange(o);
   };
