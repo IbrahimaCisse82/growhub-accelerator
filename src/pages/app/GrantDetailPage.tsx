@@ -54,6 +54,7 @@ export default function GrantDetailPage() {
   const { data: documents } = useGrantDocuments(id);
   const { data: indicators } = useGrantIndicators(id);
   const { data: activities } = useGrantActivities(id);
+  const { data: addendums } = useGrantAddendums(id);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
