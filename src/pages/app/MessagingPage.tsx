@@ -192,11 +192,9 @@ export default function MessagingPage() {
       .single();
     if (cErr || !conv) return;
 
-    // Add both participants
-    await supabase.from("conversation_participants").insert([
-      { conversation_id: conv.id, user_id: user.id },
-      { conversation_id: conv.id, user_id: targetUserId },
-    ]);
+    // Add self first (satisfies user_id = auth.uid()), then add other user (satisfies is_conversation_member)
+    await supabase.from("conversation_participants").insert({ conversation_id: conv.id, user_id: user.id });
+    await supabase.from("conversation_participants").insert({ conversation_id: conv.id, user_id: targetUserId });
 
     qc.invalidateQueries({ queryKey: ["conversations"] });
     setSelectedId(conv.id);
