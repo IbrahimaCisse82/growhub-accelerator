@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rapport de Livraison — GrowHub Accelerator Platform</title>
+<style>
+  :root { --primary: #10B981; --bg: #0f1419; --card: #1a2332; --border: #2a3a4a; --text: #e2e8f0; --muted: #94a3b8; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 8px; color: var(--primary); }
+  h2 { font-size: 1.6rem; font-weight: 700; margin: 48px 0 16px; padding-bottom: 8px; border-bottom: 2px solid var(--primary); }
+  h3 { font-size: 1.2rem; font-weight: 600; margin: 24px 0 8px; color: var(--primary); }
+  p, li { font-size: 0.95rem; color: var(--text); }
+  .subtitle { font-size: 1.1rem; color: var(--muted); margin-bottom: 32px; }
+  .meta { display: flex; gap: 32px; flex-wrap: wrap; margin-bottom: 40px; padding: 20px; background: var(--card); border: 1px solid var(--border); border-radius: 12px; }
+  .meta-item { display: flex; flex-direction: column; }
+  .meta-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.15em; color: var(--muted); font-family: monospace; }
+  .meta-value { font-size: 1rem; font-weight: 600; color: var(--text); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin: 16px 0; }
+  .screenshot { width: 100%; border-radius: 8px; border: 1px solid var(--border); margin: 12px 0 24px; }
+  .screenshot-caption { font-size: 0.8rem; color: var(--muted); font-style: italic; text-align: center; margin-top: -16px; margin-bottom: 24px; }
+  table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.9rem; }
+  th { background: var(--card); text-align: left; padding: 10px 14px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); border-bottom: 2px solid var(--border); }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 600; }
+  .badge-green { background: rgba(16,185,129,0.15); color: #10b981; }
+  .badge-blue { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  .badge-amber { background: rgba(245,158,11,0.15); color: #f59e0b; }
+  .badge-rose { background: rgba(244,63,94,0.15); color: #f43f5e; }
+  .badge-purple { background: rgba(168,85,247,0.15); color: #a855f7; }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin: 4px 0; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .toc { list-style: none; padding: 0; }
+  .toc li { padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .toc a { color: var(--primary); text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+  .cover { text-align: center; padding: 60px 0 40px; border-bottom: 2px solid var(--border); margin-bottom: 40px; }
+  .cover img { height: 48px; margin-bottom: 24px; }
+  @media print { body { background: white; color: #1a1a1a; } .card { border: 1px solid #ddd; background: #f9f9f9; } h2 { border-color: #10b981; } }
+  @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <h1>📦 Rapport de Livraison</h1>
+  <p class="subtitle">GrowHub Accelerator Platform — v1.0</p>
+</div>
+
+<div class="meta">
+  <div class="meta-item"><span class="meta-label">Client</span><span class="meta-value">GrowHub Sénégal</span></div>
+  <div class="meta-item"><span class="meta-label">Plateforme</span><span class="meta-value">GrowHub Accelerator</span></div>
+  <div class="meta-item"><span class="meta-label">Version</span><span class="meta-value">1.0.0</span></div>
+  <div class="meta-item"><span class="meta-label">Date de livraison</span><span class="meta-value">16 mars 2026</span></div>
+  <div class="meta-item"><span class="meta-label">Stack technique</span><span class="meta-value">React + TypeScript + Supabase</span></div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<h2>📋 Table des matières</h2>
+<ol class="toc">
+  <li><a href="#architecture">1. Architecture technique</a></li>
+  <li><a href="#auth">2. Authentification & Sécurité</a></li>
+  <li><a href="#modules">3. Modules fonctionnels</a></li>
+  <li><a href="#screenshots">4. Captures d'écran</a></li>
+  <li><a href="#database">5. Schéma de base de données</a></li>
+  <li><a href="#roles">6. Matrice des rôles & accès</a></li>
+  <li><a href="#rls">7. Politiques de sécurité (RLS)</a></li>
+  <li><a href="#features">8. Fonctionnalités avancées</a></li>
+  <li><a href="#deployment">9. Déploiement & infrastructure</a></li>
+</ol>
+
+<!-- 1. ARCHITECTURE -->
+<h2 id="architecture">1. Architecture technique</h2>
+<div class="card">
+  <h3>🏗️ Stack Frontend</h3>
+  <table>
+    <tr><th>Technologie</th><th>Rôle</th><th>Version</th></tr>
+    <tr><td>React 18</td><td>Framework UI</td><td>18.x</td></tr>
+    <tr><td>TypeScript</td><td>Typage statique</td><td>5.x</td></tr>
+    <tr><td>Vite</td><td>Bundler & Dev Server</td><td>5.x</td></tr>
+    <tr><td>Tailwind CSS</td><td>Styles utilitaires</td><td>3.x</td></tr>
+    <tr><td>shadcn/ui</td><td>Composants UI</td><td>Latest</td></tr>
+    <tr><td>TanStack Query</td><td>Gestion de données async</td><td>5.x</td></tr>
+    <tr><td>React Router</td><td>Routage SPA</td><td>6.x</td></tr>
+    <tr><td>Framer Motion</td><td>Animations</td><td>11.x</td></tr>
+    <tr><td>Recharts</td><td>Graphiques & visualisations</td><td>2.x</td></tr>
+  </table>
+
+  <h3>🗄️ Stack Backend (Lovable Cloud)</h3>
+  <table>
+    <tr><th>Service</th><th>Rôle</th></tr>
+    <tr><td>PostgreSQL</td><td>Base de données relationnelle</td></tr>
+    <tr><td>Auth</td><td>Authentification email/mot de passe</td></tr>
+    <tr><td>Edge Functions (Deno)</td><td>Logique serveur (IA, webhooks)</td></tr>
+    <tr><td>Storage</td><td>Stockage fichiers (avatars, documents, logos)</td></tr>
+    <tr><td>Realtime</td><td>WebSocket pour messagerie en temps réel</td></tr>
+    <tr><td>Row Level Security</td><td>Sécurité au niveau ligne</td></tr>
+  </table>
+</div>
+
+<div class="card">
+  <h3>📁 Structure du projet</h3>
+  <pre style="font-size: 0.8rem; color: var(--muted); overflow-x: auto;">
+src/
+├── components/
+│   ├── auth/          → ProtectedRoute, AdminRoute
+│   ├── dialogs/       → 14 dialogues de création/édition
+│   ├── grants/        → 10 onglets GTS (Grants Tracking System)
+│   ├── layout/        → AppLayout, AppSidebar, AppTopbar, SearchDialog
+│   ├── lms/           → AICourseGenerator, AIAssistantChat
+│   ├── shared/        → Composants réutilisables (GhButton, GhCard, Pill, StatCard...)
+│   ├── startups/      → StartupKpiTab
+│   └── ui/            → 45+ composants shadcn/ui
+├── hooks/             → 28+ hooks personnalisés (données, auth, temps réel)
+├── pages/
+│   ├── app/           → 30+ pages applicatives
+│   └── auth/          → Login, Signup, ForgotPassword, ResetPassword
+├── lib/               → Utilitaires (export CSV/PDF, work packages)
+└── integrations/      → Client Supabase auto-généré
+  </pre>
+</div>
+
+<!-- 2. AUTH & SECURITY -->
+<h2 id="auth">2. Authentification & Sécurité</h2>
+<div class="card">
+  <h3>🔐 Système d'authentification</h3>
+  <ul>
+    <li><strong>Inscription</strong> : Email + mot de passe avec vérification email obligatoire</li>
+    <li><strong>Connexion</strong> : Page de login dédiée avec gestion des erreurs</li>
+    <li><strong>Mot de passe oublié</strong> : Flux de réinitialisation par email</li>
+    <li><strong>Approbation</strong> : Les nouveaux utilisateurs doivent être validés par un admin</li>
+    <li><strong>Premier utilisateur</strong> : Automatiquement <span class="badge badge-rose">Super Admin</span> + approuvé</li>
+    <li><strong>Utilisateurs suivants</strong> : Rôle <span class="badge badge-blue">Entrepreneur</span> + en attente d'approbation</li>
+    <li><strong>Invitations</strong> : Système d'invitation par email avec rôle prédéfini et token sécurisé (expire 7 jours)</li>
+  </ul>
+
+  <h3>🛡️ Protection des routes</h3>
+  <ul>
+    <li><code>/app/*</code> → Protégé par <code>ProtectedRoute</code> (authentification requise)</li>
+    <li><code>/app/utilisateurs</code> → Protégé par <code>AdminRoute</code> (Super Admin / Coordinateur uniquement)</li>
+    <li>Vérification de profil approuvé avant accès</li>
+  </ul>
+</div>
+
+<!-- 3. MODULES -->
+<h2 id="modules">3. Modules fonctionnels</h2>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>📊 Vue Générale</h3>
+    <ul>
+      <li><strong>Dashboard</strong> — Vue consolidée : stats clés, projets actifs, pipeline candidatures, activité récente, financements</li>
+      <li><strong>Activités</strong> — Journal d'audit automatique (CRUD sur 9+ tables)</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>📋 Gestion Projets</h3>
+    <ul>
+      <li><strong>Portefeuilles</strong> — Regroupement stratégique de programmes</li>
+      <li><strong>Programmes</strong> — Programmes d'accélération avec budget</li>
+      <li><strong>Projets</strong> — Projets liés aux programmes avec validation</li>
+      <li><strong>Jalons</strong> — Milestones avec suivi d'avancement</li>
+      <li><strong>Tâches</strong> — Assignation, priorité, dates limites</li>
+      <li><strong>Gantt</strong> — Diagramme de Gantt interactif</li>
+      <li><strong>Risques</strong> — Registre des risques avec niveaux</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>🚀 Accélération</h3>
+    <ul>
+      <li><strong>Candidatures</strong> — Pipeline 6 étapes (Reçues → Acceptées/Refusées)</li>
+      <li><strong>Entreprises</strong> — Répertoire avec score, secteur, stade</li>
+      <li><strong>Cohortes</strong> — Promotion d'entreprises par projet</li>
+      <li><strong>Alumni</strong> — Suivi des entreprises diplômées</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>🤝 Accompagnement</h3>
+    <ul>
+      <li><strong>Mentors</strong> — Profils d'experts avec spécialités</li>
+      <li><strong>Coaching</strong> — Sessions planifiées avec statut</li>
+      <li><strong>LMS</strong> — Bibliothèque de cours avec génération IA</li>
+      <li><strong>Enquêtes</strong> — Satisfaction et feedback</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>💰 Financements (GTS)</h3>
+    <ul>
+      <li><strong>Grants</strong> — Gestion de subventions multi-projets</li>
+      <li><strong>Analytics Grants</strong> — Tableaux de bord financiers</li>
+      <li><strong>Budgets</strong> — Suivi budgétaire par catégorie</li>
+      <li>Onglets détail : Activités, Décaissements, Transactions, Rapports, Documents, Indicateurs, Avenants, Fiche récap</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>🌐 Réseau</h3>
+    <ul>
+      <li><strong>Partenaires</strong> — CRM partenaires et bailleurs</li>
+      <li><strong>Événements</strong> — Agenda avec inscriptions</li>
+      <li><strong>Messagerie</strong> — Chat en temps réel</li>
+      <li><strong>Ressources</strong> — Bibliothèque documentaire</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>📈 Insights</h3>
+    <ul>
+      <li><strong>Analytics</strong> — Graphiques : projets par statut, avancement, grants, sessions</li>
+      <li><strong>Rapports</strong> — Génération de rapports</li>
+    </ul>
+  </div>
+  <div class="card">
+    <h3>⚙️ Administration</h3>
+    <ul>
+      <li><strong>Utilisateurs</strong> — Gestion, approbation, rôles, invitations</li>
+      <li><strong>Profil</strong> — Édition profil personnel avec avatar</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 4. SCREENSHOTS -->
+<h2 id="screenshots">4. Captures d'écran</h2>
+
+<h3>4.1 Dashboard</h3>
+<img src="01-dashboard.png" class="screenshot" alt="Dashboard">
+<p class="screenshot-caption">Tableau de bord avec stats consolidées, projets actifs et activité récente</p>
+
+<h3>4.2 Portefeuilles</h3>
+<img src="02-portefeuilles.png" class="screenshot" alt="Portefeuilles">
+<p class="screenshot-caption">Gestion stratégique des portefeuilles de projets</p>
+
+<h3>4.3 Programmes</h3>
+<img src="03-programmes.png" class="screenshot" alt="Programmes">
+<p class="screenshot-caption">Coordination des programmes d'accélération</p>
+
+<h3>4.4 Projets</h3>
+<img src="04-projets.png" class="screenshot" alt="Projets">
+<p class="screenshot-caption">Liste des projets avec validation et progression</p>
+
+<h3>4.5 Entreprises</h3>
+<img src="05-entreprises.png" class="screenshot" alt="Entreprises">
+<p class="screenshot-caption">Répertoire des entreprises accompagnées avec filtres et export</p>
+
+<h3>4.6 Candidatures</h3>
+<img src="06-candidatures.png" class="screenshot" alt="Candidatures">
+<p class="screenshot-caption">Pipeline de sélection en 6 étapes</p>
+
+<h3>4.7 Mentors</h3>
+<img src="07-mentors.png" class="screenshot" alt="Mentors">
+<p class="screenshot-caption">Réseau d'experts avec matching entreprises</p>
+
+<h3>4.8 Coaching & Sessions</h3>
+<img src="08-coaching.png" class="screenshot" alt="Coaching">
+<p class="screenshot-caption">Planification et suivi des sessions de coaching</p>
+
+<h3>4.9 LMS & Formation</h3>
+<img src="09-lms.png" class="screenshot" alt="LMS">
+<p class="screenshot-caption">Plateforme e-learning avec génération de cours par IA</p>
+
+<h3>4.10 Grants Tracking System (GTS)</h3>
+<img src="10-grants.png" class="screenshot" alt="Grants">
+<p class="screenshot-caption">Gestion de subventions avec budget, transactions et décaissements</p>
+
+<h3>4.11 Messagerie</h3>
+<img src="11-messagerie.png" class="screenshot" alt="Messagerie">
+<p class="screenshot-caption">Messagerie interne en temps réel</p>
+
+<h3>4.12 Analytics</h3>
+<img src="12-analytics.png" class="screenshot" alt="Analytics">
+<p class="screenshot-caption">Tableaux de bord analytiques avec graphiques interactifs</p>
+
+<h3>4.13 Gestion des utilisateurs</h3>
+<img src="13-utilisateurs.png" class="screenshot" alt="Utilisateurs">
+<p class="screenshot-caption">Administration des utilisateurs, rôles et invitations</p>
+
+<h3>4.14 Profil utilisateur</h3>
+<img src="14-profil.png" class="screenshot" alt="Profil">
+<p class="screenshot-caption">Page de profil avec avatar, informations et rôles</p>
+
+<!-- 5. DATABASE -->
+<h2 id="database">5. Schéma de base de données</h2>
+<div class="card">
+  <h3>Tables principales (27+)</h3>
+  <table>
+    <tr><th>Table</th><th>Description</th><th>Relations clés</th></tr>
+    <tr><td>profiles</td><td>Profils utilisateurs</td><td>→ auth.users</td></tr>
+    <tr><td>user_roles</td><td>Rôles utilisateurs</td><td>→ auth.users</td></tr>
+    <tr><td>portfolios</td><td>Portefeuilles stratégiques</td><td>owner_id</td></tr>
+    <tr><td>programs</td><td>Programmes d'accélération</td><td>→ portfolios</td></tr>
+    <tr><td>projects</td><td>Projets opérationnels</td><td>→ programs, startups</td></tr>
+    <tr><td>cohorts</td><td>Cohortes d'entreprises</td><td>→ projects</td></tr>
+    <tr><td>startups</td><td>Entreprises accompagnées</td><td>→ cohorts, founder_id</td></tr>
+    <tr><td>startup_kpis</td><td>Indicateurs de performance</td><td>→ startups</td></tr>
+    <tr><td>applications</td><td>Candidatures</td><td>→ programs, cohorts, startups</td></tr>
+    <tr><td>mentor_profiles</td><td>Profils des mentors</td><td>→ profiles</td></tr>
+    <tr><td>mentor_matches</td><td>Matching mentor-startup</td><td>→ mentor_profiles, startups</td></tr>
+    <tr><td>coaching_sessions</td><td>Sessions de coaching</td><td>→ mentor_profiles, startups</td></tr>
+    <tr><td>milestones</td><td>Jalons des projets</td><td>→ projects</td></tr>
+    <tr><td>tasks</td><td>Tâches assignées</td><td>→ projects, assignee_id</td></tr>
+    <tr><td>risks</td><td>Registre des risques</td><td>→ projects</td></tr>
+    <tr><td>grants</td><td>Subventions</td><td>→ programs</td></tr>
+    <tr><td>grant_activities</td><td>Activités de subvention</td><td>→ grants</td></tr>
+    <tr><td>grant_disbursements</td><td>Décaissements</td><td>→ grants</td></tr>
+    <tr><td>grant_transactions</td><td>Transactions financières</td><td>→ grants, grant_reports</td></tr>
+    <tr><td>grant_reports</td><td>Rapports financiers</td><td>→ grants</td></tr>
+    <tr><td>grant_documents</td><td>Documents justificatifs</td><td>→ grants</td></tr>
+    <tr><td>grant_indicators</td><td>Indicateurs de résultat</td><td>→ grants</td></tr>
+    <tr><td>grant_addendums</td><td>Avenants</td><td>→ grants</td></tr>
+    <tr><td>budgets</td><td>Lignes budgétaires</td><td>→ projects, grants</td></tr>
+    <tr><td>events</td><td>Événements</td><td>→ programs</td></tr>
+    <tr><td>partners</td><td>Partenaires/Bailleurs</td><td>→ programs</td></tr>
+    <tr><td>courses</td><td>Cours e-learning</td><td>→ programs</td></tr>
+    <tr><td>course_modules</td><td>Modules de cours</td><td>→ courses</td></tr>
+    <tr><td>surveys</td><td>Enquêtes</td><td>→ programs</td></tr>
+    <tr><td>conversations</td><td>Conversations</td><td>→ participants</td></tr>
+    <tr><td>messages</td><td>Messages</td><td>→ conversations</td></tr>
+    <tr><td>notifications</td><td>Notifications</td><td>→ user_id</td></tr>
+    <tr><td>activity_log</td><td>Journal d'audit</td><td>→ user_id</td></tr>
+    <tr><td>invitations</td><td>Invitations</td><td>→ invited_by</td></tr>
+  </table>
+</div>
+
+<!-- 6. ROLES -->
+<h2 id="roles">6. Matrice des rôles & accès</h2>
+<div class="card">
+  <h3>Rôles définis</h3>
+  <table>
+    <tr><th>Rôle</th><th>Description</th><th>Attribution</th></tr>
+    <tr><td><span class="badge badge-rose">super_admin</span></td><td>Accès total, gestion utilisateurs</td><td>Premier inscrit (auto)</td></tr>
+    <tr><td><span class="badge badge-purple">coordinator</span></td><td>Gestion programmes, projets, grants</td><td>Invitation / attribution admin</td></tr>
+    <tr><td><span class="badge badge-blue">project_manager</span></td><td>Gestion des projets assignés</td><td>Invitation / attribution admin</td></tr>
+    <tr><td><span class="badge badge-green">mentor</span></td><td>Sessions coaching, profil expert</td><td>Invitation / attribution admin</td></tr>
+    <tr><td><span class="badge badge-amber">entrepreneur</span></td><td>Vue startup, candidatures, coaching</td><td>Par défaut à l'inscription</td></tr>
+    <tr><td><span class="badge badge-purple">evaluator</span></td><td>Évaluation des candidatures</td><td>Invitation / attribution admin</td></tr>
+  </table>
+
+  <h3>Visibilité par rôle (Navigation)</h3>
+  <table>
+    <tr><th>Section</th><th>Super Admin / Coordinateur</th><th>Chef de projet</th><th>Entrepreneur / Mentor</th></tr>
+    <tr><td>Vue Générale</td><td>✅</td><td>✅</td><td>❌</td></tr>
+    <tr><td>Gestion Projets</td><td>✅</td><td>✅</td><td>❌</td></tr>
+    <tr><td>Accélération</td><td>✅</td><td>✅</td><td>❌</td></tr>
+    <tr><td>Accompagnement</td><td>✅</td><td>✅</td><td>✅</td></tr>
+    <tr><td>Financements</td><td>✅</td><td>✅</td><td>❌</td></tr>
+    <tr><td>Réseau</td><td>✅</td><td>✅</td><td>✅</td></tr>
+    <tr><td>Insights</td><td>✅</td><td>✅</td><td>❌</td></tr>
+    <tr><td>Administration</td><td>✅</td><td>❌</td><td>❌</td></tr>
+  </table>
+</div>
+
+<!-- 7. RLS -->
+<h2 id="rls">7. Politiques de sécurité (RLS)</h2>
+<div class="card">
+  <h3>Résumé des politiques Row Level Security</h3>
+  <table>
+    <tr><th>Table</th><th>Lecture</th><th>Écriture</th></tr>
+    <tr><td>profiles</td><td>Propre profil + profils approuvés + admins voient tout</td><td>Propre profil uniquement</td></tr>
+    <tr><td>notifications</td><td>🔒 Propres notifications uniquement</td><td>Propre user_id uniquement</td></tr>
+    <tr><td>messages</td><td>🔒 Membres de la conversation</td><td>Membres de la conversation</td></tr>
+    <tr><td>coaching_sessions</td><td>🔒 Mentor, fondateur startup, ou admin</td><td>Admin + mentor (update)</td></tr>
+    <tr><td>applications</td><td>🔒 Candidat, évaluateur, ou admin</td><td>Admin (tout) + candidat (insert)</td></tr>
+    <tr><td>projects</td><td>Tous les authentifiés</td><td>Admin / coordinateur</td></tr>
+    <tr><td>grants</td><td>Tous les authentifiés</td><td>Admin / coordinateur</td></tr>
+    <tr><td>startups</td><td>Tous les authentifiés</td><td>Admin / coordinateur + fondateur</td></tr>
+    <tr><td>courses</td><td>Tous (publiés pour non-admins)</td><td>Admin / coordinateur</td></tr>
+    <tr><td>resources</td><td>Tous (publics pour non-admins)</td><td>Admin / coordinateur</td></tr>
+    <tr><td>surveys</td><td>Tous (actives pour non-admins)</td><td>Admin / coordinateur</td></tr>
+    <tr><td>user_roles</td><td>Admin uniquement</td><td>Admin uniquement</td></tr>
+    <tr><td>invitations</td><td>Admin uniquement</td><td>Admin uniquement</td></tr>
+  </table>
+</div>
+
+<!-- 8. FEATURES -->
+<h2 id="features">8. Fonctionnalités avancées</h2>
+<div class="grid-2">
+  <div class="card">
+    <h3>🔍 Recherche globale (⌘K)</h3>
+    <p>Recherche instantanée sur 8+ entités : projets, programmes, entreprises, mentors, tâches, événements, partenaires, cours.</p>
+  </div>
+  <div class="card">
+    <h3>🔔 Notifications en temps réel</h3>
+    <p>Notifications automatiques : assignation de tâches, changements de statut de candidature, sessions coaching, jalons atteints, risques critiques, nouveaux messages.</p>
+  </div>
+  <div class="card">
+    <h3>🤖 IA & LMS</h3>
+    <p>Génération de cours structurés par IA (modules, quiz, exercices). Assistant pédagogique en streaming pour l'aide à la rédaction de contenu.</p>
+  </div>
+  <div class="card">
+    <h3>📤 Export de données</h3>
+    <p>Export CSV et PDF sur les pages principales : entreprises, projets, grants, budgets, analytics.</p>
+  </div>
+  <div class="card">
+    <h3>📊 Grants Tracking System</h3>
+    <p>Système complet de suivi des subventions : 10 onglets spécialisés (activités, décaissements, transactions, rapports, documents, indicateurs, avenants, historique des modifications).</p>
+  </div>
+  <div class="card">
+    <h3>📋 Automatisations (Triggers)</h3>
+    <ul>
+      <li>Création automatique de profil à l'inscription</li>
+      <li>Attribution automatique du rôle par défaut</li>
+      <li>Gestion des invitations à l'inscription</li>
+      <li>Auto-approbation sur candidature acceptée</li>
+      <li>Log d'activité sur 9 tables</li>
+      <li>Historique des modifications grants</li>
+      <li>Notifications automatiques (7 triggers)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 9. DEPLOYMENT -->
+<h2 id="deployment">9. Déploiement & Infrastructure</h2>
+<div class="card">
+  <h3>☁️ Infrastructure</h3>
+  <table>
+    <tr><th>Composant</th><th>Service</th><th>Détails</th></tr>
+    <tr><td>Frontend</td><td>Lovable Hosting</td><td>CDN global, HTTPS automatique</td></tr>
+    <tr><td>Backend</td><td>Lovable Cloud</td><td>PostgreSQL, Auth, Realtime, Storage</td></tr>
+    <tr><td>Edge Functions</td><td>Deno Deploy</td><td>elearning-ai (génération IA)</td></tr>
+    <tr><td>Stockage fichiers</td><td>5 buckets</td><td>avatars, logos, resources, receipts, grant-documents</td></tr>
+  </table>
+
+  <h3>🔧 Optimisations</h3>
+  <ul>
+    <li><strong>Lazy loading</strong> : 30+ pages chargées à la demande</li>
+    <li><strong>Cache intelligent</strong> : TanStack Query avec staleTime 2min, gcTime 5min</li>
+    <li><strong>Design system</strong> : Tokens CSS sémantiques, thème dark natif</li>
+    <li><strong>Responsive</strong> : Sidebar mobile avec drawer, tables scrollables</li>
+  </ul>
+</div>
+
+<!-- FOOTER -->
+<div style="text-align: center; padding: 48px 0 24px; color: var(--muted); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 48px;">
+  <p>© 2026 GrowHub Accelerator — Rapport de livraison v1.0</p>
+  <p>Généré automatiquement le 16/03/2026</p>
+</div>
+
+</div>
+</body>
+</html>
