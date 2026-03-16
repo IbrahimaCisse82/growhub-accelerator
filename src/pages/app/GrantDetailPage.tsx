@@ -207,6 +207,16 @@ export default function GrantDetailPage() {
           {grant && <GrantDocumentsTab grantId={grant.id} />}
         </TabsContent>
 
+        {/* Addendums Tab */}
+        <TabsContent value="addendums">
+          {grant && <GrantAddendumTab grantId={grant.id} budgetLines={(projectBudgetLines ?? []).map((l: any) => ({ code: l.code, label: l.label, section: l.section, quantity: l.quantity, unit_cost: l.unit_cost, allocation_pct: l.allocation_pct }))} />}
+        </TabsContent>
+
+        {/* Fiche récapitulative Tab */}
+        <TabsContent value="fiche">
+          {grant && <GrantFicheRecapTab grant={grant} reports={reports ?? []} disbursements={disbursements ?? []} />}
+        </TabsContent>
+
         {/* Tracking Tab */}
         <TabsContent value="tracking">
           {budgetLines && budgetLines.length > 0 ? (
