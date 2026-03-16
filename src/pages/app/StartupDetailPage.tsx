@@ -105,6 +105,7 @@ export default function StartupDetailPage() {
           <TabsTrigger value="kpis">📊 KPIs</TabsTrigger>
           <TabsTrigger value="projects">Projets ({projects?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="sessions">Coaching ({sessions?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="documents">📁 Documents</TabsTrigger>
           {risks && risks.length > 0 && <TabsTrigger value="risks">Risques ({risks.length})</TabsTrigger>}
         </TabsList>
 
