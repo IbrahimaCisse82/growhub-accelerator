@@ -26,7 +26,7 @@ export function useAssignableUsers() {
     queryKey: ["assignable-users"],
     queryFn: async () => {
       const { data: profiles, error } = await supabase
-        .from("profiles")
+        .from("profiles_safe")
         .select("user_id, full_name, email")
         .eq("is_approved", true)
         .order("full_name");

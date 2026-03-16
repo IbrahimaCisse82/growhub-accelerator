@@ -62,7 +62,7 @@ function useProfiles(userIds: string[]) {
     queryFn: async () => {
       if (userIds.length === 0) return [];
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profiles_safe")
         .select("user_id, full_name, avatar_url")
         .in("user_id", userIds);
       if (error) throw error;
@@ -78,8 +78,9 @@ function useSearchUsers(search: string) {
     queryFn: async () => {
       if (!search || search.length < 2) return [];
       const { data, error } = await supabase
-        .from("profiles")
+        .from("profiles_safe")
         .select("user_id, full_name, avatar_url, email")
+        .eq("is_approved", true)
         .ilike("full_name", `%${search}%`)
         .limit(10);
       if (error) throw error;

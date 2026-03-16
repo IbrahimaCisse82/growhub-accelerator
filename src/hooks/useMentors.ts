@@ -14,7 +14,7 @@ async function fetchMentors() {
   let profiles: Record<string, { full_name: string; email: string | null }> = {};
   if (userIds.length > 0) {
     const { data: pData } = await supabase
-      .from("profiles")
+      .from("profiles_safe")
       .select("user_id, full_name, email")
       .in("user_id", userIds);
     profiles = Object.fromEntries((pData ?? []).map(p => [p.user_id, { full_name: p.full_name, email: p.email }]));
