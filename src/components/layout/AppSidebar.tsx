@@ -43,6 +43,7 @@ const navGroups: NavGroup[] = [
       { label: "Candidatures", icon: "✦", path: "/app/candidatures", badgeKey: "pendingApps", badgeType: "alert" },
       { label: "Entreprises", icon: "△", path: "/app/entreprises", badgeKey: "startups" },
       { label: "Cohortes", icon: "◉", path: "/app/cohortes", badgeKey: "activeCohorts" },
+      { label: "Alumni", icon: "🎓", path: "/app/alumni" },
     ],
   },
   {
