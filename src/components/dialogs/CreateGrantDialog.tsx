@@ -19,7 +19,7 @@ export default function CreateGrantDialog({ children }: { children: React.ReactN
   const { data: projects } = useProjects();
 
   // Filter only active/in-progress projects
-  const activeProjects = projects?.filter(p => p.status === "active" || p.status === "in_progress" || p.status === "draft") ?? [];
+  const activeProjects = projects?.filter(p => p.status === "active" || p.status === "draft") ?? [];
 
   const handleProjectChange = (id: string) => {
     setProjectId(id);
