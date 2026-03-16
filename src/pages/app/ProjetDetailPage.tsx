@@ -226,6 +226,7 @@ export default function ProjetDetailPage() {
           <TabsTrigger value="workpackages">Work Packages ({workPackages.length})</TabsTrigger>
           <TabsTrigger value="toc">Théorie du changement</TabsTrigger>
           <TabsTrigger value="budget">Budget ({budgetLines?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="documents">📁 Documents</TabsTrigger>
         </TabsList>
 
         {/* Work Packages tab */}
