@@ -166,6 +166,8 @@ export default function GrantDetailPage() {
           <TabsTrigger value="activities">Activités ({activities?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="indicators">Indicateurs ({indicators?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="documents">Documents ({documents?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="addendums">Addendums ({addendums?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="fiche">Fiche récap.</TabsTrigger>
           <TabsTrigger value="tracking">Suivi</TabsTrigger>
           <TabsTrigger value="info">Infos</TabsTrigger>
           <TabsTrigger value="history">Historique ({grantChanges?.length ?? 0})</TabsTrigger>
