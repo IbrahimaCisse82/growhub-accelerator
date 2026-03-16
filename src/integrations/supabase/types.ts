@@ -2016,6 +2016,14 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      verify_invitation_token: {
+        Args: { _token: string }
+        Returns: {
+          email: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+        }[]
+      }
     }
     Enums: {
       app_role:
