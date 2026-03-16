@@ -134,6 +134,9 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
       <nav className="p-3 flex-1">
         {navGroups.map((group) => {
           if (group.adminOnly && !isAdmin) return null;
+          // Entrepreneurs & mentors only see Accompagnement + Réseau
+          const isRestricted = roles.some(r => ["entrepreneur", "mentor"].includes(r)) && !isAdmin;
+          if (isRestricted && !["Accompagnement", "Réseau"].includes(group.label)) return null;
           return (
             <div key={group.label} className="mb-5">
               <div className="font-mono text-[9px] tracking-[0.2em] uppercase text-muted-foreground px-2 mb-1">
