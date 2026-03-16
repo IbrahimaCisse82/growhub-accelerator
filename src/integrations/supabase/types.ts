@@ -1334,6 +1334,65 @@ export type Database = {
         }
         Relationships: []
       }
+      partners: {
+        Row: {
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          country: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          program_id: string | null
+          sector: string | null
+          status: string
+          type: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          program_id?: string | null
+          sector?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          program_id?: string | null
+          sector?: string | null
+          status?: string
+          type?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partners_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolios: {
         Row: {
           code: string
@@ -1782,6 +1841,53 @@ export type Database = {
           },
         ]
       }
+      startup_kpis: {
+        Row: {
+          created_at: string
+          id: string
+          metric_name: string
+          metric_value: number
+          notes: string | null
+          period: string
+          recorded_at: string
+          startup_id: string
+          unit: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metric_name: string
+          metric_value?: number
+          notes?: string | null
+          period?: string
+          recorded_at?: string
+          startup_id: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metric_name?: string
+          metric_value?: number
+          notes?: string | null
+          period?: string
+          recorded_at?: string
+          startup_id?: string
+          unit?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "startup_kpis_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       startup_members: {
         Row: {
           created_at: string
@@ -1822,6 +1928,8 @@ export type Database = {
       }
       startups: {
         Row: {
+          alumni_date: string | null
+          alumni_notes: string | null
           city: string | null
           cohort_id: string | null
           country: string | null
@@ -1830,6 +1938,7 @@ export type Database = {
           founded_date: string | null
           founder_id: string | null
           id: string
+          is_alumni: boolean | null
           logo_url: string | null
           name: string
           pitch_deck_url: string | null
@@ -1842,6 +1951,8 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          alumni_date?: string | null
+          alumni_notes?: string | null
           city?: string | null
           cohort_id?: string | null
           country?: string | null
@@ -1850,6 +1961,7 @@ export type Database = {
           founded_date?: string | null
           founder_id?: string | null
           id?: string
+          is_alumni?: boolean | null
           logo_url?: string | null
           name: string
           pitch_deck_url?: string | null
@@ -1862,6 +1974,8 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          alumni_date?: string | null
+          alumni_notes?: string | null
           city?: string | null
           cohort_id?: string | null
           country?: string | null
@@ -1870,6 +1984,7 @@ export type Database = {
           founded_date?: string | null
           founder_id?: string | null
           id?: string
+          is_alumni?: boolean | null
           logo_url?: string | null
           name?: string
           pitch_deck_url?: string | null
@@ -1887,6 +2002,94 @@ export type Database = {
             columns: ["cohort_id"]
             isOneToOne: false
             referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      survey_responses: {
+        Row: {
+          answers: Json | null
+          created_at: string
+          feedback: string | null
+          id: string
+          rating: number | null
+          respondent_id: string
+          submitted_at: string
+          survey_id: string
+        }
+        Insert: {
+          answers?: Json | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          rating?: number | null
+          respondent_id: string
+          submitted_at?: string
+          survey_id: string
+        }
+        Update: {
+          answers?: Json | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          rating?: number | null
+          respondent_id?: string
+          submitted_at?: string
+          survey_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      surveys: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          program_id: string | null
+          survey_type: string
+          target_type: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          program_id?: string | null
+          survey_type?: string
+          target_type?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          program_id?: string | null
+          survey_type?: string
+          target_type?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "surveys_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
             referencedColumns: ["id"]
           },
         ]
