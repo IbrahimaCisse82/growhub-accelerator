@@ -52,6 +52,7 @@ const navGroups: NavGroup[] = [
       { label: "Mentors", icon: "◑", path: "/app/mentors" },
       { label: "Coaching", icon: "◐", path: "/app/coaching" },
       { label: "LMS & Cours", icon: "▣", path: "/app/lms" },
+      { label: "Enquêtes", icon: "📋", path: "/app/enquetes" },
     ],
   },
   {
