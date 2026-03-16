@@ -7,45 +7,58 @@ import { AuthProvider } from "@/hooks/useAuth";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminRoute from "@/components/auth/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
+import { lazy, Suspense } from "react";
+
+// Auth pages (small, loaded eagerly)
 import LoginPage from "@/pages/auth/LoginPage";
 import SignupPage from "@/pages/auth/SignupPage";
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
-import DashboardPage from "@/pages/app/DashboardPage";
-import PortfoliosPage from "@/pages/app/PortfoliosPage";
-import PortfolioDetailPage from "@/pages/app/PortfolioDetailPage";
-import ProgrammesPage from "@/pages/app/ProgrammesPage";
-import ProgramDetailPage from "@/pages/app/ProgramDetailPage";
-import CohortesPage from "@/pages/app/CohortesPage";
-import CohortDetailPage from "@/pages/app/CohortDetailPage";
-import StartupsPage from "@/pages/app/StartupsPage";
-import StartupDetailPage from "@/pages/app/StartupDetailPage";
-import CandidaturesPage from "@/pages/app/CandidaturesPage";
-import MentorsPage from "@/pages/app/MentorsPage";
-import CoachingPage from "@/pages/app/CoachingPage";
-import LmsPage from "@/pages/app/LmsPage";
-import ProjetsPage from "@/pages/app/ProjetsPage";
-import ProjetDetailPage from "@/pages/app/ProjetDetailPage";
-import JalonsPage from "@/pages/app/JalonsPage";
-import TachesPage from "@/pages/app/TachesPage";
-import ProjectWizardPage from "@/pages/app/ProjectWizardPage";
-import GanttPage from "@/pages/app/GanttPage";
-import RisquesPage from "@/pages/app/RisquesPage";
-import GrantsPage from "@/pages/app/GrantsPage";
-import GrantDetailPage from "@/pages/app/GrantDetailPage";
-import GrantsAnalyticsPage from "@/pages/app/GrantsAnalyticsPage";
-import BudgetsPage from "@/pages/app/BudgetsPage";
-import EvenementsPage from "@/pages/app/EvenementsPage";
-import MessagingPage from "@/pages/app/MessagingPage";
-import ResourcesPage from "@/pages/app/ResourcesPage";
-import AnalyticsPage from "@/pages/app/AnalyticsPage";
-import RapportsPage from "@/pages/app/RapportsPage";
-import UsersPage from "@/pages/app/UsersPage";
-import ProfilePage from "@/pages/app/ProfilePage";
-import ActivitesPage from "@/pages/app/ActivitesPage";
-import NotFound from "./pages/NotFound";
+
+// App pages (lazy loaded for performance)
+const DashboardPage = lazy(() => import("@/pages/app/DashboardPage"));
+const PortfoliosPage = lazy(() => import("@/pages/app/PortfoliosPage"));
+const PortfolioDetailPage = lazy(() => import("@/pages/app/PortfolioDetailPage"));
+const ProgrammesPage = lazy(() => import("@/pages/app/ProgrammesPage"));
+const ProgramDetailPage = lazy(() => import("@/pages/app/ProgramDetailPage"));
+const CohortesPage = lazy(() => import("@/pages/app/CohortesPage"));
+const CohortDetailPage = lazy(() => import("@/pages/app/CohortDetailPage"));
+const StartupsPage = lazy(() => import("@/pages/app/StartupsPage"));
+const StartupDetailPage = lazy(() => import("@/pages/app/StartupDetailPage"));
+const CandidaturesPage = lazy(() => import("@/pages/app/CandidaturesPage"));
+const MentorsPage = lazy(() => import("@/pages/app/MentorsPage"));
+const CoachingPage = lazy(() => import("@/pages/app/CoachingPage"));
+const LmsPage = lazy(() => import("@/pages/app/LmsPage"));
+const ProjetsPage = lazy(() => import("@/pages/app/ProjetsPage"));
+const ProjetDetailPage = lazy(() => import("@/pages/app/ProjetDetailPage"));
+const JalonsPage = lazy(() => import("@/pages/app/JalonsPage"));
+const TachesPage = lazy(() => import("@/pages/app/TachesPage"));
+const ProjectWizardPage = lazy(() => import("@/pages/app/ProjectWizardPage"));
+const GanttPage = lazy(() => import("@/pages/app/GanttPage"));
+const RisquesPage = lazy(() => import("@/pages/app/RisquesPage"));
+const GrantsPage = lazy(() => import("@/pages/app/GrantsPage"));
+const GrantDetailPage = lazy(() => import("@/pages/app/GrantDetailPage"));
+const GrantsAnalyticsPage = lazy(() => import("@/pages/app/GrantsAnalyticsPage"));
+const BudgetsPage = lazy(() => import("@/pages/app/BudgetsPage"));
+const EvenementsPage = lazy(() => import("@/pages/app/EvenementsPage"));
+const MessagingPage = lazy(() => import("@/pages/app/MessagingPage"));
+const ResourcesPage = lazy(() => import("@/pages/app/ResourcesPage"));
+const AnalyticsPage = lazy(() => import("@/pages/app/AnalyticsPage"));
+const RapportsPage = lazy(() => import("@/pages/app/RapportsPage"));
+const UsersPage = lazy(() => import("@/pages/app/UsersPage"));
+const ProfilePage = lazy(() => import("@/pages/app/ProfilePage"));
+const ActivitesPage = lazy(() => import("@/pages/app/ActivitesPage"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-40">
+      <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -54,48 +67,50 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="dashboard" element={<DashboardPage />} />
-              <Route path="activites" element={<ActivitesPage />} />
-              <Route path="portefeuilles" element={<PortfoliosPage />} />
-              <Route path="portefeuilles/:id" element={<PortfolioDetailPage />} />
-              <Route path="programmes" element={<ProgrammesPage />} />
-              <Route path="programmes/:id" element={<ProgramDetailPage />} />
-              <Route path="cohortes" element={<CohortesPage />} />
-              <Route path="cohortes/:id" element={<CohortDetailPage />} />
-              <Route path="entreprises" element={<StartupsPage />} />
-              <Route path="entreprises/:id" element={<StartupDetailPage />} />
-              <Route path="candidatures" element={<CandidaturesPage />} />
-              <Route path="mentors" element={<MentorsPage />} />
-              <Route path="coaching" element={<CoachingPage />} />
-              <Route path="lms" element={<LmsPage />} />
-              <Route path="projets" element={<ProjetsPage />} />
-              <Route path="projets/nouveau" element={<ProjectWizardPage />} />
-              <Route path="projets/:id" element={<ProjetDetailPage />} />
-              <Route path="jalons" element={<JalonsPage />} />
-              <Route path="taches" element={<TachesPage />} />
-              <Route path="gantt" element={<GanttPage />} />
-              <Route path="risques" element={<RisquesPage />} />
-              <Route path="grants" element={<GrantsPage />} />
-              <Route path="grants/:id" element={<GrantDetailPage />} />
-              <Route path="grants-analytics" element={<GrantsAnalyticsPage />} />
-              <Route path="budgets" element={<BudgetsPage />} />
-              <Route path="evenements" element={<EvenementsPage />} />
-              <Route path="messagerie" element={<MessagingPage />} />
-              <Route path="ressources" element={<ResourcesPage />} />
-              <Route path="analytics" element={<AnalyticsPage />} />
-              <Route path="rapports" element={<RapportsPage />} />
-              <Route path="utilisateurs" element={<AdminRoute><UsersPage /></AdminRoute>} />
-              <Route path="profil" element={<ProfilePage />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="activites" element={<ActivitesPage />} />
+                <Route path="portefeuilles" element={<PortfoliosPage />} />
+                <Route path="portefeuilles/:id" element={<PortfolioDetailPage />} />
+                <Route path="programmes" element={<ProgrammesPage />} />
+                <Route path="programmes/:id" element={<ProgramDetailPage />} />
+                <Route path="cohortes" element={<CohortesPage />} />
+                <Route path="cohortes/:id" element={<CohortDetailPage />} />
+                <Route path="entreprises" element={<StartupsPage />} />
+                <Route path="entreprises/:id" element={<StartupDetailPage />} />
+                <Route path="candidatures" element={<CandidaturesPage />} />
+                <Route path="mentors" element={<MentorsPage />} />
+                <Route path="coaching" element={<CoachingPage />} />
+                <Route path="lms" element={<LmsPage />} />
+                <Route path="projets" element={<ProjetsPage />} />
+                <Route path="projets/nouveau" element={<ProjectWizardPage />} />
+                <Route path="projets/:id" element={<ProjetDetailPage />} />
+                <Route path="jalons" element={<JalonsPage />} />
+                <Route path="taches" element={<TachesPage />} />
+                <Route path="gantt" element={<GanttPage />} />
+                <Route path="risques" element={<RisquesPage />} />
+                <Route path="grants" element={<GrantsPage />} />
+                <Route path="grants/:id" element={<GrantDetailPage />} />
+                <Route path="grants-analytics" element={<GrantsAnalyticsPage />} />
+                <Route path="budgets" element={<BudgetsPage />} />
+                <Route path="evenements" element={<EvenementsPage />} />
+                <Route path="messagerie" element={<MessagingPage />} />
+                <Route path="ressources" element={<ResourcesPage />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
+                <Route path="rapports" element={<RapportsPage />} />
+                <Route path="utilisateurs" element={<AdminRoute><UsersPage /></AdminRoute>} />
+                <Route path="profil" element={<ProfilePage />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
