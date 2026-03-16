@@ -188,10 +188,12 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
         </DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); saveMutation.mutate(); }} className="space-y-4">
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Libellé *</label><input value={label} onChange={e => setLabel(e.target.value)} required className={inputCls} placeholder="Ex: Achat matériel informatique" /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Montant (€) *</label><input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required className={inputCls} /></div>
-            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Date *</label><input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} /></div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Montant local</label><input type="number" step="0.01" value={amountLocal} onChange={e => { setAmountLocal(e.target.value); const loc = parseFloat(e.target.value) || 0; const rate = parseFloat(exchangeRate) || 1; setAmount(String(Math.round((loc / rate) * 100) / 100)); }} className={inputCls} placeholder="Devise locale" /></div>
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Taux change</label><input type="number" step="0.0001" value={exchangeRate} onChange={e => { setExchangeRate(e.target.value); const loc = parseFloat(amountLocal) || 0; const rate = parseFloat(e.target.value) || 1; setAmount(String(Math.round((loc / rate) * 100) / 100)); }} className={inputCls} placeholder="1 EUR =" /></div>
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Montant EUR *</label><input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required className={inputCls} /></div>
           </div>
+          <div className="space-y-2"><label className="text-sm font-medium text-foreground">Date *</label><input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Code budgétaire</label><input value={budgetCode} onChange={e => setBudgetCode(e.target.value)} className={inputCls} placeholder="Ex: A1.1.1" /></div>
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Catégorie</label>
