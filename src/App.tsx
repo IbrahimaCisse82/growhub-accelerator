@@ -50,7 +50,16 @@ const ProfilePage = lazy(() => import("@/pages/app/ProfilePage"));
 const ActivitesPage = lazy(() => import("@/pages/app/ActivitesPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 2, // 2 min — data stays fresh, no refetch on navigation
+      gcTime: 1000 * 60 * 5,    // 5 min cache
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function PageLoader() {
   return (
