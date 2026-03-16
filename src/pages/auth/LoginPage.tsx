@@ -60,9 +60,9 @@ export default function LoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium text-foreground">Mot de passe</label>
-              <Link to="/forgot-password" className="text-xs text-primary hover:underline">
+              <a href="/forgot-password" className="text-xs text-primary hover:underline">
                 Mot de passe oublié ?
-              </Link>
+              </a>
             </div>
             <input
               type="password"
@@ -83,11 +83,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
-          Pas encore de compte ?{" "}
-          <Link to="/signup" className="text-primary hover:underline font-medium">
-            S'inscrire
-          </Link>
+        <p className="text-center text-xs text-muted-foreground">
+          L'accès à la plateforme se fait uniquement sur invitation ou via un appel à candidature.
         </p>
       </div>
     </div>

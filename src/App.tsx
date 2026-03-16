@@ -11,7 +11,7 @@ import { lazy, Suspense } from "react";
 
 // Auth pages (small, loaded eagerly)
 import LoginPage from "@/pages/auth/LoginPage";
-import SignupPage from "@/pages/auth/SignupPage";
+// SignupPage removed — access by invitation only
 import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 
@@ -83,7 +83,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/signup" element={<Navigate to="/login" replace />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
