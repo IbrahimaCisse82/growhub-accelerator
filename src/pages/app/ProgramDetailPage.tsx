@@ -191,6 +191,11 @@ export default function ProgramDetailPage() {
         </div>
       )}
 
+      {/* Documents */}
+      <div className="mb-6">
+        <EntityDocumentsTab entityType="program" entityId={program.id} label="Documents du programme" />
+      </div>
+
       <EditProgramDialog open={editOpen} onOpenChange={setEditOpen} program={program} />
       <ValidateEntityDialog open={validateOpen} onOpenChange={setValidateOpen} entityType="programs" entityId={program.id} entityName={program.name} />
     </motion.div>

@@ -193,6 +193,10 @@ export default function StartupDetailPage() {
             </div>
           </TabsContent>
         )}
+
+        <TabsContent value="documents" className="mt-4">
+          <EntityDocumentsTab entityType="startup" entityId={startup.id} label="Documents de l'entreprise" />
+        </TabsContent>
       </Tabs>
     </motion.div>
   );

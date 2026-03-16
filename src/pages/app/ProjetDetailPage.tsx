@@ -288,6 +288,9 @@ export default function ProjetDetailPage() {
             </div>
           ) : <Empty text="Aucune ligne budgétaire" />}
         </TabsContent>
+        <TabsContent value="documents" className="mt-4">
+          <EntityDocumentsTab entityType="project" entityId={project.id} label="Documents du projet" />
+        </TabsContent>
       </Tabs>
 
       <EditProjectDialog open={editOpen} onOpenChange={setEditOpen} project={project} />
