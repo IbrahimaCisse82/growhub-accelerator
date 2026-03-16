@@ -1,4 +1,4 @@
-import { ButtonHTMLAttributes } from "react";
+import { forwardRef, ButtonHTMLAttributes } from "react";
 
 type Variant = "primary" | "secondary" | "ghost" | "accent";
 
@@ -19,13 +19,19 @@ const sizeClasses = {
   md: "px-3.5 py-[7px] text-xs",
 };
 
-export default function GhButton({ variant = "primary", size = "sm", className = "", children, ...props }: GhButtonProps) {
-  return (
-    <button
-      className={`inline-flex items-center gap-1.5 rounded-lg font-body font-semibold cursor-pointer transition-all whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
-      {...props}
-    >
-      {children}
-    </button>
-  );
-}
+const GhButton = forwardRef<HTMLButtonElement, GhButtonProps>(
+  ({ variant = "primary", size = "sm", className = "", children, ...props }, ref) => {
+    return (
+      <button
+        ref={ref}
+        className={`inline-flex items-center gap-1.5 rounded-lg font-body font-semibold cursor-pointer transition-all whitespace-nowrap disabled:opacity-50 disabled:pointer-events-none ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+        {...props}
+      >
+        {children}
+      </button>
+    );
+  }
+);
+GhButton.displayName = "GhButton";
+
+export default GhButton;
