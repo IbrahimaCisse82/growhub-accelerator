@@ -185,17 +185,12 @@ export default function MessagingPage() {
       }
     }
 
-    // Create new conversation
-    const { data: conv, error: cErr } = await supabase
-      .from("conversations")
-      .insert({ title: targetName, is_group: false })
-      .select()
-      .single();
-    if (cErr || !conv) return;
+    // Create new conversation via secure database function
+    const { data: convId, error: cErr } = await supabase
+      .rpc("start_conversation", { _other_user_id: targetUserId, _title: targetName });
+    if (cErr || !convId) return;
 
-    // Add self first (satisfies user_id = auth.uid()), then add other user (satisfies is_conversation_member)
-    await supabase.from("conversation_participants").insert({ conversation_id: conv.id, user_id: user.id });
-    await supabase.from("conversation_participants").insert({ conversation_id: conv.id, user_id: targetUserId });
+    const conv = { id: convId };
 
     qc.invalidateQueries({ queryKey: ["conversations"] });
     setSelectedId(conv.id);

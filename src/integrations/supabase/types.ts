@@ -2016,6 +2016,10 @@ export type Database = {
         Args: { _conversation_id: string; _user_id: string }
         Returns: boolean
       }
+      start_conversation: {
+        Args: { _other_user_id: string; _title?: string }
+        Returns: string
+      }
       verify_invitation_token: {
         Args: { _token: string }
         Returns: {
