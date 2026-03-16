@@ -83,11 +83,8 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground">
-          Pas encore de compte ?{" "}
-          <Link to="/signup" className="text-primary hover:underline font-medium">
-            S'inscrire
-          </Link>
+        <p className="text-center text-xs text-muted-foreground">
+          L'accès à la plateforme se fait uniquement sur invitation ou via un appel à candidature.
         </p>
       </div>
     </div>
