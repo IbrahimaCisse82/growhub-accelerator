@@ -53,7 +53,7 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
             <table className="w-full text-[12.5px]">
               <thead>
                 <tr className="bg-secondary">
-                  {["Date", "Libellé", "Code budget", "Fournisseur", "Réf.", "Montant", "Pièce", ""].map(h => (
+                  {["Date", "Libellé", "Code budget", "Fournisseur", "Réf.", "Local", "Taux", "EUR", "Pièce", ""].map(h => (
                     <th key={h} className="px-3 py-2.5 text-left text-[10px] font-mono uppercase text-muted-foreground tracking-wider border-b border-border whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -68,6 +68,8 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
                     </td>
                     <td className="px-3 py-2.5 border-b border-border text-muted-foreground">{tx.vendor ?? "—"}</td>
                     <td className="px-3 py-2.5 border-b border-border text-muted-foreground font-mono text-[11px]">{tx.reference ?? "—"}</td>
+                    <td className="px-3 py-2.5 border-b border-border font-mono text-muted-foreground whitespace-nowrap">{(tx as any).amount_local ? fmt((tx as any).amount_local) : "—"}</td>
+                    <td className="px-3 py-2.5 border-b border-border font-mono text-muted-foreground text-[11px]">{(tx as any).exchange_rate && (tx as any).exchange_rate !== 1 ? (tx as any).exchange_rate : "—"}</td>
                     <td className="px-3 py-2.5 border-b border-border font-mono font-semibold text-foreground whitespace-nowrap">{fmt(tx.amount)} €</td>
                     <td className="px-3 py-2.5 border-b border-border">
                       {tx.receipt_url ? (
