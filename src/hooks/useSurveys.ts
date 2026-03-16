@@ -51,7 +51,7 @@ export function useSubmitSurveyResponse() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (response: { survey_id: string; respondent_id: string; rating?: number; feedback?: string; answers?: Record<string, unknown> }) => {
-      const { error } = await supabase.from("survey_responses").insert(response);
+      const { error } = await supabase.from("survey_responses").insert([response] as any);
       if (error) throw error;
     },
     onSuccess: (_, vars) => {
