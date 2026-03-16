@@ -6,7 +6,9 @@ import Pill from "@/components/shared/Pill";
 import GhButton from "@/components/shared/GhButton";
 import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStartup, useStartupMembers, useStartupProjects, useStartupSessions, useStartupRisks } from "@/hooks/useStartupDetail";
+import StartupKpiTab from "@/components/startups/StartupKpiTab";
 
 const riskColor: Record<string, "green" | "amber" | "rose" | "gray"> = { low: "green", medium: "amber", high: "rose", critical: "rose" };
 const sessionColor: Record<string, "green" | "amber" | "blue" | "gray"> = { planned: "amber", confirmed: "blue", completed: "green", cancelled: "gray", in_progress: "blue" };
@@ -96,89 +98,100 @@ export default function StartupDetailPage() {
         </div>
       )}
 
-      {/* Projets associés */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display text-sm font-bold text-foreground">Projets ({projects?.length ?? 0})</h3>
-          <GhButton variant="ghost" onClick={() => navigate("/app/projets")}>Voir tout →</GhButton>
-        </div>
-        {!projects || projects.length === 0 ? (
-          <div className="bg-card border border-border rounded-xl p-6 text-center text-sm text-muted-foreground">Aucun projet associé</div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {projects.map(p => (
-              <div key={p.id} className="bg-card border border-border rounded-xl p-4 hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer" onClick={() => navigate("/app/projets")}>
-                <div className="text-[13px] font-bold text-foreground">{p.name}</div>
-                <div className="text-[11px] text-muted-foreground mt-1">{p.code ?? "—"}</div>
-                <div className="flex items-center justify-between mt-3">
-                  <Pill color={p.status === "active" ? "green" : p.status === "completed" ? "blue" : "gray"}>{p.status}</Pill>
-                  <span className="font-mono text-[11px] text-primary">{p.progress ?? 0}%</span>
-                </div>
-                {(p.progress ?? 0) > 0 && (
-                  <div className="mt-2 h-1 bg-muted rounded-full overflow-hidden">
-                    <div className="h-full bg-primary rounded-full" style={{ width: `${p.progress}%` }} />
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      {/* Tabs for KPIs, Projects, Sessions, Risks */}
+      <Tabs defaultValue="kpis" className="w-full">
+        <TabsList className="bg-secondary border border-border">
+          <TabsTrigger value="kpis">📊 KPIs</TabsTrigger>
+          <TabsTrigger value="projects">Projets ({projects?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="sessions">Coaching ({sessions?.length ?? 0})</TabsTrigger>
+          {risks && risks.length > 0 && <TabsTrigger value="risks">Risques ({risks.length})</TabsTrigger>}
+        </TabsList>
 
-      {/* Sessions coaching */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-display text-sm font-bold text-foreground">Sessions coaching ({sessions?.length ?? 0})</h3>
-          <GhButton variant="ghost" onClick={() => navigate("/app/coaching")}>Voir tout →</GhButton>
-        </div>
-        {!sessions || sessions.length === 0 ? (
-          <div className="bg-card border border-border rounded-xl p-6 text-center text-sm text-muted-foreground">Aucune session de coaching</div>
-        ) : (
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <table className="w-full border-collapse text-[12.5px]">
-              <thead><tr className="bg-secondary">
-                {["Session", "Date", "Durée", "Statut"].map(h => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left">{h}</th>)}
-              </tr></thead>
-              <tbody>
-                {sessions.slice(0, 5).map(s => (
-                  <tr key={s.id} className="hover:bg-secondary transition-colors cursor-pointer" onClick={() => navigate("/app/coaching")}>
-                    <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{s.title}</td>
-                    <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{new Date(s.scheduled_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
-                    <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{s.duration_minutes ?? 60} min</td>
-                    <td className="px-3.5 py-2.5 border-b border-border"><Pill color={sessionColor[s.status] ?? "gray"}>{s.status}</Pill></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        <TabsContent value="kpis" className="mt-4">
+          <StartupKpiTab startupId={startup.id} />
+        </TabsContent>
 
-      {/* Risques */}
-      {risks && risks.length > 0 && (
-        <div className="mb-6">
+        <TabsContent value="projects" className="mt-4">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="font-display text-sm font-bold text-foreground">Risques ({risks.length})</h3>
-            <GhButton variant="ghost" onClick={() => navigate("/app/risques")}>Voir tout →</GhButton>
+            <h3 className="font-display text-sm font-bold text-foreground">Projets ({projects?.length ?? 0})</h3>
+            <GhButton variant="ghost" onClick={() => navigate("/app/projets")}>Voir tout →</GhButton>
           </div>
-          <div className="bg-card border border-border rounded-xl overflow-hidden">
-            <table className="w-full border-collapse text-[12.5px]">
-              <thead><tr className="bg-secondary">
-                {["Risque", "Niveau", "Statut"].map(h => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left">{h}</th>)}
-              </tr></thead>
-              <tbody>
-                {risks.map(r => (
-                  <tr key={r.id} className="hover:bg-secondary transition-colors">
-                    <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{r.title}</td>
-                    <td className="px-3.5 py-2.5 border-b border-border"><Pill color={riskColor[r.level] ?? "gray"}>{r.level}</Pill></td>
-                    <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{r.status ?? "open"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          {!projects || projects.length === 0 ? (
+            <div className="bg-card border border-border rounded-xl p-6 text-center text-sm text-muted-foreground">Aucun projet associé</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {projects.map(p => (
+                <div key={p.id} className="bg-card border border-border rounded-xl p-4 hover:border-border/80 hover:-translate-y-0.5 transition-all cursor-pointer" onClick={() => navigate(`/app/projets/${p.id}`)}>
+                  <div className="text-[13px] font-bold text-foreground">{p.name}</div>
+                  <div className="text-[11px] text-muted-foreground mt-1">{p.code ?? "—"}</div>
+                  <div className="flex items-center justify-between mt-3">
+                    <Pill color={p.status === "active" ? "green" : p.status === "completed" ? "blue" : "gray"}>{p.status}</Pill>
+                    <span className="font-mono text-[11px] text-primary">{p.progress ?? 0}%</span>
+                  </div>
+                  {(p.progress ?? 0) > 0 && (
+                    <div className="mt-2 h-1 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full" style={{ width: `${p.progress}%` }} />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="sessions" className="mt-4">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-display text-sm font-bold text-foreground">Sessions coaching ({sessions?.length ?? 0})</h3>
+            <GhButton variant="ghost" onClick={() => navigate("/app/coaching")}>Voir tout →</GhButton>
           </div>
-        </div>
-      )}
+          {!sessions || sessions.length === 0 ? (
+            <div className="bg-card border border-border rounded-xl p-6 text-center text-sm text-muted-foreground">Aucune session de coaching</div>
+          ) : (
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <table className="w-full border-collapse text-[12.5px]">
+                <thead><tr className="bg-secondary">
+                  {["Session", "Date", "Durée", "Statut"].map(h => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left">{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {sessions.slice(0, 5).map(s => (
+                    <tr key={s.id} className="hover:bg-secondary transition-colors cursor-pointer" onClick={() => navigate("/app/coaching")}>
+                      <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{s.title}</td>
+                      <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">{new Date(s.scheduled_at).toLocaleDateString("fr-FR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+                      <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{s.duration_minutes ?? 60} min</td>
+                      <td className="px-3.5 py-2.5 border-b border-border"><Pill color={sessionColor[s.status] ?? "gray"}>{s.status}</Pill></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </TabsContent>
+
+        {risks && risks.length > 0 && (
+          <TabsContent value="risks" className="mt-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display text-sm font-bold text-foreground">Risques ({risks.length})</h3>
+              <GhButton variant="ghost" onClick={() => navigate("/app/risques")}>Voir tout →</GhButton>
+            </div>
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <table className="w-full border-collapse text-[12.5px]">
+                <thead><tr className="bg-secondary">
+                  {["Risque", "Niveau", "Statut"].map(h => <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left">{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {risks.map(r => (
+                    <tr key={r.id} className="hover:bg-secondary transition-colors">
+                      <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground">{r.title}</td>
+                      <td className="px-3.5 py-2.5 border-b border-border"><Pill color={riskColor[r.level] ?? "gray"}>{r.level}</Pill></td>
+                      <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground">{r.status ?? "open"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </TabsContent>
+        )}
+      </Tabs>
     </motion.div>
   );
 }

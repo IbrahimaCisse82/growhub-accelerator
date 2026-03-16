@@ -43,6 +43,7 @@ const navGroups: NavGroup[] = [
       { label: "Candidatures", icon: "✦", path: "/app/candidatures", badgeKey: "pendingApps", badgeType: "alert" },
       { label: "Entreprises", icon: "△", path: "/app/entreprises", badgeKey: "startups" },
       { label: "Cohortes", icon: "◉", path: "/app/cohortes", badgeKey: "activeCohorts" },
+      { label: "Alumni", icon: "🎓", path: "/app/alumni" },
     ],
   },
   {
@@ -51,6 +52,7 @@ const navGroups: NavGroup[] = [
       { label: "Mentors", icon: "◑", path: "/app/mentors" },
       { label: "Coaching", icon: "◐", path: "/app/coaching" },
       { label: "LMS & Cours", icon: "▣", path: "/app/lms" },
+      { label: "Enquêtes", icon: "📋", path: "/app/enquetes" },
     ],
   },
   {
@@ -64,6 +66,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Réseau",
     items: [
+      { label: "Partenaires", icon: "🤝", path: "/app/partenaires" },
       { label: "Événements", icon: "◆", path: "/app/evenements" },
       { label: "Messagerie", icon: "◗", path: "/app/messagerie", badgeKey: "unreadNotifs", badgeType: "alert" },
       { label: "Ressources", icon: "▨", path: "/app/ressources" },
