@@ -569,6 +569,85 @@ export type Database = {
           },
         ]
       }
+      grant_addendum_lines: {
+        Row: {
+          addendum_id: string
+          budget_line_code: string
+          created_at: string
+          delta_amount: number
+          id: string
+        }
+        Insert: {
+          addendum_id: string
+          budget_line_code: string
+          created_at?: string
+          delta_amount?: number
+          id?: string
+        }
+        Update: {
+          addendum_id?: string
+          budget_line_code?: string
+          created_at?: string
+          delta_amount?: number
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grant_addendum_lines_addendum_id_fkey"
+            columns: ["addendum_id"]
+            isOneToOne: false
+            referencedRelation: "grant_addendums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grant_addendums: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          date: string | null
+          grant_id: string
+          id: string
+          justification: string | null
+          motif: string | null
+          num: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          date?: string | null
+          grant_id: string
+          id?: string
+          justification?: string | null
+          motif?: string | null
+          num?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          date?: string | null
+          grant_id?: string
+          id?: string
+          justification?: string | null
+          motif?: string | null
+          num?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grant_addendums_grant_id_fkey"
+            columns: ["grant_id"]
+            isOneToOne: false
+            referencedRelation: "grants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grant_changes: {
         Row: {
           action: string
@@ -852,48 +931,57 @@ export type Database = {
       grant_transactions: {
         Row: {
           amount: number
+          amount_local: number | null
           budget_code: string | null
           category: string | null
           created_at: string
           created_by: string | null
           description: string | null
+          exchange_rate: number | null
           grant_id: string
           id: string
           label: string
           receipt_url: string | null
           reference: string | null
+          report_id: string | null
           transaction_date: string
           updated_at: string
           vendor: string | null
         }
         Insert: {
           amount?: number
+          amount_local?: number | null
           budget_code?: string | null
           category?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          exchange_rate?: number | null
           grant_id: string
           id?: string
           label: string
           receipt_url?: string | null
           reference?: string | null
+          report_id?: string | null
           transaction_date?: string
           updated_at?: string
           vendor?: string | null
         }
         Update: {
           amount?: number
+          amount_local?: number | null
           budget_code?: string | null
           category?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          exchange_rate?: number | null
           grant_id?: string
           id?: string
           label?: string
           receipt_url?: string | null
           reference?: string | null
+          report_id?: string | null
           transaction_date?: string
           updated_at?: string
           vendor?: string | null
@@ -904,6 +992,13 @@ export type Database = {
             columns: ["grant_id"]
             isOneToOne: false
             referencedRelation: "grants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grant_transactions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "grant_reports"
             referencedColumns: ["id"]
           },
         ]

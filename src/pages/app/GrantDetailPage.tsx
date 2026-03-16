@@ -27,6 +27,8 @@ import GrantIndicatorsTab from "@/components/grants/GrantIndicatorsTab";
 import GrantActivitiesTab from "@/components/grants/GrantActivitiesTab";
 import GrantBudgetChart from "@/components/grants/GrantBudgetChart";
 import GrantAlertsPanel from "@/components/grants/GrantAlertsPanel";
+import GrantAddendumTab, { useGrantAddendums } from "@/components/grants/GrantAddendumTab";
+import GrantFicheRecapTab from "@/components/grants/GrantFicheRecapTab";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
@@ -52,6 +54,7 @@ export default function GrantDetailPage() {
   const { data: documents } = useGrantDocuments(id);
   const { data: indicators } = useGrantIndicators(id);
   const { data: activities } = useGrantActivities(id);
+  const { data: addendums } = useGrantAddendums(id);
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
   const [showCancel, setShowCancel] = useState(false);
@@ -163,6 +166,8 @@ export default function GrantDetailPage() {
           <TabsTrigger value="activities">Activités ({activities?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="indicators">Indicateurs ({indicators?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="documents">Documents ({documents?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="addendums">Addendums ({addendums?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="fiche">Fiche récap.</TabsTrigger>
           <TabsTrigger value="tracking">Suivi</TabsTrigger>
           <TabsTrigger value="info">Infos</TabsTrigger>
           <TabsTrigger value="history">Historique ({grantChanges?.length ?? 0})</TabsTrigger>
@@ -200,6 +205,16 @@ export default function GrantDetailPage() {
 
         <TabsContent value="documents">
           {grant && <GrantDocumentsTab grantId={grant.id} />}
+        </TabsContent>
+
+        {/* Addendums Tab */}
+        <TabsContent value="addendums">
+          {grant && <GrantAddendumTab grantId={grant.id} budgetLines={(projectBudgetLines ?? []).map((l: any) => ({ code: l.code, label: l.label, section: l.section, quantity: l.quantity, unit_cost: l.unit_cost, allocation_pct: l.allocation_pct }))} />}
+        </TabsContent>
+
+        {/* Fiche récapitulative Tab */}
+        <TabsContent value="fiche">
+          {grant && <GrantFicheRecapTab grant={grant} reports={reports ?? []} disbursements={disbursements ?? []} />}
         </TabsContent>
 
         {/* Tracking Tab */}

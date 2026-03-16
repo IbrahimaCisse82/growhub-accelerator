@@ -53,7 +53,7 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
             <table className="w-full text-[12.5px]">
               <thead>
                 <tr className="bg-secondary">
-                  {["Date", "Libellé", "Code budget", "Fournisseur", "Réf.", "Montant", "Pièce", ""].map(h => (
+                  {["Date", "Libellé", "Code budget", "Fournisseur", "Réf.", "Local", "Taux", "EUR", "Pièce", ""].map(h => (
                     <th key={h} className="px-3 py-2.5 text-left text-[10px] font-mono uppercase text-muted-foreground tracking-wider border-b border-border whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -68,6 +68,8 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
                     </td>
                     <td className="px-3 py-2.5 border-b border-border text-muted-foreground">{tx.vendor ?? "—"}</td>
                     <td className="px-3 py-2.5 border-b border-border text-muted-foreground font-mono text-[11px]">{tx.reference ?? "—"}</td>
+                    <td className="px-3 py-2.5 border-b border-border font-mono text-muted-foreground whitespace-nowrap">{(tx as any).amount_local ? fmt((tx as any).amount_local) : "—"}</td>
+                    <td className="px-3 py-2.5 border-b border-border font-mono text-muted-foreground text-[11px]">{(tx as any).exchange_rate && (tx as any).exchange_rate !== 1 ? (tx as any).exchange_rate : "—"}</td>
                     <td className="px-3 py-2.5 border-b border-border font-mono font-semibold text-foreground whitespace-nowrap">{fmt(tx.amount)} €</td>
                     <td className="px-3 py-2.5 border-b border-border">
                       {tx.receipt_url ? (
@@ -83,7 +85,7 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
                   </tr>
                 ))}
                 <tr className="bg-foreground/5">
-                  <td colSpan={5} className="px-3 py-2.5 text-right text-[11px] font-bold text-foreground uppercase">Total</td>
+                  <td colSpan={7} className="px-3 py-2.5 text-right text-[11px] font-bold text-foreground uppercase">Total</td>
                   <td className="px-3 py-2.5 font-mono text-sm font-bold text-primary">{fmt(totalAmount)} €</td>
                   <td colSpan={2} />
                 </tr>
@@ -126,6 +128,8 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
   const [category, setCategory] = useState("");
   const [uploading, setUploading] = useState(false);
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null);
+  const [exchangeRate, setExchangeRate] = useState("1");
+  const [amountLocal, setAmountLocal] = useState("");
   const isEdit = !!editData;
 
   const handleOpenChange = (o: boolean) => {
@@ -135,9 +139,12 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
       setBudgetCode(editData.budget_code ?? ""); setVendor(editData.vendor ?? "");
       setReference(editData.reference ?? ""); setDescription(editData.description ?? "");
       setCategory(editData.category ?? ""); setReceiptUrl(editData.receipt_url ?? null);
+      setExchangeRate(String((editData as any).exchange_rate ?? "1"));
+      setAmountLocal(String((editData as any).amount_local ?? ""));
     } else if (o) {
       setLabel(""); setAmount(""); setDate(new Date().toISOString().slice(0, 10));
       setBudgetCode(""); setVendor(""); setReference(""); setDescription(""); setCategory(""); setReceiptUrl(null);
+      setExchangeRate("1"); setAmountLocal("");
     }
     onOpenChange(o);
   };
@@ -163,10 +170,11 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const payload = {
+      const payload: any = {
         grant_id: grantId, label, amount: parseFloat(amount) || 0, transaction_date: date,
         budget_code: budgetCode || null, vendor: vendor || null, reference: reference || null,
         description: description || null, category: category || null, receipt_url: receiptUrl, created_by: userId ?? null,
+        exchange_rate: parseFloat(exchangeRate) || 1, amount_local: parseFloat(amountLocal) || 0,
       };
       if (isEdit) {
         const { error } = await supabase.from("grant_transactions").update(payload).eq("id", editData.id);
@@ -188,10 +196,12 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
         </DialogHeader>
         <form onSubmit={(e) => { e.preventDefault(); saveMutation.mutate(); }} className="space-y-4">
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Libellé *</label><input value={label} onChange={e => setLabel(e.target.value)} required className={inputCls} placeholder="Ex: Achat matériel informatique" /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Montant (€) *</label><input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required className={inputCls} /></div>
-            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Date *</label><input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} /></div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Montant local</label><input type="number" step="0.01" value={amountLocal} onChange={e => { setAmountLocal(e.target.value); const loc = parseFloat(e.target.value) || 0; const rate = parseFloat(exchangeRate) || 1; setAmount(String(Math.round((loc / rate) * 100) / 100)); }} className={inputCls} placeholder="Devise locale" /></div>
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Taux change</label><input type="number" step="0.0001" value={exchangeRate} onChange={e => { setExchangeRate(e.target.value); const loc = parseFloat(amountLocal) || 0; const rate = parseFloat(e.target.value) || 1; setAmount(String(Math.round((loc / rate) * 100) / 100)); }} className={inputCls} placeholder="1 EUR =" /></div>
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Montant EUR *</label><input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required className={inputCls} /></div>
           </div>
+          <div className="space-y-2"><label className="text-sm font-medium text-foreground">Date *</label><input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} /></div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Code budgétaire</label><input value={budgetCode} onChange={e => setBudgetCode(e.target.value)} className={inputCls} placeholder="Ex: A1.1.1" /></div>
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Catégorie</label>
