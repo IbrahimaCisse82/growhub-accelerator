@@ -76,6 +76,12 @@ const navGroups: NavGroup[] = [
     label: "Insights",
     items: [
       { label: "Analytics", icon: "◈", path: "/app/analytics" },
+    ],
+  },
+  {
+    label: "Insights Admin",
+    adminOnly: true,
+    items: [
       { label: "Rapports", icon: "▦", path: "/app/rapports" },
     ],
   },
