@@ -543,8 +543,6 @@ export function useTypingIndicator(channelId: string | null) {
   return { typingUsers, sendTyping };
 }
 
-// Need to import useState for typing indicator
-import { useState } from "react";
 
 // ── Profiles batch ──
 export function useProfilesBatch(userIds: string[]) {
