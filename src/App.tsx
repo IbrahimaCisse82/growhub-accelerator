@@ -51,6 +51,8 @@ const ActivitesPage = lazy(() => import("@/pages/app/ActivitesPage"));
 const PartnersPage = lazy(() => import("@/pages/app/PartnersPage"));
 const SurveysPage = lazy(() => import("@/pages/app/SurveysPage"));
 const AlumniPage = lazy(() => import("@/pages/app/AlumniPage"));
+const DataCollectionPage = lazy(() => import("@/pages/app/DataCollectionPage"));
+const WebhooksPage = lazy(() => import("@/pages/app/WebhooksPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
