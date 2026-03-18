@@ -1,433 +1,351 @@
+import { useState, useEffect, useRef, useMemo } from "react";
 import { motion } from "framer-motion";
-import SectionHeader from "@/components/shared/SectionHeader";
-import GhButton from "@/components/shared/GhButton";
-import EmptyState from "@/components/shared/EmptyState";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { useState, useEffect, useRef } from "react";
-
-/* ── hooks ── */
-
-function useConversations(userId: string | undefined) {
-  return useQuery({
-    queryKey: ["conversations", userId],
-    queryFn: async () => {
-      if (!userId) return [];
-      // Get conversations where user is a participant
-      const { data: participantRows, error: pErr } = await supabase
-        .from("conversation_participants")
-        .select("conversation_id")
-        .eq("user_id", userId);
-      if (pErr) throw pErr;
-      const ids = participantRows?.map((r) => r.conversation_id) ?? [];
-      if (ids.length === 0) return [];
-
-      const { data, error } = await supabase
-        .from("conversations")
-        .select("*, conversation_participants(user_id)")
-        .in("id", ids)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: !!userId,
-  });
-}
-
-function useMessages(conversationId: string | null) {
-  return useQuery({
-    queryKey: ["messages", conversationId],
-    queryFn: async () => {
-      if (!conversationId) return [];
-      const { data, error } = await supabase
-        .from("messages")
-        .select("*")
-        .eq("conversation_id", conversationId)
-        .order("created_at", { ascending: true });
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: !!conversationId,
-  });
-}
-
-function useProfiles(userIds: string[]) {
-  return useQuery({
-    queryKey: ["profiles-batch", userIds.sort().join(",")],
-    queryFn: async () => {
-      if (userIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from("profiles_safe")
-        .select("user_id, full_name, avatar_url")
-        .in("user_id", userIds);
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: userIds.length > 0,
-  });
-}
-
-function useSearchUsers(search: string) {
-  return useQuery({
-    queryKey: ["search-users", search],
-    queryFn: async () => {
-      if (!search || search.length < 2) return [];
-      const { data, error } = await supabase
-        .from("profiles_safe")
-        .select("user_id, full_name, avatar_url, email")
-        .eq("is_approved", true)
-        .ilike("full_name", `%${search}%`)
-        .limit(10);
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: search.length >= 2,
-  });
-}
-
-/* ── component ── */
+import {
+  useChannels, useChannelMembers, useChannelMessages, useMessageReactions,
+  useMessageAttachments, useSendMessage, useEditMessage, useDeleteMessage,
+  useToggleReaction, useTogglePin, usePinnedMessages, useCreateChannel,
+  useJoinChannel, usePresence, useMessagingRealtime, useTypingIndicator,
+  useProfilesBatch, Channel,
+} from "@/hooks/useMessaging";
+import ChannelSidebar from "@/components/messaging/ChannelSidebar";
+import MessageBubble from "@/components/messaging/MessageBubble";
+import MessageInput from "@/components/messaging/MessageInput";
+import ThreadPanel from "@/components/messaging/ThreadPanel";
+import SearchPanel from "@/components/messaging/SearchPanel";
+import { Hash, Lock, MessageSquare, Users, Pin, Settings, ChevronLeft } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function MessagingPage() {
-  const { user } = useAuth();
-  const qc = useQueryClient();
-  const { data: conversations, isLoading } = useConversations(user?.id);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const { data: messages, refetch: refetchMessages } = useMessages(selectedId);
-  const [newMsg, setNewMsg] = useState("");
-  const [showList, setShowList] = useState(true);
-  const [showNewDialog, setShowNewDialog] = useState(false);
-  const [searchUser, setSearchUser] = useState("");
-  const { data: searchResults } = useSearchUsers(searchUser);
+  const { user, profile } = useAuth();
+  const [selectedChannelId, setSelectedChannelId] = useState<string | null>(null);
+  const [threadId, setThreadId] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showMobileList, setShowMobileList] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Collect all user ids from conversations for profile lookup
-  const allUserIds = Array.from(
-    new Set(
-      (conversations ?? []).flatMap((c: any) =>
-        (c.conversation_participants ?? []).map((p: any) => p.user_id)
-      )
-    )
-  );
-  const msgSenderIds = Array.from(new Set((messages ?? []).map((m) => m.sender_id)));
-  const combinedIds = Array.from(new Set([...allUserIds, ...msgSenderIds]));
-  const { data: profiles } = useProfiles(combinedIds);
+  // Data
+  const { data: channels = [] } = useChannels();
+  const { data: channelMembers = [] } = useChannelMembers(selectedChannelId);
+  const { data: messages = [], isLoading: loadingMessages } = useChannelMessages(selectedChannelId, null);
+  const { data: threadMessages = [] } = useChannelMessages(selectedChannelId, threadId);
+  const { data: pinnedMessages = [] } = usePinnedMessages(selectedChannelId);
+  const { data: presenceMap = new Map() } = usePresence();
 
-  const profileMap = new Map((profiles ?? []).map((p) => [p.user_id, p]));
+  const createChannel = useCreateChannel();
+  const joinChannel = useJoinChannel();
+  const sendMessage = useSendMessage();
+  const editMessage = useEditMessage();
+  const deleteMessage = useDeleteMessage();
+  const toggleReaction = useToggleReaction();
+  const togglePin = useTogglePin();
 
-  // Realtime subscription for messages
+  // Realtime
+  useMessagingRealtime(selectedChannelId);
+  const { typingUsers, sendTyping } = useTypingIndicator(selectedChannelId);
+
+  // Get all user IDs for profiles
+  const allUserIds = useMemo(() => {
+    const ids = new Set<string>();
+    messages.forEach(m => ids.add(m.sender_id));
+    threadMessages.forEach(m => ids.add(m.sender_id));
+    channelMembers.forEach(m => ids.add(m.user_id));
+    return Array.from(ids);
+  }, [messages, threadMessages, channelMembers]);
+
+  const { data: profileMap = new Map() } = useProfilesBatch(allUserIds);
+
+  // Reactions
+  const allMessageIds = useMemo(() => {
+    return [...messages, ...threadMessages].map(m => m.id);
+  }, [messages, threadMessages]);
+  const { data: reactionsMap = new Map() } = useMessageReactions(allMessageIds);
+  const { data: attachmentsMap = new Map() } = useMessageAttachments(allMessageIds);
+
+  // My channel IDs
+  const myChannelIds = useMemo(() => {
+    const set = new Set<string>();
+    // We need to check membership - for now use channels that are public or the user is in
+    channelMembers.forEach(m => {
+      if (m.user_id === user?.id) set.add(m.channel_id);
+    });
+    // Also add public channels where we might already be members
+    return set;
+  }, [channelMembers, user?.id]);
+
+  // Actually, we need a global membership query. Let's use the channels themselves.
+  // Since RLS already filters, all channels returned are ones we can see.
+  const allMyChannelIds = useMemo(() => {
+    // Until we have per-user membership query, mark all visible channels
+    return new Set(channels.map(c => c.id));
+  }, [channels]);
+
+  const pinnedIds = useMemo(() => new Set(pinnedMessages.map((p: any) => p.message_id)), [pinnedMessages]);
+
+  // Auto-select first channel
   useEffect(() => {
-    if (!selectedId) return;
-    const channel = supabase
-      .channel(`messages-${selectedId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "messages",
-          filter: `conversation_id=eq.${selectedId}`,
-        },
-        () => {
-          refetchMessages();
-        }
-      )
-      .subscribe();
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [selectedId, refetchMessages]);
-
-  // Auto scroll to bottom on new messages
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (!selectedChannelId && channels.length > 0) {
+      setSelectedChannelId(channels[0].id);
+      setShowMobileList(false);
     }
+  }, [channels, selectedChannelId]);
+
+  // Scroll to bottom on new messages
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages]);
 
-  const sendMessage = async () => {
-    if (!newMsg.trim() || !selectedId || !user) return;
-    await supabase.from("messages").insert({
-      content: newMsg,
-      conversation_id: selectedId,
-      sender_id: user.id,
-    });
-    setNewMsg("");
-    refetchMessages();
-  };
+  const selectedChannel = channels.find(c => c.id === selectedChannelId);
 
-  const selectConversation = (id: string) => {
-    setSelectedId(id);
-    setShowList(false);
-  };
+  // Handlers
+  const handleSelectChannel = (id: string) => {
+    setSelectedChannelId(id);
+    setThreadId(null);
+    setShowSearch(false);
+    setShowMobileList(false);
 
-  const createConversation = async (targetUserId: string, targetName: string) => {
-    if (!user) return;
-
-    // Check if a 1-on-1 conversation already exists
-    const myConvIds = (conversations ?? []).map((c: any) => c.id);
-    for (const conv of conversations ?? []) {
-      const participants = (conv as any).conversation_participants ?? [];
-      if (
-        !conv.is_group &&
-        participants.length === 2 &&
-        participants.some((p: any) => p.user_id === targetUserId)
-      ) {
-        setSelectedId(conv.id);
-        setShowList(false);
-        setShowNewDialog(false);
-        setSearchUser("");
-        return;
-      }
+    // Auto-join public channels
+    const ch = channels.find(c => c.id === id);
+    if (ch && ch.channel_type === "public" && user) {
+      joinChannel.mutate({ channelId: id, userId: user.id });
     }
-
-    // Create new conversation via secure database function
-    const { data: convId, error: cErr } = await supabase
-      .rpc("start_conversation", { _other_user_id: targetUserId, _title: targetName });
-    if (cErr || !convId) return;
-
-    const conv = { id: convId };
-
-    qc.invalidateQueries({ queryKey: ["conversations"] });
-    setSelectedId(conv.id);
-    setShowList(false);
-    setShowNewDialog(false);
-    setSearchUser("");
   };
 
-  const getConversationLabel = (conv: any) => {
-    if (conv.title) return conv.title;
-    const participants = conv.conversation_participants ?? [];
-    const otherIds = participants
-      .map((p: any) => p.user_id)
-      .filter((id: string) => id !== user?.id);
-    const otherProfiles = otherIds.map((id: string) => profileMap.get(id));
-    return otherProfiles.map((p: any) => p?.full_name || "Utilisateur").join(", ") || "Conversation";
+  const handleCreateChannel = async (data: { name: string; description?: string; channel_type: string }) => {
+    if (!user) return;
+    const ch = await createChannel.mutateAsync({ ...data, created_by: user.id });
+    setSelectedChannelId(ch.id);
+    setShowMobileList(false);
   };
 
-  const getLastMessagePreview = (conv: any) => {
-    return conv.is_group ? "Groupe" : "Privé";
+  const handleSendMessage = (content: string, attachments?: any[], mentionIds?: string[]) => {
+    if (!user || !selectedChannelId) return;
+    sendMessage.mutate({
+      channelId: selectedChannelId,
+      senderId: user.id,
+      content,
+      threadId: undefined,
+      mentionIds,
+      attachments,
+    });
   };
 
-  const selectedConv = conversations?.find((c) => c.id === selectedId);
+  const handleSendThreadReply = (content: string, attachments?: any[], mentionIds?: string[]) => {
+    if (!user || !selectedChannelId || !threadId) return;
+    sendMessage.mutate({
+      channelId: selectedChannelId,
+      senderId: user.id,
+      content,
+      threadId,
+      mentionIds,
+      attachments,
+    });
+  };
+
+  const handleReact = (messageId: string, emoji: string) => {
+    if (!user) return;
+    toggleReaction.mutate({ messageId, userId: user.id, emoji });
+  };
+
+  const handlePin = (messageId: string, isPinned: boolean) => {
+    if (!user || !selectedChannelId) return;
+    togglePin.mutate({ messageId, channelId: selectedChannelId, userId: user.id, isPinned });
+  };
+
+  const handleEdit = (messageId: string, content: string) => {
+    if (!selectedChannelId) return;
+    editMessage.mutate({ messageId, content, channelId: selectedChannelId });
+  };
+
+  const handleDelete = (messageId: string) => {
+    if (!selectedChannelId) return;
+    deleteMessage.mutate({ messageId, channelId: selectedChannelId });
+  };
+
+  const getProfile = (userId: string) => profileMap.get(userId) ?? { user_id: userId, full_name: "Utilisateur", avatar_url: null };
+  const getReactions = (msgId: string) => {
+    const r = reactionsMap.get(msgId) ?? [];
+    return r.map(rg => ({ ...rg, reacted: rg.users.includes(user?.id ?? "") }));
+  };
+
+  const membersList = channelMembers.map(m => ({
+    user_id: m.user_id,
+    full_name: profileMap.get(m.user_id)?.full_name ?? "Utilisateur",
+  }));
+
+  // Group messages by date
+  const messagesByDate = useMemo(() => {
+    const groups: { date: string; messages: typeof messages }[] = [];
+    let currentDate = "";
+    for (const msg of messages) {
+      const date = new Date(msg.created_at).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+      if (date !== currentDate) {
+        currentDate = date;
+        groups.push({ date, messages: [] });
+      }
+      groups[groups.length - 1].messages.push(msg);
+    }
+    return groups;
+  }, [messages]);
+
+  const threadParent = threadId ? messages.find(m => m.id === threadId) : null;
+  const threadReplies = threadMessages.filter(m => m.id !== threadId);
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <SectionHeader
-        title="Messagerie"
-        subtitle="Messagerie interne de la plateforme"
-        actions={
-          <GhButton variant="primary" onClick={() => setShowNewDialog(true)}>
-            + Nouvelle conversation
-          </GhButton>
-        }
-      />
-      <div className="grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 h-[calc(100vh-220px)]">
-        {/* Conversations list */}
-        <div
-          className={`bg-card border border-border rounded-xl overflow-hidden flex flex-col ${
-            !showList ? "hidden md:flex" : "flex"
-          }`}
-        >
-          <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-            <span className="font-display text-sm font-bold text-foreground">
-              Conversations
-            </span>
-            <span className="text-[11px] text-muted-foreground font-mono">
-              {conversations?.length ?? 0}
-            </span>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            {isLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 m-2 rounded-lg" />
-              ))
-            ) : !conversations || conversations.length === 0 ? (
-              <EmptyState
-                icon="💬"
-                title="Aucune conversation"
-                description="Démarrez une nouvelle conversation"
-                actionLabel="Nouveau message"
-                onAction={() => setShowNewDialog(true)}
-              />
-            ) : (
-              conversations.map((c) => (
-                <button
-                  key={c.id}
-                  onClick={() => selectConversation(c.id)}
-                  className={`w-full px-4 py-3 text-left border-b border-border hover:bg-secondary transition-colors ${
-                    selectedId === c.id ? "bg-primary/10" : ""
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-                      {c.is_group ? "👥" : "💬"}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold text-foreground truncate">
-                        {getConversationLabel(c)}
-                      </div>
-                      <div className="text-[11px] text-muted-foreground">
-                        {getLastMessagePreview(c)} ·{" "}
-                        {format(new Date(c.created_at), "dd MMM", { locale: fr })}
-                      </div>
-                    </div>
-                  </div>
-                </button>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Messages panel */}
-        <div
-          className={`bg-card border border-border rounded-xl overflow-hidden flex flex-col ${
-            showList ? "hidden md:flex" : "flex"
-          }`}
-        >
-          {!selectedId ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground text-sm gap-2">
-              <span className="text-4xl">💬</span>
-              <span>Sélectionnez une conversation</span>
-            </div>
-          ) : (
-            <>
-              {/* Header */}
-              <div className="px-4 py-3 border-b border-border flex items-center gap-3">
-                <button
-                  onClick={() => setShowList(true)}
-                  className="md:hidden text-muted-foreground hover:text-foreground text-sm"
-                >
-                  ← Retour
-                </button>
-                <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary">
-                  {selectedConv?.is_group ? "👥" : "💬"}
-                </div>
-                <div>
-                  <div className="text-sm font-semibold text-foreground">
-                    {selectedConv ? getConversationLabel(selectedConv) : "Conversation"}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">
-                    {(selectedConv as any)?.conversation_participants?.length ?? 0} participant(s)
-                  </div>
-                </div>
-              </div>
-
-              {/* Messages */}
-              <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">
-                {!messages || messages.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center text-muted-foreground text-sm py-10">
-                    Aucun message. Commencez la conversation !
-                  </div>
-                ) : (
-                  messages.map((m) => {
-                    const isMine = m.sender_id === user?.id;
-                    const senderProfile = profileMap.get(m.sender_id);
-                    return (
-                      <div
-                        key={m.id}
-                        className={`flex ${isMine ? "justify-end" : "justify-start"}`}
-                      >
-                        <div className={`max-w-[75%] ${isMine ? "items-end" : "items-start"} flex flex-col`}>
-                          {!isMine && (
-                            <span className="text-[10px] text-muted-foreground mb-0.5 font-medium">
-                              {senderProfile?.full_name || "Utilisateur"}
-                            </span>
-                          )}
-                          <div
-                            className={`px-3 py-2 rounded-2xl text-sm leading-relaxed ${
-                              isMine
-                                ? "bg-primary text-primary-foreground rounded-br-md"
-                                : "bg-secondary text-foreground rounded-bl-md"
-                            }`}
-                          >
-                            {m.content}
-                          </div>
-                          <div className="font-mono text-[9px] text-muted-foreground mt-0.5 px-1">
-                            {format(new Date(m.created_at), "HH:mm", { locale: fr })}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-
-              {/* Input */}
-              <div className="p-3 border-t border-border flex gap-2">
-                <input
-                  value={newMsg}
-                  onChange={(e) => setNewMsg(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
-                  className="flex-1 h-10 rounded-xl border border-input bg-secondary px-4 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-                  placeholder="Écrire un message…"
-                />
-                <GhButton onClick={sendMessage} variant="primary" disabled={!newMsg.trim()}>
-                  Envoyer
-                </GhButton>
-              </div>
-            </>
-          )}
-        </div>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="h-[calc(100vh-80px)] flex rounded-xl overflow-hidden border border-border bg-card">
+      {/* Channel Sidebar */}
+      <div className={`w-[240px] flex-shrink-0 ${showMobileList ? "flex" : "hidden"} md:flex`}>
+        <ChannelSidebar
+          channels={channels}
+          selectedId={selectedChannelId}
+          onSelect={handleSelectChannel}
+          onCreateChannel={handleCreateChannel}
+          onSearch={() => setShowSearch(true)}
+          myChannelIds={allMyChannelIds}
+        />
       </div>
 
-      {/* New conversation dialog */}
-      <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
-        <DialogContent className="bg-card border-border">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">Nouvelle conversation</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-1 block">
-                Rechercher un utilisateur
-              </label>
-              <input
-                value={searchUser}
-                onChange={(e) => setSearchUser(e.target.value)}
-                className="w-full h-10 rounded-lg border border-input bg-secondary px-3 text-sm text-foreground outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
-                placeholder="Nom de l'utilisateur…"
-                autoFocus
-              />
+      {/* Main Messages Area */}
+      <div className={`flex-1 flex flex-col min-w-0 ${showMobileList ? "hidden" : "flex"} md:flex`}>
+        {!selectedChannelId ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground gap-3">
+            <MessageSquare className="w-12 h-12 opacity-20" />
+            <p className="text-sm">Sélectionnez un canal</p>
+          </div>
+        ) : (
+          <>
+            {/* Channel Header */}
+            <div className="px-4 py-3 border-b border-border flex items-center gap-3">
+              <button onClick={() => setShowMobileList(true)} className="md:hidden text-muted-foreground hover:text-foreground">
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              {selectedChannel?.channel_type === "private" ? <Lock className="w-4 h-4 text-muted-foreground" /> : <Hash className="w-4 h-4 text-muted-foreground" />}
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-bold text-foreground">{selectedChannel?.name}</div>
+                {selectedChannel?.topic && (
+                  <div className="text-[10px] text-muted-foreground truncate">{selectedChannel.topic}</div>
+                )}
+              </div>
+              <div className="flex items-center gap-1 text-muted-foreground">
+                <button onClick={() => setShowSearch(!showSearch)} className="p-1.5 rounded hover:bg-secondary hover:text-foreground transition-colors" title="Rechercher">
+                  <Pin className="w-4 h-4" />
+                </button>
+                <div className="flex items-center gap-1 text-[11px] text-muted-foreground ml-2">
+                  <Users className="w-3.5 h-3.5" />
+                  <span className="font-mono">{channelMembers.length}</span>
+                </div>
+              </div>
             </div>
-            <div className="max-h-[250px] overflow-y-auto space-y-1">
-              {searchUser.length < 2 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Tapez au moins 2 caractères pour rechercher
-                </p>
-              ) : !searchResults || searchResults.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Aucun utilisateur trouvé
-                </p>
+
+            {/* Messages */}
+            <div ref={scrollRef} className="flex-1 overflow-y-auto">
+              {loadingMessages ? (
+                <div className="p-4 space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="flex gap-3">
+                      <Skeleton className="w-8 h-8 rounded-lg" />
+                      <div className="space-y-1.5">
+                        <Skeleton className="w-24 h-3" />
+                        <Skeleton className="w-48 h-4" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+                  <Hash className="w-12 h-12 opacity-20" />
+                  <p className="text-sm font-medium">Bienvenue dans #{selectedChannel?.name}</p>
+                  <p className="text-[11px]">C'est le début du canal. Envoyez le premier message !</p>
+                </div>
               ) : (
-                searchResults
-                  .filter((u) => u.user_id !== user?.id)
-                  .map((u) => (
-                    <button
-                      key={u.user_id}
-                      onClick={() => createConversation(u.user_id, u.full_name)}
-                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-secondary transition-colors text-left"
-                    >
-                      <div className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-sm font-bold text-primary shrink-0">
-                        {u.full_name?.charAt(0)?.toUpperCase() || "?"}
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium text-foreground">{u.full_name}</div>
-                        {u.email && (
-                          <div className="text-[11px] text-muted-foreground">{u.email}</div>
-                        )}
-                      </div>
-                    </button>
-                  ))
+                messagesByDate.map(group => (
+                  <div key={group.date}>
+                    <div className="flex items-center gap-3 px-4 py-2 my-2">
+                      <div className="flex-1 h-px bg-border" />
+                      <span className="text-[10px] font-medium text-muted-foreground uppercase">{group.date}</span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                    {group.messages.map(msg => {
+                      const p = getProfile(msg.sender_id);
+                      return (
+                        <MessageBubble
+                          key={msg.id}
+                          message={msg}
+                          senderName={p.full_name}
+                          senderAvatar={p.avatar_url}
+                          isOnline={presenceMap.get(msg.sender_id)?.status === "online"}
+                          reactions={getReactions(msg.id)}
+                          attachments={attachmentsMap.get(msg.id) ?? []}
+                          isMine={msg.sender_id === user?.id}
+                          isPinned={pinnedIds.has(msg.id)}
+                          onReact={(emoji) => handleReact(msg.id, emoji)}
+                          onThreadOpen={() => setThreadId(msg.id)}
+                          onPin={() => handlePin(msg.id, pinnedIds.has(msg.id))}
+                          onEdit={(c) => handleEdit(msg.id, c)}
+                          onDelete={() => handleDelete(msg.id)}
+                        />
+                      );
+                    })}
+                  </div>
+                ))
               )}
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+
+            {/* Typing indicator */}
+            {typingUsers.length > 0 && (
+              <div className="px-4 py-1 text-[10px] text-muted-foreground italic border-t border-border/50">
+                {typingUsers.join(", ")} {typingUsers.length === 1 ? "est en train d'écrire" : "sont en train d'écrire"}…
+              </div>
+            )}
+
+            {/* Input */}
+            <MessageInput
+              onSend={handleSendMessage}
+              onTyping={() => sendTyping(profile?.full_name ?? "Utilisateur")}
+              placeholder={`Message #${selectedChannel?.name ?? "canal"}…`}
+              members={membersList}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Thread Panel */}
+      {threadId && threadParent && (
+        <div className="w-[350px] flex-shrink-0 hidden lg:flex">
+          <ThreadPanel
+            parentMessage={threadParent}
+            replies={threadReplies}
+            profileMap={profileMap}
+            presenceMap={presenceMap as any}
+            reactionsMap={reactionsMap}
+            attachmentsMap={attachmentsMap}
+            pinnedIds={pinnedIds}
+            currentUserId={user?.id ?? ""}
+            onClose={() => setThreadId(null)}
+            onSend={handleSendThreadReply}
+            onReact={handleReact}
+            onPin={handlePin}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onTyping={() => sendTyping(profile?.full_name ?? "Utilisateur")}
+            typingUsers={typingUsers}
+            members={membersList}
+          />
+        </div>
+      )}
+
+      {/* Search Panel */}
+      {showSearch && (
+        <div className="w-[350px] flex-shrink-0 hidden lg:flex">
+          <SearchPanel
+            onClose={() => setShowSearch(false)}
+            onNavigate={(channelId, messageId) => {
+              setSelectedChannelId(channelId);
+              setShowSearch(false);
+            }}
+          />
+        </div>
+      )}
     </motion.div>
   );
 }
