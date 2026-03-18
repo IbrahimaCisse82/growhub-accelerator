@@ -44,11 +44,129 @@ export type Database = {
         }
         Relationships: []
       }
+      application_evaluations: {
+        Row: {
+          application_id: string
+          created_at: string | null
+          evaluator_id: string
+          id: string
+          notes: string | null
+          recommendation: string | null
+          round_id: string
+          scores: Json | null
+          submitted_at: string | null
+          total_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string | null
+          evaluator_id: string
+          id?: string
+          notes?: string | null
+          recommendation?: string | null
+          round_id: string
+          scores?: Json | null
+          submitted_at?: string | null
+          total_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string | null
+          evaluator_id?: string
+          id?: string
+          notes?: string | null
+          recommendation?: string | null
+          round_id?: string
+          scores?: Json | null
+          submitted_at?: string | null
+          total_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_evaluations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_evaluations_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "application_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      application_rounds: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          program_id: string | null
+          project_id: string | null
+          round_number: number
+          round_type: string
+          starts_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          program_id?: string | null
+          project_id?: string | null
+          round_number?: number
+          round_type?: string
+          starts_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          program_id?: string | null
+          project_id?: string | null
+          round_number?: number
+          round_type?: string
+          starts_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_rounds_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_rounds_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           applicant_id: string
           cohort_id: string | null
           created_at: string
+          current_round_id: string | null
           evaluation_notes: string | null
           evaluator_id: string | null
           id: string
@@ -66,6 +184,7 @@ export type Database = {
           applicant_id: string
           cohort_id?: string | null
           created_at?: string
+          current_round_id?: string | null
           evaluation_notes?: string | null
           evaluator_id?: string | null
           id?: string
@@ -83,6 +202,7 @@ export type Database = {
           applicant_id?: string
           cohort_id?: string | null
           created_at?: string
+          current_round_id?: string | null
           evaluation_notes?: string | null
           evaluator_id?: string | null
           id?: string
@@ -102,6 +222,13 @@ export type Database = {
             columns: ["cohort_id"]
             isOneToOne: false
             referencedRelation: "cohorts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_current_round_id_fkey"
+            columns: ["current_round_id"]
+            isOneToOne: false
+            referencedRelation: "application_rounds"
             referencedColumns: ["id"]
           },
           {
@@ -345,6 +472,44 @@ export type Database = {
           },
         ]
       }
+      coaching_notes: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string | null
+          id: string
+          is_private: boolean | null
+          session_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          session_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          session_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_notes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       coaching_sessions: {
         Row: {
           created_at: string
@@ -400,6 +565,56 @@ export type Database = {
             columns: ["startup_id"]
             isOneToOne: false
             referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coaching_tasks: {
+        Row: {
+          assignee_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          created_by: string
+          description: string | null
+          due_date: string | null
+          id: string
+          is_completed: boolean | null
+          session_id: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assignee_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean | null
+          session_id: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assignee_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          is_completed?: boolean | null
+          session_id?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coaching_tasks_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_sessions"
             referencedColumns: ["id"]
           },
         ]
@@ -639,6 +854,110 @@ export type Database = {
           },
         ]
       }
+      data_collection_forms: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          fields: Json
+          frequency: string | null
+          id: string
+          is_active: boolean | null
+          program_id: string | null
+          target_stages: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          fields?: Json
+          frequency?: string | null
+          id?: string
+          is_active?: boolean | null
+          program_id?: string | null
+          target_stages?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          fields?: Json
+          frequency?: string | null
+          id?: string
+          is_active?: boolean | null
+          program_id?: string | null
+          target_stages?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_collection_forms_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      data_collection_responses: {
+        Row: {
+          created_at: string | null
+          form_id: string
+          id: string
+          period: string | null
+          respondent_id: string
+          responses: Json
+          startup_id: string
+          status: string | null
+          submitted_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          form_id: string
+          id?: string
+          period?: string | null
+          respondent_id: string
+          responses?: Json
+          startup_id: string
+          status?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          form_id?: string
+          id?: string
+          period?: string | null
+          respondent_id?: string
+          responses?: Json
+          startup_id?: string
+          status?: string | null
+          submitted_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "data_collection_responses_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "data_collection_forms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "data_collection_responses_startup_id_fkey"
+            columns: ["startup_id"]
+            isOneToOne: false
+            referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_documents: {
         Row: {
           category: string
@@ -684,20 +1003,67 @@ export type Database = {
         }
         Relationships: []
       }
+      evaluation_criteria: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          max_score: number
+          name: string
+          round_id: string
+          sort_order: number | null
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          max_score?: number
+          name: string
+          round_id: string
+          sort_order?: number | null
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          max_score?: number
+          name?: string
+          round_id?: string
+          sort_order?: number | null
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evaluation_criteria_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "application_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_registrations: {
         Row: {
+          attended: boolean | null
+          checked_in_at: string | null
           event_id: string
           id: string
           registered_at: string
           user_id: string
         }
         Insert: {
+          attended?: boolean | null
+          checked_in_at?: string | null
           event_id: string
           id?: string
           registered_at?: string
           user_id: string
         }
         Update: {
+          attended?: boolean | null
+          checked_in_at?: string | null
           event_id?: string
           id?: string
           registered_at?: string
@@ -2238,6 +2604,35 @@ export type Database = {
           },
         ]
       }
+      round_judges: {
+        Row: {
+          assigned_at: string | null
+          id: string
+          round_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          id?: string
+          round_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          id?: string
+          round_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "round_judges_round_id_fkey"
+            columns: ["round_id"]
+            isOneToOne: false
+            referencedRelation: "application_rounds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       startup_kpis: {
         Row: {
           created_at: string
@@ -2633,6 +3028,39 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_configs: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          event_type: string
+          id: string
+          is_active: boolean | null
+          name: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by: string
+          event_type: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          event_type?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          updated_at?: string | null
+          url?: string
         }
         Relationships: []
       }
