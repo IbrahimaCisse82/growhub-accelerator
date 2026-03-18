@@ -122,6 +122,8 @@ const App = () => (
                 <Route path="partenaires" element={<PartnersPage />} />
                 <Route path="enquetes" element={<SurveysPage />} />
                 <Route path="alumni" element={<AlumniPage />} />
+                <Route path="collecte-donnees" element={<DataCollectionPage />} />
+                <Route path="webhooks" element={<AdminRoute><WebhooksPage /></AdminRoute>} />
                 <Route path="utilisateurs" element={<AdminRoute><UsersPage /></AdminRoute>} />
                 <Route path="profil" element={<ProfilePage />} />
               </Route>

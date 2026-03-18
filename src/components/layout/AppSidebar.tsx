@@ -91,6 +91,7 @@ const navGroups: NavGroup[] = [
     adminOnly: true,
     items: [
       { label: "Utilisateurs", icon: "◉", path: "/app/utilisateurs", badgeType: "alert" },
+      { label: "Webhooks", icon: "⚡", path: "/app/webhooks" },
     ],
   },
 ];

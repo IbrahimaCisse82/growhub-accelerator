@@ -31,6 +31,8 @@ const pageTitles: Record<string, string> = {
   "/app/rapports": "Rapports",
   "/app/utilisateurs": "Utilisateurs",
   "/app/profil": "Mon profil",
+  "/app/collecte-donnees": "Collecte de données",
+  "/app/webhooks": "Intégrations & Webhooks",
 };
 
 interface AppTopbarProps {
