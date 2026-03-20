@@ -15,6 +15,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { googleCalendarUrl, outlookCalendarUrl } from "@/lib/calendarLinks";
 
 const typeColor: Record<string, "green" | "blue" | "purple" | "amber" | "rose" | "gray"> = { demo_day: "green", workshop: "blue", networking: "purple", hackathon: "amber", committee: "rose", webinar: "blue", other: "gray" };
 const typeLabel: Record<string, string> = { demo_day: "Demo Day", workshop: "Workshop", networking: "Networking", hackathon: "Hackathon", committee: "Comité", webinar: "Webinar", other: "Autre" };
@@ -236,9 +237,17 @@ export default function EvenementsPage() {
                 </div>
               )}
             </div>
-            <div className="mt-6 flex gap-2">
+            <div className="mt-6 flex flex-col gap-3">
               <GhButton size="md" onClick={() => register.mutate(selectedEvent.id)}>S'inscrire</GhButton>
-              <GhButton variant="ghost" size="md">Partager</GhButton>
+              <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Ajouter au calendrier</div>
+              <div className="flex gap-2">
+                <a href={googleCalendarUrl(selectedEvent)} target="_blank" rel="noopener noreferrer" className="flex-1">
+                  <GhButton variant="secondary" size="sm" className="w-full">📅 Google</GhButton>
+                </a>
+                <a href={outlookCalendarUrl(selectedEvent)} target="_blank" rel="noopener noreferrer" className="flex-1">
+                  <GhButton variant="secondary" size="sm" className="w-full">📧 Outlook</GhButton>
+                </a>
+              </div>
             </div>
           </motion.div>
         </div>
