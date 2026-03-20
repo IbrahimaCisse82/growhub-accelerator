@@ -67,6 +67,7 @@ const navGroups: NavGroup[] = [
   {
     label: "Réseau",
     items: [
+      { label: "Marketplace", icon: "🏪", path: "/app/marketplace" },
       { label: "Partenaires", icon: "🤝", path: "/app/partenaires" },
       { label: "Événements", icon: "◆", path: "/app/evenements" },
       { label: "Messagerie", icon: "◗", path: "/app/messagerie", badgeKey: "unreadNotifs", badgeType: "alert" },

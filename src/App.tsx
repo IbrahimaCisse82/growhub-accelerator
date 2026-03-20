@@ -53,6 +53,7 @@ const SurveysPage = lazy(() => import("@/pages/app/SurveysPage"));
 const AlumniPage = lazy(() => import("@/pages/app/AlumniPage"));
 const DataCollectionPage = lazy(() => import("@/pages/app/DataCollectionPage"));
 const WebhooksPage = lazy(() => import("@/pages/app/WebhooksPage"));
+const MarketplacePage = lazy(() => import("@/pages/app/MarketplacePage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -123,6 +124,7 @@ const App = () => (
                 <Route path="enquetes" element={<SurveysPage />} />
                 <Route path="alumni" element={<AlumniPage />} />
                 <Route path="collecte-donnees" element={<DataCollectionPage />} />
+                <Route path="marketplace" element={<MarketplacePage />} />
                 <Route path="webhooks" element={<AdminRoute><WebhooksPage /></AdminRoute>} />
                 <Route path="utilisateurs" element={<AdminRoute><UsersPage /></AdminRoute>} />
                 <Route path="profil" element={<ProfilePage />} />
