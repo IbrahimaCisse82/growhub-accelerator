@@ -53,7 +53,11 @@ const SurveysPage = lazy(() => import("@/pages/app/SurveysPage"));
 const AlumniPage = lazy(() => import("@/pages/app/AlumniPage"));
 const DataCollectionPage = lazy(() => import("@/pages/app/DataCollectionPage"));
 const WebhooksPage = lazy(() => import("@/pages/app/WebhooksPage"));
+const WebhooksPage = lazy(() => import("@/pages/app/WebhooksPage"));
 const MarketplacePage = lazy(() => import("@/pages/app/MarketplacePage"));
+const SchedulingPage = lazy(() => import("@/pages/app/SchedulingPage"));
+const MatchingPage = lazy(() => import("@/pages/app/MatchingPage"));
+const PublicApplicationPage = lazy(() => import("@/pages/public/PublicApplicationPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -87,6 +91,7 @@ const App = () => (
               <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<Navigate to="/login" replace />} />
+              <Route path="/postuler" element={<PublicApplicationPage />} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/reset-password" element={<ResetPasswordPage />} />
               <Route path="/app" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
@@ -103,6 +108,8 @@ const App = () => (
                 <Route path="candidatures" element={<CandidaturesPage />} />
                 <Route path="mentors" element={<MentorsPage />} />
                 <Route path="coaching" element={<CoachingPage />} />
+                <Route path="rdv" element={<SchedulingPage />} />
+                <Route path="matching" element={<MatchingPage />} />
                 <Route path="lms" element={<LmsPage />} />
                 <Route path="projets" element={<ProjetsPage />} />
                 <Route path="projets/nouveau" element={<ProjectWizardPage />} />
