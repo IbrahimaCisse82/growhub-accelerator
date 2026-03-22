@@ -65,7 +65,7 @@ function useExistingMatches() {
 
 // ── Matching algorithm ──
 function computeMatchScore(
-  mentor: { expertise_areas: string[] | null; max_startups: number | null; availability: string | null },
+  mentor: { expertise_areas: string[] | null; max_startups: number | null; availability: string | null; user_id: string },
   startup: { sector: string | null; stage: string | null },
   existingMatches: any[]
 ): { score: number; reasons: string[] } {
@@ -216,7 +216,8 @@ export default function MatchingPage() {
   // Compute scores for selected startup
   const matchResults = currentStartup && mentors
     ? mentors.map(mentor => {
-        const { score, reasons } = computeMatchScore(mentor, currentStartup, matches ?? []);
+        const mentorForAlgo = { expertise_areas: mentor.expertise_areas, max_startups: mentor.max_startups, availability: mentor.availability, user_id: mentor.user_id };
+        const { score, reasons } = computeMatchScore(mentorForAlgo, currentStartup, matches ?? []);
         const existingMatch = matches?.find(m => m.mentor_id === mentor.user_id && m.startup_id === currentStartup.id);
         return { mentor, score, reasons, existingMatch };
       }).sort((a, b) => b.score - a.score)

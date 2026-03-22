@@ -220,7 +220,7 @@ export default function SchedulingPage() {
       </div>
 
       {/* Calendar grid */}
-      <GhCard noPadding>
+      <GhCard title="Créneaux de la semaine" noPadding>
         <div className="grid grid-cols-7 border-b border-border">
           {weekDays.map(day => (
             <div key={day.toISOString()} className={`text-center py-3 text-xs font-medium border-r border-border last:border-r-0 ${isSameDay(day, new Date()) ? "bg-primary/5 text-primary" : "text-muted-foreground"}`}>
