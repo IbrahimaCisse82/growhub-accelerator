@@ -84,7 +84,8 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-xs text-muted-foreground">
-          L'accès à la plateforme se fait uniquement sur invitation ou via un appel à candidature.
+          L'accès se fait sur invitation ou via un{" "}
+          <Link to="/postuler" className="text-primary hover:underline font-medium">appel à candidature →</Link>
         </p>
       </div>
     </div>

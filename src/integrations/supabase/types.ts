@@ -1770,6 +1770,59 @@ export type Database = {
           },
         ]
       }
+      mentor_availability_slots: {
+        Row: {
+          booked_at: string | null
+          booked_by: string | null
+          created_at: string
+          end_at: string
+          id: string
+          is_booked: boolean
+          mentor_id: string
+          notes: string | null
+          recurrence: string | null
+          session_id: string | null
+          start_at: string
+          updated_at: string
+        }
+        Insert: {
+          booked_at?: string | null
+          booked_by?: string | null
+          created_at?: string
+          end_at: string
+          id?: string
+          is_booked?: boolean
+          mentor_id: string
+          notes?: string | null
+          recurrence?: string | null
+          session_id?: string | null
+          start_at: string
+          updated_at?: string
+        }
+        Update: {
+          booked_at?: string | null
+          booked_by?: string | null
+          created_at?: string
+          end_at?: string
+          id?: string
+          is_booked?: boolean
+          mentor_id?: string
+          notes?: string | null
+          recurrence?: string | null
+          session_id?: string | null
+          start_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mentor_availability_slots_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "coaching_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mentor_matches: {
         Row: {
           id: string
@@ -2506,6 +2559,81 @@ export type Database = {
             columns: ["startup_id"]
             isOneToOne: false
             referencedRelation: "startups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_applications: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          motivation: string | null
+          phone: string | null
+          pitch: string | null
+          program_id: string | null
+          project_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sector: string | null
+          stage: string | null
+          startup_name: string
+          status: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          motivation?: string | null
+          phone?: string | null
+          pitch?: string | null
+          program_id?: string | null
+          project_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sector?: string | null
+          stage?: string | null
+          startup_name: string
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          motivation?: string | null
+          phone?: string | null
+          pitch?: string | null
+          program_id?: string | null
+          project_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sector?: string | null
+          stage?: string | null
+          startup_name?: string
+          status?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_applications_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "public_applications_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
