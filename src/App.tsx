@@ -53,7 +53,6 @@ const SurveysPage = lazy(() => import("@/pages/app/SurveysPage"));
 const AlumniPage = lazy(() => import("@/pages/app/AlumniPage"));
 const DataCollectionPage = lazy(() => import("@/pages/app/DataCollectionPage"));
 const WebhooksPage = lazy(() => import("@/pages/app/WebhooksPage"));
-const WebhooksPage = lazy(() => import("@/pages/app/WebhooksPage"));
 const MarketplacePage = lazy(() => import("@/pages/app/MarketplacePage"));
 const SchedulingPage = lazy(() => import("@/pages/app/SchedulingPage"));
 const MatchingPage = lazy(() => import("@/pages/app/MatchingPage"));
