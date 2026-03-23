@@ -7,6 +7,7 @@ import SearchDialog from "./SearchDialog";
 import { useTheme } from "@/hooks/useTheme";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useTranslation, LOCALE_LABELS, LOCALE_FLAGS, type Locale } from "@/lib/i18n";
 
 const pageTitles: Record<string, string> = {
   "/app/dashboard": "Dashboard",
@@ -50,6 +51,7 @@ export default function AppTopbar({ onToggleSidebar, showMenuButton }: AppTopbar
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllRead();
   const { theme, toggleTheme } = useTheme();
+  const { locale, setLocale, t } = useTranslation();
 
   return (
     <>
@@ -71,9 +73,25 @@ export default function AppTopbar({ onToggleSidebar, showMenuButton }: AppTopbar
             onClick={() => setSearchOpen(true)}
             className="hidden sm:flex bg-secondary border border-border rounded-lg px-3 py-[7px] font-body text-[12.5px] text-muted-foreground outline-none transition-colors hover:border-primary/50 w-[180px] md:w-[220px] text-left"
           >
-            🔍 Rechercher… <span className="font-mono text-[10px] ml-2 opacity-50">⌘K</span>
+            🔍 {t("common.search")} <span className="font-mono text-[10px] ml-2 opacity-50">⌘K</span>
           </button>
           <button onClick={() => setSearchOpen(true)} className="sm:hidden bg-secondary border border-border text-muted-foreground p-[7px] w-[34px] h-[34px] rounded-lg flex items-center justify-center hover:bg-muted transition-colors text-sm">🔍</button>
+
+          {/* Language switcher */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="bg-secondary border border-border text-muted-foreground p-[7px] w-[34px] h-[34px] rounded-lg flex items-center justify-center hover:bg-muted hover:text-foreground transition-colors text-sm">
+                {LOCALE_FLAGS[locale]}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="bg-card border-border" align="end">
+              {(Object.keys(LOCALE_LABELS) as Locale[]).map(l => (
+                <DropdownMenuItem key={l} onClick={() => setLocale(l)} className={`cursor-pointer text-foreground hover:bg-secondary ${locale === l ? "bg-primary/10" : ""}`}>
+                  <span className="mr-2">{LOCALE_FLAGS[l]}</span> {LOCALE_LABELS[l]}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Theme toggle */}
           <button onClick={toggleTheme} className="bg-secondary border border-border text-muted-foreground p-[7px] w-[34px] h-[34px] rounded-lg flex items-center justify-center hover:bg-muted hover:text-foreground transition-colors text-sm">
