@@ -1,6 +1,7 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebarCounts } from "@/hooks/useSidebarCounts";
+import { useTranslation } from "@/lib/i18n";
 import logo from "@/assets/logo-growhublink.png";
 
 interface NavItem {
@@ -17,87 +18,91 @@ interface NavGroup {
   adminOnly?: boolean;
 }
 
-const navGroups: NavGroup[] = [
-  {
-    label: "Vue Générale",
-    items: [
-      { label: "Dashboard", icon: "⬡", path: "/app/dashboard" },
-      { label: "Activités", icon: "◎", path: "/app/activites", badgeKey: "activities", badgeType: "new" },
-    ],
-  },
-  {
-    label: "Gestion Projets",
-    items: [
-      { label: "Portefeuilles", icon: "◈", path: "/app/portefeuilles" },
-      { label: "Programmes", icon: "◇", path: "/app/programmes" },
-      { label: "Projets", icon: "▦", path: "/app/projets" },
-      { label: "Jalons", icon: "🏁", path: "/app/jalons" },
-      { label: "Tâches", icon: "☑", path: "/app/taches" },
-      { label: "Gantt", icon: "▤", path: "/app/gantt" },
-      { label: "Risques", icon: "⚠", path: "/app/risques", badgeKey: "openRisks", badgeType: "alert" },
-    ],
-  },
-  {
-    label: "Accélération",
-    items: [
-      { label: "Candidatures", icon: "✦", path: "/app/candidatures", badgeKey: "pendingApps", badgeType: "alert" },
-      { label: "Entreprises", icon: "△", path: "/app/entreprises", badgeKey: "startups" },
-      { label: "Cohortes", icon: "◉", path: "/app/cohortes", badgeKey: "activeCohorts" },
-      { label: "Alumni", icon: "🎓", path: "/app/alumni" },
-    ],
-  },
-  {
-    label: "Accompagnement",
-    items: [
-      { label: "Mentors", icon: "◑", path: "/app/mentors" },
-      { label: "Matching", icon: "🔗", path: "/app/matching" },
-      { label: "Coaching", icon: "◐", path: "/app/coaching" },
-      { label: "Prise de RDV", icon: "📅", path: "/app/rdv" },
-      { label: "LMS & Cours", icon: "▣", path: "/app/lms" },
-      { label: "Enquêtes", icon: "📋", path: "/app/enquetes" },
-      { label: "Collecte données", icon: "📊", path: "/app/collecte-donnees" },
-    ],
-  },
-  {
-    label: "Financements",
-    items: [
-      { label: "Grants & Subventions", icon: "◎", path: "/app/grants" },
-      { label: "Analytics Grants", icon: "◈", path: "/app/grants-analytics" },
-      { label: "Budgets", icon: "◫", path: "/app/budgets" },
-    ],
-  },
-  {
-    label: "Réseau",
-    items: [
-      { label: "Marketplace", icon: "🏪", path: "/app/marketplace" },
-      { label: "Partenaires", icon: "🤝", path: "/app/partenaires" },
-      { label: "Événements", icon: "◆", path: "/app/evenements" },
-      { label: "Messagerie", icon: "◗", path: "/app/messagerie", badgeKey: "unreadNotifs", badgeType: "alert" },
-      { label: "Ressources", icon: "▨", path: "/app/ressources" },
-    ],
-  },
-  {
-    label: "Insights",
-    items: [
-      { label: "Analytics", icon: "◈", path: "/app/analytics" },
-    ],
-  },
-  {
-    label: "Insights Admin",
-    adminOnly: true,
-    items: [
-      { label: "Rapports", icon: "▦", path: "/app/rapports" },
-    ],
-  },
-  {
-    label: "Administration",
-    adminOnly: true,
-    items: [
-      { label: "Utilisateurs", icon: "◉", path: "/app/utilisateurs", badgeType: "alert" },
-      { label: "Webhooks", icon: "⚡", path: "/app/webhooks" },
-    ],
-  },
-];
+function useNavGroups() {
+  const { t } = useTranslation();
+  const navGroups: NavGroup[] = [
+    {
+      label: t("nav.overview"),
+      items: [
+        { label: t("nav.dashboard"), icon: "⬡", path: "/app/dashboard" },
+        { label: t("nav.activities"), icon: "◎", path: "/app/activites", badgeKey: "activities", badgeType: "new" },
+      ],
+    },
+    {
+      label: t("nav.projectMgmt"),
+      items: [
+        { label: t("nav.portfolios"), icon: "◈", path: "/app/portefeuilles" },
+        { label: t("nav.programs"), icon: "◇", path: "/app/programmes" },
+        { label: t("nav.projects"), icon: "▦", path: "/app/projets" },
+        { label: t("nav.milestones"), icon: "🏁", path: "/app/jalons" },
+        { label: t("nav.tasks"), icon: "☑", path: "/app/taches" },
+        { label: t("nav.gantt"), icon: "▤", path: "/app/gantt" },
+        { label: t("nav.risks"), icon: "⚠", path: "/app/risques", badgeKey: "openRisks", badgeType: "alert" },
+      ],
+    },
+    {
+      label: t("nav.acceleration"),
+      items: [
+        { label: t("nav.applications"), icon: "✦", path: "/app/candidatures", badgeKey: "pendingApps", badgeType: "alert" },
+        { label: t("nav.startups"), icon: "△", path: "/app/entreprises", badgeKey: "startups" },
+        { label: t("nav.cohorts"), icon: "◉", path: "/app/cohortes", badgeKey: "activeCohorts" },
+        { label: t("nav.alumni"), icon: "🎓", path: "/app/alumni" },
+      ],
+    },
+    {
+      label: t("nav.support"),
+      items: [
+        { label: t("nav.mentors"), icon: "◑", path: "/app/mentors" },
+        { label: t("nav.matching"), icon: "🔗", path: "/app/matching" },
+        { label: t("nav.coaching"), icon: "◐", path: "/app/coaching" },
+        { label: t("nav.scheduling"), icon: "📅", path: "/app/rdv" },
+        { label: t("nav.lms"), icon: "▣", path: "/app/lms" },
+        { label: t("nav.surveys"), icon: "📋", path: "/app/enquetes" },
+        { label: t("nav.dataCollection"), icon: "📊", path: "/app/collecte-donnees" },
+      ],
+    },
+    {
+      label: t("nav.funding"),
+      items: [
+        { label: t("nav.grants"), icon: "◎", path: "/app/grants" },
+        { label: t("nav.grantsAnalytics"), icon: "◈", path: "/app/grants-analytics" },
+        { label: t("nav.budgets"), icon: "◫", path: "/app/budgets" },
+      ],
+    },
+    {
+      label: t("nav.network"),
+      items: [
+        { label: t("nav.marketplace"), icon: "🏪", path: "/app/marketplace" },
+        { label: t("nav.partners"), icon: "🤝", path: "/app/partenaires" },
+        { label: t("nav.events"), icon: "◆", path: "/app/evenements" },
+        { label: t("nav.messaging"), icon: "◗", path: "/app/messagerie", badgeKey: "unreadNotifs", badgeType: "alert" },
+        { label: t("nav.resources"), icon: "▨", path: "/app/ressources" },
+      ],
+    },
+    {
+      label: t("nav.insights"),
+      items: [
+        { label: t("nav.analytics"), icon: "◈", path: "/app/analytics" },
+      ],
+    },
+    {
+      label: t("nav.insightsAdmin"),
+      adminOnly: true,
+      items: [
+        { label: t("nav.reports"), icon: "▦", path: "/app/rapports" },
+      ],
+    },
+    {
+      label: t("nav.admin"),
+      adminOnly: true,
+      items: [
+        { label: t("nav.users"), icon: "◉", path: "/app/utilisateurs", badgeType: "alert" },
+        { label: t("nav.webhooks"), icon: "⚡", path: "/app/webhooks" },
+      ],
+    },
+  ];
+  return navGroups;
+}
 
 const badgeClasses: Record<string, string> = {
   default: "bg-surface-3 text-muted-foreground",
@@ -114,7 +119,9 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, roles, isAdmin, signOut } = useAuth();
+  const { t } = useTranslation();
   const { data: counts } = useSidebarCounts();
+  const navGroups = useNavGroups();
   const initials = profile?.full_name ? profile.full_name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : "??";
   const mainRole = roles[0] ?? "user";
 
@@ -134,20 +141,17 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
       ? "w-full h-full bg-card flex flex-col scrollbar-hidden overflow-y-auto"
       : "fixed left-0 top-0 bottom-0 w-[240px] bg-card border-r border-border flex flex-col z-[200] scrollbar-hidden overflow-y-auto"
     }>
-      {/* Logo */}
       <div className="px-[18px] py-[22px] border-b border-border flex-shrink-0">
         <div className="flex items-center gap-2.5">
           <img src={logo} alt="GrowHub Accelerator" className="h-8 w-auto" />
         </div>
       </div>
 
-      {/* Nav */}
       <nav className="p-3 flex-1">
         {navGroups.map((group) => {
           if (group.adminOnly && !isAdmin) return null;
-          // Entrepreneurs & mentors only see Accompagnement + Réseau
           const isRestricted = roles.some(r => ["entrepreneur", "mentor"].includes(r)) && !isAdmin;
-          if (isRestricted && !["Accompagnement", "Réseau"].includes(group.label)) return null;
+          if (isRestricted && !["Accompagnement", "Réseau", t("nav.support"), t("nav.network")].includes(group.label)) return null;
           return (
             <div key={group.label} className="mb-5">
               <div className="font-mono text-[9px] tracking-[0.2em] uppercase text-muted-foreground px-2 mb-1">
@@ -184,7 +188,6 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
         })}
       </nav>
 
-      {/* Footer */}
       <div className="p-3 border-t border-border flex-shrink-0">
         <div className="flex items-center gap-2.5 p-2 rounded-lg hover:bg-surface-2 cursor-pointer transition-colors" onClick={() => handleNav("/app/profil")}>
           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-[11px] font-bold text-foreground flex-shrink-0">
@@ -196,7 +199,7 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
           </div>
         </div>
         <button onClick={signOut} className="w-full mt-1 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors text-left">
-          ↪ Déconnexion
+          ↪ {t("nav.logout")}
         </button>
       </div>
     </aside>
