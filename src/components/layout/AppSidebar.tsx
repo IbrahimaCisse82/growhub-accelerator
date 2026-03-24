@@ -151,7 +151,13 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
         {navGroups.map((group) => {
           if (group.adminOnly && !isAdmin) return null;
           const isRestricted = roles.some(r => ["entrepreneur", "mentor"].includes(r)) && !isAdmin;
-          if (isRestricted && !["Accompagnement", "Réseau", t("nav.support"), t("nav.network")].includes(group.label)) return null;
+          const allowedGroups = [
+            t("nav.overview"), t("nav.support"), t("nav.network"),
+            // Hardcoded fallbacks for locale changes
+            "Vue Générale", "Accompagnement", "Réseau", "Overview", "Support", "Network",
+            "نظرة عامة", "المرافقة", "الشبكة",
+          ];
+          if (isRestricted && !allowedGroups.includes(group.label)) return null;
           return (
             <div key={group.label} className="mb-5">
               <div className="font-mono text-[9px] tracking-[0.2em] uppercase text-muted-foreground px-2 mb-1">
