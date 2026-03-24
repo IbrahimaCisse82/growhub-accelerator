@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import FillFormDialog from "@/components/data-collection/FillFormDialog";
 
 type FieldType = "text" | "number" | "select" | "multiselect" | "date" | "textarea" | "boolean";
 

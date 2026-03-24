@@ -32,7 +32,7 @@ export default function SettingsPage() {
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
-      return data as { preferences: Record<string, boolean> } | null;
+      return data as unknown as { preferences: Record<string, boolean> } | null;
     },
   });
 
