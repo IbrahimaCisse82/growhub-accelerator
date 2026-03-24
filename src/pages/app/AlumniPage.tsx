@@ -6,6 +6,7 @@ import Pill from "@/components/shared/Pill";
 import EmptyState from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAlumni } from "@/hooks/useAlumni";
+import CertificateDialog from "@/components/alumni/CertificateDialog";
 
 export default function AlumniPage() {
   const { data: alumni, isLoading } = useAlumni();
@@ -59,6 +60,14 @@ export default function AlumniPage() {
                   <div className="text-[10px] text-muted-foreground">Score: <span className="text-foreground font-medium">{a.score ?? "—"}</span></div>
                   <div className="text-[10px] text-muted-foreground">Équipe: <span className="text-foreground font-medium">{a.team_size ?? "—"}</span></div>
                   {a.revenue_monthly && <div className="text-[10px] text-muted-foreground">Revenu: <span className="text-foreground font-medium">{new Intl.NumberFormat("fr-FR").format(a.revenue_monthly)} XOF</span></div>}
+                  <div className="ml-auto">
+                    <CertificateDialog
+                      startupName={a.name}
+                      programName={program}
+                      cohortName={cohort?.name}
+                      alumniDate={a.alumni_date}
+                    />
+                  </div>
                 </div>
               </div>
             );

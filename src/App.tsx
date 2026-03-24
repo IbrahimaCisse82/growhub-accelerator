@@ -56,6 +56,7 @@ const DataCollectionPage = lazy(() => import("@/pages/app/DataCollectionPage"));
 const WebhooksPage = lazy(() => import("@/pages/app/WebhooksPage"));
 const MarketplacePage = lazy(() => import("@/pages/app/MarketplacePage"));
 const SchedulingPage = lazy(() => import("@/pages/app/SchedulingPage"));
+const SettingsPage = lazy(() => import("@/pages/app/SettingsPage"));
 const MatchingPage = lazy(() => import("@/pages/app/MatchingPage"));
 const PublicApplicationPage = lazy(() => import("@/pages/public/PublicApplicationPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -136,6 +137,7 @@ const App = () => (
                 <Route path="webhooks" element={<AdminRoute><WebhooksPage /></AdminRoute>} />
                 <Route path="utilisateurs" element={<AdminRoute><UsersPage /></AdminRoute>} />
                 <Route path="profil" element={<ProfilePage />} />
+                <Route path="parametres" element={<SettingsPage />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

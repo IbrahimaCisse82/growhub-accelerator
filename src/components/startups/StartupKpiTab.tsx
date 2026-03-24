@@ -35,7 +35,7 @@ export default function StartupKpiTab({ startupId }: { startupId: string }) {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">Indicateurs de performance</h3>
-        {isAdmin && <GhButton size="sm" variant="primary" onClick={() => setOpen(true)}>+ KPI</GhButton>}
+        <GhButton size="sm" variant="primary" onClick={() => setOpen(true)}>+ KPI</GhButton>
       </div>
 
       {isLoading ? (

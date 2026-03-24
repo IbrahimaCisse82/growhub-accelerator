@@ -151,7 +151,13 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
         {navGroups.map((group) => {
           if (group.adminOnly && !isAdmin) return null;
           const isRestricted = roles.some(r => ["entrepreneur", "mentor"].includes(r)) && !isAdmin;
-          if (isRestricted && !["Accompagnement", "Réseau", t("nav.support"), t("nav.network")].includes(group.label)) return null;
+          const allowedGroups = [
+            t("nav.overview"), t("nav.support"), t("nav.network"),
+            // Hardcoded fallbacks for locale changes
+            "Vue Générale", "Accompagnement", "Réseau", "Overview", "Support", "Network",
+            "نظرة عامة", "المرافقة", "الشبكة",
+          ];
+          if (isRestricted && !allowedGroups.includes(group.label)) return null;
           return (
             <div key={group.label} className="mb-5">
               <div className="font-mono text-[9px] tracking-[0.2em] uppercase text-muted-foreground px-2 mb-1">
@@ -198,9 +204,14 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
             <div className="font-mono text-[9px] text-muted-foreground mt-px">{mainRole}</div>
           </div>
         </div>
-        <button onClick={signOut} className="w-full mt-1 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors text-left">
-          ↪ {t("nav.logout")}
-        </button>
+        <div className="flex gap-1 mt-1">
+          <button onClick={() => handleNav("/app/parametres")} className="flex-1 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors text-left">
+            ⚙ Paramètres
+          </button>
+          <button onClick={signOut} className="flex-1 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors text-left">
+            ↪ {t("nav.logout")}
+          </button>
+        </div>
       </div>
     </aside>
   );
