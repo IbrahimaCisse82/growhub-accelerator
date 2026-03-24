@@ -278,8 +278,10 @@ export default function CandidaturesPage() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<string | null>(null);
   const [projectFilter, setProjectFilter] = useState<string | null>(searchParams.get("project"));
-  const [viewMode, setViewMode] = useState<"table" | "kanban">("table");
+  const [viewMode, setViewMode] = useState<"table" | "kanban" | "builder">("table");
   const qc = useQueryClient();
+  const [newRoundName, setNewRoundName] = useState("");
+  const [newRoundType, setNewRoundType] = useState("evaluation");
 
   const advance = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -295,6 +297,64 @@ export default function CandidaturesPage() {
       if (error) throw error;
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["applications"] }); qc.invalidateQueries({ queryKey: ["applications-pipeline"] }); toast({ title: "Candidature refusée" }); },
+  });
+
+  const saveRound = useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: Record<string, unknown> }) => {
+      const { error } = await supabase.from("application_rounds").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["application-rounds"] });
+      toast({ title: "✓ Round mis à jour" });
+    },
+  });
+
+  const createRound = useMutation({
+    mutationFn: async () => {
+      const maxRound = (rounds ?? []).reduce((max, r) => Math.max(max, r.round_number), 0);
+      const { error } = await supabase.from("application_rounds").insert({
+        project_id: projectFilter ?? null,
+        round_number: maxRound + 1,
+        name: newRoundName,
+        round_type: newRoundType,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["application-rounds"] });
+      setNewRoundName("");
+      setNewRoundType("evaluation");
+      toast({ title: "✓ Round ajouté" });
+    },
+  });
+
+  const removeRound = useMutation({
+    mutationFn: async (roundId: string) => {
+      const { error } = await supabase.from("application_rounds").delete().eq("id", roundId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["application-rounds"] });
+      toast({ title: "✓ Round supprimé" });
+    },
+  });
+
+  const moveRound = useMutation({
+    mutationFn: async ({ roundId, dir }: { roundId: string; dir: -1 | 1 }) => {
+      const ordered = [...(rounds ?? [])].sort((a, b) => a.round_number - b.round_number);
+      const idx = ordered.findIndex(r => r.id === roundId);
+      const nextIdx = idx + dir;
+      if (idx < 0 || nextIdx < 0 || nextIdx >= ordered.length) return;
+      const copy = [...ordered];
+      [copy[idx], copy[nextIdx]] = [copy[nextIdx], copy[idx]];
+      await Promise.all(copy.map((r, i) =>
+        supabase.from("application_rounds").update({ round_number: i + 1 }).eq("id", r.id)
+      ));
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["application-rounds"] });
+    },
   });
 
   const projectsWithApps = projects?.filter(p => p.applications_open) ?? [];
@@ -315,6 +375,7 @@ export default function CandidaturesPage() {
           <div className="flex border border-border rounded-lg overflow-hidden">
             <button onClick={() => setViewMode("table")} className={`px-2.5 py-1.5 text-[11px] ${viewMode === "table" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary"}`}>▤ Table</button>
             <button onClick={() => setViewMode("kanban")} className={`px-2.5 py-1.5 text-[11px] ${viewMode === "kanban" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary"}`}>◫ Kanban</button>
+            <button onClick={() => setViewMode("builder")} className={`px-2.5 py-1.5 text-[11px] ${viewMode === "builder" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary"}`}>⚙ Builder</button>
           </div>
         </>}
       />
@@ -371,7 +432,75 @@ export default function CandidaturesPage() {
         </div>
       )}
 
-      {viewMode === "kanban" ? (
+      {viewMode === "builder" ? (
+        <GhCard title="Workflow Builder — Rounds" badge={String(rounds?.length ?? 0)}>
+          <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto] gap-2">
+              <input
+                value={newRoundName}
+                onChange={(e) => setNewRoundName(e.target.value)}
+                placeholder="Nom du round (ex: Pré-sélection)"
+                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-[12px] text-foreground"
+              />
+              <select
+                value={newRoundType}
+                onChange={(e) => setNewRoundType(e.target.value)}
+                className="bg-surface-2 border border-border rounded-lg px-3 py-2 text-[12px] text-foreground"
+              >
+                <option value="evaluation">Évaluation</option>
+                <option value="interview">Entretien</option>
+                <option value="committee">Comité</option>
+              </select>
+              <GhButton
+                onClick={() => createRound.mutate()}
+                disabled={!newRoundName.trim() || createRound.isPending}
+              >
+                + Ajouter
+              </GhButton>
+            </div>
+
+            {(rounds ?? []).length === 0 ? (
+              <EmptyState icon="⚙" title="Aucun round" description="Créez votre premier round de sélection" />
+            ) : (
+              <div className="space-y-2">
+                {[...(rounds ?? [])].sort((a, b) => a.round_number - b.round_number).map((r, idx, arr) => (
+                  <div key={r.id} className="grid grid-cols-1 lg:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 items-center bg-surface-2 border border-border rounded-lg p-2.5">
+                    <span className="font-mono text-[11px] text-primary font-bold">R{r.round_number}</span>
+                    <input
+                      defaultValue={r.name}
+                      onBlur={(e) => {
+                        const next = e.target.value.trim();
+                        if (next && next !== r.name) saveRound.mutate({ id: r.id, patch: { name: next } });
+                      }}
+                      className="bg-card border border-border rounded-lg px-2 py-1.5 text-[12px] text-foreground"
+                    />
+                    <select
+                      value={r.round_type}
+                      onChange={(e) => saveRound.mutate({ id: r.id, patch: { round_type: e.target.value } })}
+                      className="bg-card border border-border rounded-lg px-2 py-1.5 text-[12px] text-foreground"
+                    >
+                      <option value="evaluation">Évaluation</option>
+                      <option value="interview">Entretien</option>
+                      <option value="committee">Comité</option>
+                    </select>
+                    <button
+                      onClick={() => saveRound.mutate({ id: r.id, patch: { is_active: !r.is_active } })}
+                      className={`text-[11px] px-2 py-1 rounded-lg ${r.is_active ? "bg-gh-green/15 text-gh-green" : "bg-muted text-muted-foreground"}`}
+                    >
+                      {r.is_active ? "Actif" : "Inactif"}
+                    </button>
+                    <div className="flex gap-1">
+                      <GhButton variant="ghost" size="sm" onClick={() => moveRound.mutate({ roundId: r.id, dir: -1 })} disabled={idx === 0}>↑</GhButton>
+                      <GhButton variant="ghost" size="sm" onClick={() => moveRound.mutate({ roundId: r.id, dir: 1 })} disabled={idx === arr.length - 1}>↓</GhButton>
+                    </div>
+                    <GhButton variant="ghost" size="sm" onClick={() => removeRound.mutate(r.id)}>Supprimer</GhButton>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </GhCard>
+      ) : viewMode === "kanban" ? (
         /* ── Kanban View ── */
         <div className="flex gap-3 overflow-x-auto pb-4">
           {pipelineLabels.filter(s => s.key !== "rejected").map(step => {

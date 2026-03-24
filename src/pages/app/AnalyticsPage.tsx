@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useMemo, useState } from "react";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
@@ -19,25 +20,38 @@ export default function AnalyticsPage() {
   const { data: projects } = useProjects();
   const { data: cohorts } = useCohorts();
   const { data: sessions } = useCoachingSessions();
+  const [period, setPeriod] = useState<"30d" | "90d" | "12m" | "all">("90d");
 
-  const totalFunding = grants?.reduce((a, g) => a + g.amount_total, 0) ?? 0;
-  const totalSessions = sessions?.length ?? 0;
-  const completedSessions = sessions?.filter(s => s.status === "completed").length ?? 0;
-  const avgProgress = projects && projects.length > 0 ? Math.round(projects.reduce((a, p) => a + (p.progress ?? 0), 0) / projects.length) : 0;
+  const inPeriod = (dateLike?: string | null) => {
+    if (!dateLike || period === "all") return true;
+    const date = new Date(dateLike).getTime();
+    const now = Date.now();
+    const days = period === "30d" ? 30 : period === "90d" ? 90 : 365;
+    return now - date <= days * 24 * 60 * 60 * 1000;
+  };
+
+  const projectsFiltered = useMemo(() => (projects ?? []).filter(p => inPeriod((p as any).created_at ?? null)), [projects, period]);
+  const grantsFiltered = useMemo(() => (grants ?? []).filter(g => inPeriod((g as any).created_at ?? null)), [grants, period]);
+  const sessionsFiltered = useMemo(() => (sessions ?? []).filter(s => inPeriod((s as any).created_at ?? null)), [sessions, period]);
+
+  const totalFunding = grantsFiltered.reduce((a, g) => a + g.amount_total, 0) ?? 0;
+  const totalSessions = sessionsFiltered.length ?? 0;
+  const completedSessions = sessionsFiltered.filter(s => s.status === "completed").length ?? 0;
+  const avgProgress = projectsFiltered.length > 0 ? Math.round(projectsFiltered.reduce((a, p) => a + (p.progress ?? 0), 0) / projectsFiltered.length) : 0;
 
   const projectsByStatus = ["active", "draft", "completed", "paused", "cancelled"].map(s => ({
-    name: s, value: projects?.filter(p => p.status === s).length ?? 0,
+    name: s, value: projectsFiltered.filter(p => p.status === s).length ?? 0,
   })).filter(d => d.value > 0);
 
   const grantsByStatus = ["active", "disbursing", "draft", "closing", "closed"].map(s => ({
-    name: s, value: grants?.filter(g => g.status === s).length ?? 0,
+    name: s, value: grantsFiltered.filter(g => g.status === s).length ?? 0,
   })).filter(d => d.value > 0);
 
   const sessionsByStatus = ["planned", "confirmed", "completed", "cancelled"].map(s => ({
-    name: s, value: sessions?.filter(se => se.status === s).length ?? 0,
+    name: s, value: sessionsFiltered.filter(se => se.status === s).length ?? 0,
   })).filter(d => d.value > 0);
 
-  const grantBars = grants?.slice(0, 8).map(g => ({
+  const grantBars = grantsFiltered.slice(0, 8).map(g => ({
     name: g.code.slice(0, 8), total: g.amount_total, spent: g.amount_disbursed ?? 0,
   })) ?? [];
 
@@ -54,6 +68,22 @@ export default function AnalyticsPage() {
           ];
           exportToPDF("Analytics — GrowHub", summary, [{ key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" }]);
         }}>⎙ PDF</GhButton>} />
+      <div className="flex items-center gap-2 mb-4">
+        {[
+          { key: "30d", label: "30j" },
+          { key: "90d", label: "90j" },
+          { key: "12m", label: "12m" },
+          { key: "all", label: "Tout" },
+        ].map(p => (
+          <button
+            key={p.key}
+            onClick={() => setPeriod(p.key as "30d" | "90d" | "12m" | "all")}
+            className={`text-[11px] px-2.5 py-1 rounded-lg ${period === p.key ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}
+          >
+            {p.label}
+          </button>
+        ))}
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Entreprises totales" value={String(startupsCount ?? 0)} note="" color="green" />
         <StatCard label="Financement total" value={new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(totalFunding)} note="XOF" color="blue" />

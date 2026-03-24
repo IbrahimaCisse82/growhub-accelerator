@@ -61,6 +61,7 @@ function FormBuilderDialog() {
   const [description, setDescription] = useState("");
   const [frequency, setFrequency] = useState("monthly");
   const [fields, setFields] = useState<FormField[]>([]);
+  const [draggedFieldId, setDraggedFieldId] = useState<string | null>(null);
 
   const addField = () => {
     setFields(prev => [...prev, {
@@ -82,6 +83,17 @@ function FormBuilderDialog() {
     if (newIdx < 0 || newIdx >= fields.length) return;
     const copy = [...fields];
     [copy[idx], copy[newIdx]] = [copy[newIdx], copy[idx]];
+    setFields(copy);
+  };
+
+  const moveFieldById = (sourceId: string, targetId: string) => {
+    if (sourceId === targetId) return;
+    const sourceIdx = fields.findIndex(f => f.id === sourceId);
+    const targetIdx = fields.findIndex(f => f.id === targetId);
+    if (sourceIdx < 0 || targetIdx < 0) return;
+    const copy = [...fields];
+    const [item] = copy.splice(sourceIdx, 1);
+    copy.splice(targetIdx, 0, item);
     setFields(copy);
   };
 
@@ -138,7 +150,18 @@ function FormBuilderDialog() {
             </div>
             <div className="space-y-2">
               {fields.map((field, idx) => (
-                <div key={field.id} className="bg-surface-2 rounded-lg p-3 border border-border">
+                <div
+                  key={field.id}
+                  draggable
+                  onDragStart={() => setDraggedFieldId(field.id)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => {
+                    if (!draggedFieldId) return;
+                    moveFieldById(draggedFieldId, field.id);
+                    setDraggedFieldId(null);
+                  }}
+                  className="bg-surface-2 rounded-lg p-3 border border-border"
+                >
                   <div className="flex items-center gap-2 mb-2">
                     <div className="flex flex-col gap-0.5">
                       <button onClick={() => moveField(idx, -1)} className="text-muted-foreground hover:text-foreground text-[10px]">▲</button>
