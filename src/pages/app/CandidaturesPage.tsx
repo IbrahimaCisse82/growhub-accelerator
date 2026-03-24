@@ -389,25 +389,25 @@ export default function CandidaturesPage() {
       </div>
 
       {/* Pipeline funnel */}
-      <div className="flex flex-wrap border border-border rounded-xl overflow-hidden mb-4">
+      <div className="flex flex-wrap ui-panel overflow-hidden mb-4">
         {pipelineLabels.map((step, idx) => (
           <div key={step.key} onClick={() => setFilter(filter === step.key ? null : step.key)}
-            className={`flex-1 min-w-[80px] py-3.5 text-center border-r border-border last:border-r-0 relative hover:bg-secondary cursor-pointer transition-colors ${filter === step.key ? "bg-primary/10" : ""}`}>
+            className={`flex-1 min-w-[100px] py-4 text-center border-r border-border last:border-r-0 relative hover:bg-secondary cursor-pointer transition-colors ${filter === step.key ? "ui-highlight" : ""}`}>
             {filter === step.key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
             {/* Funnel connector */}
             {idx > 0 && <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 text-muted-foreground text-[10px]">→</span>}
-            <div className="text-sm mb-0.5">{step.icon}</div>
-            <div className="font-mono text-xl font-semibold text-foreground">
+            <div className="text-base mb-0.5">{step.icon}</div>
+            <div className="font-mono text-2xl font-semibold text-foreground">
               {pipeline ? pipeline[step.key as keyof typeof pipeline] ?? 0 : "—"}
             </div>
-            <div className="text-[10px] text-muted-foreground mt-0.5">{step.label}</div>
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mt-0.5">{step.label}</div>
           </div>
         ))}
       </div>
 
       {/* Rounds overview */}
       {rounds && rounds.length > 0 && (
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <div className="flex items-center gap-2 mb-4 flex-wrap ui-panel p-2">
           <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">Rounds :</span>
           {rounds.map(r => (
             <div key={r.id} className="flex items-center gap-1.5 bg-surface-2 border border-border rounded-lg px-2.5 py-1.5 text-[11px]">
@@ -423,7 +423,7 @@ export default function CandidaturesPage() {
 
       {/* Project filter */}
       {projectsWithApps.length > 0 && (
-        <div className="flex items-center gap-2 mb-4 flex-wrap">
+        <div className="flex items-center gap-2 mb-4 flex-wrap ui-panel p-2">
           <span className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">Projet :</span>
           <button onClick={() => setProjectFilter(null)} className={`text-[11px] px-2.5 py-1 rounded-lg ${!projectFilter ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}>Tous</button>
           {projectsWithApps.map(p => (
@@ -440,12 +440,12 @@ export default function CandidaturesPage() {
                 value={newRoundName}
                 onChange={(e) => setNewRoundName(e.target.value)}
                 placeholder="Nom du round (ex: Pré-sélection)"
-                className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-[12px] text-foreground"
+                className="w-full bg-card border border-border rounded-lg px-3 py-2 text-[12px] text-foreground"
               />
               <select
                 value={newRoundType}
                 onChange={(e) => setNewRoundType(e.target.value)}
-                className="bg-surface-2 border border-border rounded-lg px-3 py-2 text-[12px] text-foreground"
+                className="bg-card border border-border rounded-lg px-3 py-2 text-[12px] text-foreground"
               >
                 <option value="evaluation">Évaluation</option>
                 <option value="interview">Entretien</option>
@@ -464,7 +464,7 @@ export default function CandidaturesPage() {
             ) : (
               <div className="space-y-2">
                 {[...(rounds ?? [])].sort((a, b) => a.round_number - b.round_number).map((r, idx, arr) => (
-                  <div key={r.id} className="grid grid-cols-1 lg:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 items-center bg-surface-2 border border-border rounded-lg p-2.5">
+                  <div key={r.id} className="grid grid-cols-1 lg:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-2 items-center ui-soft-card p-2.5">
                     <span className="font-mono text-[11px] text-primary font-bold">R{r.round_number}</span>
                     <input
                       defaultValue={r.name}
@@ -506,18 +506,18 @@ export default function CandidaturesPage() {
           {pipelineLabels.filter(s => s.key !== "rejected").map(step => {
             const colApps = filtered?.filter(a => a.status === step.key) ?? [];
             return (
-              <div key={step.key} className="min-w-[220px] flex-shrink-0">
+              <div key={step.key} className="min-w-[260px] flex-shrink-0 ui-panel p-2.5">
                 <div className="flex items-center gap-2 mb-2 px-1">
                   <span className="text-sm">{step.icon}</span>
-                  <span className="text-[11px] font-bold text-foreground">{step.label}</span>
-                  <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-px rounded-full">{colApps.length}</span>
+                  <span className="text-[11px] uppercase tracking-wide font-bold text-foreground">{step.label}</span>
+                  <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-px rounded-full ml-auto">{colApps.length}</span>
                 </div>
                 <div className="space-y-2">
                   {colApps.map(c => (
-                    <div key={c.id} className="bg-card border border-border rounded-lg p-3 hover:border-primary/30 transition-colors">
-                      <div className="text-[12px] font-semibold text-foreground mb-1">{c.startups?.name ?? "—"}</div>
-                      <div className="text-[10px] text-muted-foreground mb-2">{(c as any).projects?.name ?? "—"}</div>
-                      {c.score != null && <div className="font-mono text-[11px] text-primary mb-2">{c.score}/100</div>}
+                    <div key={c.id} className="bg-card border border-border rounded-lg p-3 hover:border-primary/30 transition-colors shadow-sm">
+                      <div className="text-[12px] font-semibold text-foreground mb-1 line-clamp-1">{c.startups?.name ?? "—"}</div>
+                      <div className="text-[10px] text-muted-foreground mb-2 line-clamp-1">{(c as any).projects?.name ?? "—"}</div>
+                      {c.score != null && <div className="font-mono text-[11px] text-primary mb-2 bg-primary/10 inline-block px-1.5 py-0.5 rounded">{c.score}/100</div>}
                       <div className="flex gap-1">
                         {nextStatus[c.status] && <GhButton variant="primary" size="sm" onClick={() => advance.mutate({ id: c.id, status: nextStatus[c.status] })}>→</GhButton>}
                         {rounds && rounds.length > 0 && <EvaluationDialog application={c} rounds={rounds} />}
@@ -534,9 +534,9 @@ export default function CandidaturesPage() {
         /* ── Table View ── */
         <GhCard title={filter ? `Candidatures — ${pipelineLabels.find(p => p.key === filter)?.label}` : "Toutes les candidatures"} badge={String(filtered?.length ?? 0)} noPadding>
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-[12.5px]">
+            <table className="w-full border-collapse text-[12px]">
               <thead>
-                <tr className="bg-secondary">
+                <tr className="bg-secondary/70">
                   {["Entreprise", "Projet", "Round", "Score", "Étape", "Date", "Actions"].map(h => (
                     <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>
                   ))}

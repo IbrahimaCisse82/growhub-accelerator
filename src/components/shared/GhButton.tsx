@@ -8,10 +8,10 @@ interface GhButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<Variant, string> = {
-  primary: "bg-primary text-primary-foreground hover:brightness-110 hover:shadow-[0_0_16px_hsl(var(--primary)/0.3)]",
+  primary: "bg-primary text-primary-foreground border border-primary/40 hover:brightness-110 hover:shadow-[0_0_16px_hsl(var(--primary)/0.3)]",
   secondary: "bg-surface-2 text-foreground border border-border hover:bg-surface-3 hover:border-border/80",
-  ghost: "bg-transparent text-text-secondary border border-border hover:bg-surface-2 hover:text-foreground",
-  accent: "bg-gh-blue text-foreground hover:brightness-110",
+  ghost: "bg-transparent text-text-secondary border border-border/80 hover:bg-surface-2 hover:text-foreground",
+  accent: "bg-gh-blue text-foreground border border-gh-blue/40 hover:brightness-110",
 };
 
 const sizeClasses = {

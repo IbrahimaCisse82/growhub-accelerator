@@ -21,19 +21,20 @@ export default function StatCard({ label, value, note, icon, color }: StatCardPr
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-card border border-border rounded-xl p-[18px] relative overflow-hidden hover:border-border/80 hover:-translate-y-px transition-all cursor-default group"
+      className="bg-card border border-border rounded-xl p-[16px] relative overflow-hidden hover:border-border/80 hover:-translate-y-px transition-all cursor-default group"
     >
       <div className={`absolute bottom-0 left-0 right-0 h-0.5 ${colorMap[color]}`} />
+      <div className="absolute top-0 left-0 right-0 h-10 bg-gradient-to-b from-white/[0.03] to-transparent pointer-events-none" />
       {icon && (
         <span className="absolute top-3.5 right-3.5 text-[22px] opacity-15">{icon}</span>
       )}
-      <div className="font-mono text-[10px] tracking-[0.1em] uppercase text-muted-foreground">
+      <div className="font-mono text-[9px] tracking-[0.16em] uppercase text-muted-foreground">
         {label}
       </div>
-      <div className="font-mono text-[26px] font-semibold text-foreground mt-2 mb-1 leading-none">
+      <div className="font-mono text-[24px] md:text-[26px] font-semibold text-foreground mt-2 mb-1 leading-none">
         {value}
       </div>
-      <div className="text-[11px] text-muted-foreground">{note}</div>
+      <div className="text-[10px] text-muted-foreground">{note}</div>
     </motion.div>
   );
 }

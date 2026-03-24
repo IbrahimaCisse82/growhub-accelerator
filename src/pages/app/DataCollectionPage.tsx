@@ -121,7 +121,7 @@ function FormBuilderDialog() {
       <DialogTrigger asChild>
         <GhButton>+ Créer formulaire</GhButton>
       </DialogTrigger>
-      <DialogContent className="max-w-[650px] bg-card border-border max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-[760px] bg-card border-border max-h-[88vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-foreground">Créer un formulaire de collecte</DialogTitle>
         </DialogHeader>
@@ -132,7 +132,7 @@ function FormBuilderDialog() {
           <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Description (optionnel)"
             className="w-full bg-surface-2 border border-border rounded-lg px-3 py-2 text-[12px] text-foreground resize-none h-16" />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ui-panel p-2">
             <span className="text-[11px] text-muted-foreground">Fréquence :</span>
             {["monthly", "quarterly", "one_time"].map(f => (
               <button key={f} onClick={() => setFrequency(f)}
@@ -160,7 +160,7 @@ function FormBuilderDialog() {
                     moveFieldById(draggedFieldId, field.id);
                     setDraggedFieldId(null);
                   }}
-                  className="bg-surface-2 rounded-lg p-3 border border-border"
+                  className="ui-soft-card p-3"
                 >
                   <div className="flex items-center gap-2 mb-2">
                     <div className="flex flex-col gap-0.5">
@@ -322,7 +322,7 @@ export default function DataCollectionPage() {
               )}
             </GhCard>
           ) : (
-            <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm border border-dashed border-border rounded-xl">
+            <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm border border-dashed border-border rounded-xl ui-panel">
               Sélectionnez un formulaire pour voir les réponses
             </div>
           )}

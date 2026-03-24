@@ -151,4 +151,20 @@
   .scrollbar-thin::-webkit-scrollbar { width: 5px; height: 5px; }
   .scrollbar-thin::-webkit-scrollbar-track { background: hsl(var(--background)); }
   .scrollbar-thin::-webkit-scrollbar-thumb { background: hsl(var(--border-2)); border-radius: 3px; }
+
+  .ui-panel {
+    @apply bg-surface-2/90 border border-border rounded-xl;
+  }
+
+  .ui-soft-card {
+    @apply bg-surface-2 border border-border rounded-lg;
+  }
+
+  .ui-dark-chip {
+    @apply bg-card border border-border text-muted-foreground;
+  }
+
+  .ui-highlight {
+    @apply border-primary/30 bg-primary/10;
+  }
 }

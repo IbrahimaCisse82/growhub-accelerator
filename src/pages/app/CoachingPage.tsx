@@ -124,7 +124,7 @@ function SessionDetailDialog({ session }: { session: any }) {
       <DialogTrigger asChild>
         <GhButton variant="secondary" size="sm">📝 Détails</GhButton>
       </DialogTrigger>
-      <DialogContent className="max-w-[650px] bg-card border-border max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-[900px] bg-card border-border max-h-[88vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2">
             {session.title} <Pill color={st.color}>{st.label}</Pill>
@@ -154,7 +154,7 @@ function SessionDetailDialog({ session }: { session: any }) {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-border mb-3">
+          <div className="flex border-b border-border mb-3">
           {(["notes", "tasks", "feedback"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-2 text-[11.5px] font-medium transition-colors relative ${tab === t ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
@@ -165,7 +165,7 @@ function SessionDetailDialog({ session }: { session: any }) {
         </div>
 
         {tab === "notes" && (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="flex gap-2">
               <textarea value={newNote} onChange={e => setNewNote(e.target.value)}
                 placeholder="Ajouter une note de réunion…"
@@ -178,6 +178,7 @@ function SessionDetailDialog({ session }: { session: any }) {
                 </label>
               </div>
             </div>
+            <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
             {notes?.map(n => (
               <div key={n.id} className="bg-surface-2 rounded-lg p-3 border border-border">
                 <div className="flex items-center justify-between mb-1">
@@ -188,6 +189,7 @@ function SessionDetailDialog({ session }: { session: any }) {
               </div>
             ))}
             {(!notes || notes.length === 0) && <div className="text-center text-muted-foreground text-[11px] py-4">Aucune note pour cette session</div>}
+            </div>
           </div>
         )}
 
@@ -274,7 +276,7 @@ export default function CoachingPage() {
       </div>
 
       {/* Status filter */}
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
+      <div className="flex items-center gap-2 mb-4 flex-wrap ui-panel p-2">
         <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">Statut :</span>
         <button onClick={() => setStatusFilter(null)} className={`text-[11px] px-2.5 py-1 rounded-lg ${!statusFilter ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary"}`}>Tous</button>
         {Object.entries(statusMap).map(([key, val]) => (
@@ -289,7 +291,7 @@ export default function CoachingPage() {
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[12.5px]">
             <thead>
-              <tr className="bg-secondary">
+              <tr className="bg-secondary/70">
                 {["Date", "Entreprise", "Titre", "Durée", "Note", "Statut", "Actions"].map(h => (
                   <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>
                 ))}
@@ -306,7 +308,7 @@ export default function CoachingPage() {
                 filteredSessions.map(s => {
                   const st = statusMap[s.status] ?? statusMap.planned;
                   return (
-                    <tr key={s.id} className="hover:bg-secondary transition-colors">
+                    <tr key={s.id} className="hover:bg-secondary/60 transition-colors">
                       <td className="px-3.5 py-2.5 border-b border-border font-mono text-foreground">
                         {format(new Date(s.scheduled_at), "dd MMM HH:mm", { locale: fr })}
                       </td>
@@ -320,7 +322,7 @@ export default function CoachingPage() {
                       </td>
                       <td className="px-3.5 py-2.5 border-b border-border"><Pill color={st.color}>{st.label}</Pill></td>
                       <td className="px-3.5 py-2.5 border-b border-border">
-                        <div className="flex gap-1">
+                        <div className="flex gap-1 flex-wrap">
                           <SessionDetailDialog session={s} />
                           {s.status === "planned" && <GhButton variant="primary" size="sm" onClick={() => updateStatus.mutate({ id: s.id, status: "confirmed" })}>Confirmer</GhButton>}
                           {s.status === "confirmed" && <GhButton variant="accent" size="sm" onClick={() => updateStatus.mutate({ id: s.id, status: "completed" })}>Terminer</GhButton>}

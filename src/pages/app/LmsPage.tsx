@@ -38,6 +38,8 @@ function CourseEditorDialog({ open, onOpenChange, course }: { open: boolean; onO
   });
 
   const [draftModules, setDraftModules] = useState<any[]>([]);
+  const [editorTab, setEditorTab] = useState<"content" | "settings" | "cohorts" | "preview">("content");
+  const [selectedModuleIdx, setSelectedModuleIdx] = useState(0);
   useEffect(() => {
     if (!open || !course) return;
     setTitle(course.title ?? "");
@@ -48,7 +50,10 @@ function CourseEditorDialog({ open, onOpenChange, course }: { open: boolean; onO
   useEffect(() => {
     if (!open) return;
     setDraftModules((modules ?? []).map(m => ({ ...m })));
+    setSelectedModuleIdx(0);
   }, [open, modules]);
+
+  const selectedModule = draftModules[selectedModuleIdx] ?? null;
 
   const saveCourse = useMutation({
     mutationFn: async () => {
@@ -107,61 +112,114 @@ function CourseEditorDialog({ open, onOpenChange, course }: { open: boolean; onO
           <DialogTitle className="text-foreground">Éditeur de cours</DialogTitle>
         </DialogHeader>
         {!course ? null : (
-          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
-            <div className="border border-border rounded-lg p-3 bg-surface-2 space-y-2">
-              <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-card border border-border rounded-lg px-2.5 py-2 text-[12px] text-foreground" placeholder="Titre du cours" />
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full h-20 bg-card border border-border rounded-lg px-2.5 py-2 text-[12px] text-foreground resize-none" placeholder="Description" />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between gap-2 border border-border rounded-lg px-3 py-2 bg-surface-2">
+              <div className="text-[12px] font-semibold text-foreground truncate">Course: {title || "Sans titre"}</div>
               <button onClick={() => setIsPublished(v => !v)} className={`text-[11px] px-2 py-1 rounded-lg ${isPublished ? "bg-gh-green/15 text-gh-green" : "bg-muted text-muted-foreground"}`}>
-                {isPublished ? "● Publié" : "● Brouillon"}
+                {isPublished ? "Publish course" : "Draft content"}
               </button>
-              <GhButton
-                variant="secondary"
-                size="sm"
-                onClick={() => setDraftModules(prev => [...prev, { id: `tmp-${crypto.randomUUID()}`, title: "Nouvelle unité", content: "", module_type: "lesson", duration_minutes: 30, module_order: prev.length + 1 }])}
-              >
-                + Ajouter unité
-              </GhButton>
             </div>
-            <div className="space-y-2">
-              {draftModules.length === 0 ? (
-                <div className="text-[12px] text-muted-foreground border border-dashed border-border rounded-lg p-4 text-center">
-                  Aucune unité. Ajoutez-en une pour commencer.
-                </div>
-              ) : draftModules.map((m, idx) => (
-                <div key={m.id} className="border border-border rounded-lg p-3 bg-surface-2">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="font-mono text-[10px] text-primary">U{idx + 1}</span>
-                    <input
-                      value={m.title ?? ""}
-                      onChange={(e) => setDraftModules(prev => prev.map((it, i) => i === idx ? { ...it, title: e.target.value } : it))}
-                      className="flex-1 bg-card border border-border rounded-lg px-2 py-1.5 text-[12px] text-foreground"
-                    />
-                    <GhButton variant="ghost" size="sm" onClick={() => setDraftModules(prev => {
-                      if (idx === 0) return prev;
-                      const copy = [...prev];
-                      [copy[idx - 1], copy[idx]] = [copy[idx], copy[idx - 1]];
-                      return copy;
-                    })}>↑</GhButton>
-                    <GhButton variant="ghost" size="sm" onClick={() => setDraftModules(prev => {
-                      if (idx === prev.length - 1) return prev;
-                      const copy = [...prev];
-                      [copy[idx], copy[idx + 1]] = [copy[idx + 1], copy[idx]];
-                      return copy;
-                    })}>↓</GhButton>
-                    <GhButton variant="ghost" size="sm" onClick={() => {
-                      removeModule.mutate(String(m.id));
-                      setDraftModules(prev => prev.filter((_, i) => i !== idx));
-                    }}>Suppr.</GhButton>
-                  </div>
-                  <textarea
-                    value={m.content ?? ""}
-                    onChange={(e) => setDraftModules(prev => prev.map((it, i) => i === idx ? { ...it, content: e.target.value } : it))}
-                    className="w-full h-24 bg-card border border-border rounded-lg px-2 py-2 text-[12px] text-foreground resize-none"
-                    placeholder="Contenu de l'unité"
-                  />
-                </div>
+
+            <div className="flex border-b border-border">
+              {([
+                ["content", "Content"],
+                ["settings", "Settings"],
+                ["cohorts", "Cohorts"],
+                ["preview", "Preview"],
+              ] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setEditorTab(key)}
+                  className={`px-4 py-2 text-[11.5px] font-medium transition-colors relative ${editorTab === key ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                >
+                  {label}
+                  {editorTab === key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+                </button>
               ))}
             </div>
+
+            {editorTab !== "content" ? (
+              <div className="border border-border rounded-lg p-4 bg-surface-2 text-[12px] text-muted-foreground">
+                {editorTab === "settings" && "Panneau settings en cours — le contenu principal est déjà éditable dans l’onglet Content."}
+                {editorTab === "cohorts" && "Panneau cohorts en cours — liaison cohortes/cours à finaliser."}
+                {editorTab === "preview" && "Panneau preview en cours — aperçu final sera enrichi dans la prochaine passe."}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
+                <div className="border border-border rounded-lg p-3 bg-surface-2 space-y-3">
+                  <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full bg-card border border-border rounded-lg px-2.5 py-2 text-[12px] text-foreground" placeholder="Titre du cours" />
+                  <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full h-20 bg-card border border-border rounded-lg px-2.5 py-2 text-[12px] text-foreground resize-none" placeholder="Description" />
+                  <div className="text-[10px] font-mono text-muted-foreground uppercase">Units</div>
+                  <div className="space-y-1.5 max-h-[380px] overflow-y-auto pr-1">
+                    {draftModules.map((m, idx) => (
+                      <button
+                        key={m.id}
+                        onClick={() => setSelectedModuleIdx(idx)}
+                        className={`w-full text-left px-2.5 py-2 rounded-lg border text-[12px] ${selectedModuleIdx === idx ? "bg-primary/10 border-primary/30 text-foreground" : "bg-card border-border text-muted-foreground hover:text-foreground"}`}
+                      >
+                        {idx + 1}. {m.title || "Nouvelle unité"}
+                      </button>
+                    ))}
+                  </div>
+                  <GhButton
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => {
+                      setDraftModules(prev => [...prev, { id: `tmp-${crypto.randomUUID()}`, title: "Nouvelle unité", content: "", module_type: "lesson", duration_minutes: 30, module_order: prev.length + 1 }]);
+                      setSelectedModuleIdx(draftModules.length);
+                    }}
+                  >
+                    + Ajouter unité
+                  </GhButton>
+                </div>
+
+                <div className="border border-border rounded-lg p-3 bg-surface-2 space-y-3">
+                  {!selectedModule ? (
+                    <div className="text-[12px] text-muted-foreground text-center py-16">Sélectionne une unité à éditer</div>
+                  ) : (
+                    <>
+                      <div className="text-[12px] font-semibold text-foreground">Edit section</div>
+                      <input
+                        value={selectedModule.title ?? ""}
+                        onChange={(e) => setDraftModules(prev => prev.map((it, i) => i === selectedModuleIdx ? { ...it, title: e.target.value } : it))}
+                        className="w-full bg-card border border-border rounded-lg px-2.5 py-2 text-[12px] text-foreground"
+                        placeholder="Section title"
+                      />
+                      <textarea
+                        value={selectedModule.content ?? ""}
+                        onChange={(e) => setDraftModules(prev => prev.map((it, i) => i === selectedModuleIdx ? { ...it, content: e.target.value } : it))}
+                        className="w-full h-44 bg-card border border-border rounded-lg px-2.5 py-2 text-[12px] text-foreground resize-none"
+                        placeholder="Notes / Resources"
+                      />
+                      <div className="flex gap-1">
+                        <GhButton variant="ghost" size="sm" onClick={() => setDraftModules(prev => {
+                          if (selectedModuleIdx === 0) return prev;
+                          const copy = [...prev];
+                          [copy[selectedModuleIdx - 1], copy[selectedModuleIdx]] = [copy[selectedModuleIdx], copy[selectedModuleIdx - 1]];
+                          setSelectedModuleIdx(selectedModuleIdx - 1);
+                          return copy;
+                        })}>↑ Move</GhButton>
+                        <GhButton variant="ghost" size="sm" onClick={() => setDraftModules(prev => {
+                          if (selectedModuleIdx === prev.length - 1) return prev;
+                          const copy = [...prev];
+                          [copy[selectedModuleIdx], copy[selectedModuleIdx + 1]] = [copy[selectedModuleIdx + 1], copy[selectedModuleIdx]];
+                          setSelectedModuleIdx(selectedModuleIdx + 1);
+                          return copy;
+                        })}>↓ Move</GhButton>
+                        <GhButton variant="ghost" size="sm" onClick={() => {
+                          removeModule.mutate(String(selectedModule.id));
+                          setDraftModules(prev => {
+                            const next = prev.filter((_, i) => i !== selectedModuleIdx);
+                            setSelectedModuleIdx(Math.max(0, Math.min(selectedModuleIdx, next.length - 1)));
+                            return next;
+                          });
+                        }}>Delete</GhButton>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
         <div className="flex justify-end">

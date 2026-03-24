@@ -83,7 +83,7 @@ export default function EvenementsPage() {
       </div>
 
       {/* View toggles & navigation */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-4 ui-panel p-2.5">
         <div className="flex items-center gap-2">
           <GhButton variant="ghost" onClick={navPrev}>←</GhButton>
           <span className="font-display text-sm font-bold text-foreground min-w-[160px] text-center">
@@ -94,7 +94,7 @@ export default function EvenementsPage() {
           <GhButton variant="ghost" onClick={navNext}>→</GhButton>
           <GhButton variant="ghost" size="sm" onClick={() => setCurrentDate(new Date())}>Aujourd'hui</GhButton>
         </div>
-        <div className="flex border border-border rounded-lg overflow-hidden">
+        <div className="flex border border-border rounded-lg overflow-hidden bg-card">
           {(["month", "week", "list"] as const).map(v => (
             <button key={v} onClick={() => setViewMode(v)}
               className={`px-3 py-1.5 text-[11px] font-medium transition-colors ${viewMode === v ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-secondary"}`}>
@@ -113,7 +113,7 @@ export default function EvenementsPage() {
             const d = new Date(e.start_at);
             return (
               <div key={e.id} onClick={() => setSelectedEvent(e)}
-                className="bg-surface-2 border border-border rounded-[10px] p-3 sm:p-4 flex items-center gap-3 sm:gap-3.5 cursor-pointer hover:border-primary/30 transition-colors">
+                className="ui-soft-card rounded-[10px] p-3 sm:p-4 flex items-center gap-3 sm:gap-3.5 cursor-pointer hover:border-primary/30 transition-colors">
                 <div className="text-center flex-shrink-0 w-[46px] bg-card rounded-lg py-2 px-1.5 border border-border">
                   <div className="font-mono text-xl font-bold text-foreground leading-none">{format(d, "dd")}</div>
                   <div className="font-mono text-[9px] text-muted-foreground uppercase mt-0.5">{format(d, "MMM", { locale: fr })}</div>
@@ -143,7 +143,7 @@ export default function EvenementsPage() {
               const inMonth = isSameMonth(day, currentDate);
               return (
                 <div key={day.toISOString()}
-                  className={`min-h-[80px] border-b border-r border-border p-1.5 transition-colors hover:bg-secondary/50 ${!inMonth ? "opacity-30" : ""} ${isToday(day) ? "bg-primary/5" : ""}`}>
+                  className={`min-h-[88px] border-b border-r border-border p-1.5 transition-colors hover:bg-secondary/50 ${!inMonth ? "opacity-30" : ""} ${isToday(day) ? "bg-primary/5" : ""}`}>
                   <div className={`font-mono text-[11px] mb-1 ${isToday(day) ? "text-primary font-bold" : "text-foreground"}`}>
                     {format(day, "d")}
                   </div>
@@ -182,7 +182,7 @@ export default function EvenementsPage() {
                   <div className="space-y-1">
                     {dayEvents.map(e => (
                       <div key={e.id} onClick={() => setSelectedEvent(e)}
-                        className="bg-surface-2 border border-border rounded-lg p-2 cursor-pointer hover:border-primary/30 transition-colors">
+                        className="ui-soft-card p-2 cursor-pointer hover:border-primary/30 transition-colors">
                         <div className="text-[10px] font-mono text-primary">{format(new Date(e.start_at), "HH:mm")}</div>
                         <div className="text-[11px] font-semibold text-foreground truncate">{e.title}</div>
                         <Pill color={typeColor[e.event_type] ?? "gray"}>{typeLabel[e.event_type] ?? e.event_type}</Pill>
