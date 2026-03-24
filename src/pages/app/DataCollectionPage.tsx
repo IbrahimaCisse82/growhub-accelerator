@@ -195,8 +195,25 @@ function FormBuilderDialog() {
 // ── Main Page ──
 export default function DataCollectionPage() {
   const { data: forms, isLoading } = useForms();
+  const { isAdmin, roles, profile } = useAuth();
+  const isEntrepreneur = roles.includes("entrepreneur") && !isAdmin;
   const [selectedFormId, setSelectedFormId] = useState<string | null>(null);
   const { data: responses } = useResponses(selectedFormId ?? undefined);
+
+  // Get entrepreneur's startup for form filling
+  const { data: myStartup } = useQuery({
+    queryKey: ["my-startup-for-forms", profile?.user_id],
+    enabled: isEntrepreneur && !!profile?.user_id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("startups")
+        .select("id, name")
+        .eq("founder_id", profile!.user_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const activeForms = forms?.filter(f => f.is_active).length ?? 0;
   const totalResponses = forms?.length ?? 0;
@@ -206,7 +223,7 @@ export default function DataCollectionPage() {
       <SectionHeader
         title="Collecte de données"
         subtitle="Formulaires dynamiques pour collecter les données des startups automatiquement"
-        actions={<FormBuilderDialog />}
+        actions={isAdmin ? <FormBuilderDialog /> : undefined}
       />
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5 mb-5">
@@ -236,6 +253,11 @@ export default function DataCollectionPage() {
                         <Pill color={f.is_active ? "green" : "gray"}>{f.is_active ? "Actif" : "Inactif"}</Pill>
                         <Pill color="blue">{f.frequency === "monthly" ? "Mensuel" : f.frequency === "quarterly" ? "Trimestriel" : "Ponctuel"}</Pill>
                       </div>
+                      {isEntrepreneur && myStartup && f.is_active && (
+                        <div className="mt-2">
+                          <FillFormDialog form={f} startupId={myStartup.id} />
+                        </div>
+                      )}
                     </button>
                   );
                 })}
