@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { useTranslation } from "@/lib/i18n";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
@@ -19,45 +18,40 @@ const notifTypes = [
   { key: "success", label: "Système", description: "Notifications système importantes" },
 ];
 
-function useNotifPreferences() {
+export default function SettingsPage() {
   const { user } = useAuth();
-  return useQuery({
+  const qc = useQueryClient();
+
+  const { data: prefs } = useQuery({
     queryKey: ["notif-preferences", user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("notification_preferences")
+        .from("notification_preferences" as any)
         .select("*")
         .eq("user_id", user!.id)
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data as { preferences: Record<string, boolean> } | null;
     },
   });
-}
-
-export default function SettingsPage() {
-  const { user } = useAuth();
-  const { t } = useTranslation();
-  const qc = useQueryClient();
-  const { data: prefs } = useNotifPreferences();
 
   const defaultPrefs = Object.fromEntries(notifTypes.map(n => [n.key, true]));
   const [preferences, setPreferences] = useState<Record<string, boolean>>(defaultPrefs);
 
   useEffect(() => {
     if (prefs?.preferences) {
-      setPreferences({ ...defaultPrefs, ...(prefs.preferences as Record<string, boolean>) });
+      setPreferences({ ...defaultPrefs, ...prefs.preferences });
     }
   }, [prefs]);
 
   const savePrefs = useMutation({
     mutationFn: async () => {
       const { error } = await supabase
-        .from("notification_preferences")
+        .from("notification_preferences" as any)
         .upsert({
           user_id: user!.id,
-          preferences: preferences as any,
+          preferences,
           updated_at: new Date().toISOString(),
         }, { onConflict: "user_id" });
       if (error) throw error;
