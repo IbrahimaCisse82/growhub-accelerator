@@ -204,9 +204,14 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
             <div className="font-mono text-[9px] text-muted-foreground mt-px">{mainRole}</div>
           </div>
         </div>
-        <button onClick={signOut} className="w-full mt-1 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors text-left">
-          ↪ {t("nav.logout")}
-        </button>
+        <div className="flex gap-1 mt-1">
+          <button onClick={() => handleNav("/app/parametres")} className="flex-1 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors text-left">
+            ⚙ Paramètres
+          </button>
+          <button onClick={signOut} className="flex-1 px-2 py-1.5 text-[11px] text-muted-foreground hover:text-foreground hover:bg-surface-2 rounded-lg transition-colors text-left">
+            ↪ {t("nav.logout")}
+          </button>
+        </div>
       </div>
     </aside>
   );
