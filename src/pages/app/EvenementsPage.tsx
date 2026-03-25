@@ -114,7 +114,7 @@ export default function EvenementsPage() {
           ) : events?.map((e) => {
             const d = new Date(e.start_at);
             return (
-              <div key={e.id} onClick={() => setSelectedEvent(e)}
+               <div key={e.id} onClick={() => navigate(`/app/evenements/${e.id}`)}
                 className="ui-soft-card rounded-[10px] p-3 sm:p-4 flex items-center gap-3 sm:gap-3.5 cursor-pointer hover:border-primary/30 transition-colors">
                 <div className="text-center flex-shrink-0 w-[46px] bg-card rounded-lg py-2 px-1.5 border border-border">
                   <div className="font-mono text-xl font-bold text-foreground leading-none">{format(d, "dd")}</div>
