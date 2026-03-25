@@ -336,6 +336,7 @@ export default function DataCollectionPage() {
             </div>
           )}
         </div>
+      </div>
         </TabsContent>
 
         <TabsContent value="metrics">
