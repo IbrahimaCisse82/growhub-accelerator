@@ -58,6 +58,8 @@ const MarketplacePage = lazy(() => import("@/pages/app/MarketplacePage"));
 const SchedulingPage = lazy(() => import("@/pages/app/SchedulingPage"));
 const SettingsPage = lazy(() => import("@/pages/app/SettingsPage"));
 const MatchingPage = lazy(() => import("@/pages/app/MatchingPage"));
+const EventDetailPage = lazy(() => import("@/pages/app/EventDetailPage"));
+const FunnelBuilderPage = lazy(() => import("@/pages/app/FunnelBuilderPage"));
 const PublicApplicationPage = lazy(() => import("@/pages/public/PublicApplicationPage"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
@@ -125,6 +127,8 @@ const App = () => (
                 <Route path="grants-analytics" element={<GrantsAnalyticsPage />} />
                 <Route path="budgets" element={<BudgetsPage />} />
                 <Route path="evenements" element={<EvenementsPage />} />
+                <Route path="evenements/:id" element={<EventDetailPage />} />
+                <Route path="funnel-builder" element={<AdminRoute><FunnelBuilderPage /></AdminRoute>} />
                 <Route path="messagerie" element={<MessagingPage />} />
                 <Route path="ressources" element={<ResourcesPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
