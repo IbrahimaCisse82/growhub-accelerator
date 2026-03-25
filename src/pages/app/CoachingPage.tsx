@@ -9,6 +9,8 @@ import EmptyState from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCoachingSessions } from "@/hooks/useCoachingSessions";
 import CreateSessionDialog from "@/components/dialogs/CreateSessionDialog";
+import CoachingInviteComposer from "@/components/coaching/CoachingInviteComposer";
+import CoachingEvaluationPanel from "@/components/coaching/CoachingEvaluationPanel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -68,8 +70,7 @@ function SessionDetailDialog({ session }: { session: any }) {
   const [newNote, setNewNote] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
   const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [tab, setTab] = useState<"notes" | "tasks" | "feedback">("notes");
-
+  const [tab, setTab] = useState<"notes" | "tasks" | "feedback" | "evaluation">("notes");
   const addNote = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.from("coaching_notes").insert({
@@ -155,10 +156,10 @@ function SessionDetailDialog({ session }: { session: any }) {
 
         {/* Tabs */}
           <div className="flex border-b border-border mb-3">
-          {(["notes", "tasks", "feedback"] as const).map(t => (
+          {(["notes", "tasks", "evaluation", "feedback"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`px-4 py-2 text-[11.5px] font-medium transition-colors relative ${tab === t ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
-              {t === "notes" ? `📝 Notes (${notes?.length ?? 0})` : t === "tasks" ? `☑ Tâches (${tasks?.length ?? 0})` : "⭐ Feedback"}
+              {t === "notes" ? `📝 Notes (${notes?.length ?? 0})` : t === "tasks" ? `☑ Tâches (${tasks?.length ?? 0})` : t === "evaluation" ? "📊 Évaluation" : "⭐ Feedback"}
               {tab === t && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
             </button>
           ))}
@@ -216,6 +217,14 @@ function SessionDetailDialog({ session }: { session: any }) {
           </div>
         )}
 
+        {tab === "evaluation" && (
+          <CoachingEvaluationPanel
+            sessionId={session.id}
+            existingScores={(() => { try { const parsed = JSON.parse(session.notes ?? "{}"); return parsed.evaluation_scores; } catch { return undefined; } })()}
+            existingComment={(() => { try { const parsed = JSON.parse(session.notes ?? "{}"); return parsed.evaluation_comment; } catch { return undefined; } })()}
+          />
+        )}
+
         {tab === "feedback" && (
           <div className="space-y-3">
             <div>
@@ -265,7 +274,10 @@ export default function CoachingPage() {
       <SectionHeader
         title="Coaching & Sessions"
         subtitle="Planification, notes de réunion, tâches de suivi et évaluations"
-        actions={<CreateSessionDialog><GhButton>+ Planifier session</GhButton></CreateSessionDialog>}
+        actions={<div className="flex gap-2">
+          <CoachingInviteComposer><GhButton variant="secondary">📧 Inviter</GhButton></CoachingInviteComposer>
+          <CreateSessionDialog><GhButton>+ Planifier session</GhButton></CreateSessionDialog>
+        </div>}
       />
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3.5 mb-5">
         <StatCard label="Sessions totales" value={String(total)} note="" color="green" />
