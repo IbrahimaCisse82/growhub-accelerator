@@ -15,6 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import FillFormDialog from "@/components/data-collection/FillFormDialog";
+import MetricsManager from "@/components/data-collection/MetricsManager";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type FieldType = "text" | "number" | "select" | "multiselect" | "date" | "textarea" | "boolean";
 
@@ -245,15 +247,22 @@ export default function DataCollectionPage() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader
         title="Collecte de données"
-        subtitle="Formulaires dynamiques pour collecter les données des startups automatiquement"
+        subtitle="Formulaires dynamiques et métriques pour collecter les données des startups"
         actions={isAdmin ? <FormBuilderDialog /> : undefined}
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5 mb-5">
-        <StatCard label="Formulaires actifs" value={String(activeForms)} note="" color="green" />
-        <StatCard label="Total formulaires" value={String(totalResponses)} note="" color="blue" />
-        <StatCard label="Réponses ce mois" value={String(responses?.length ?? 0)} note="" color="purple" />
-      </div>
+      <Tabs defaultValue="collection" className="mb-5">
+        <TabsList className="bg-surface-2 border border-border">
+          <TabsTrigger value="collection">Data collection</TabsTrigger>
+          <TabsTrigger value="metrics">Calculated metrics</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="collection">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5 mb-5 mt-4">
+            <StatCard label="Formulaires actifs" value={String(activeForms)} note="" color="green" />
+            <StatCard label="Total formulaires" value={String(totalResponses)} note="" color="blue" />
+            <StatCard label="Réponses ce mois" value={String(responses?.length ?? 0)} note="" color="purple" />
+          </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Forms list */}
@@ -327,7 +336,14 @@ export default function DataCollectionPage() {
             </div>
           )}
         </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="metrics">
+          <div className="mt-4">
+            <MetricsManager />
+          </div>
+        </TabsContent>
+      </Tabs>
     </motion.div>
   );
 }

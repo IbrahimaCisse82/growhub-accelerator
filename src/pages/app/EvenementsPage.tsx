@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
@@ -24,6 +25,7 @@ type ViewMode = "month" | "week" | "list";
 
 export default function EvenementsPage() {
   const { data: events, isLoading } = useEvents();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const qc = useQueryClient();
   const [viewMode, setViewMode] = useState<ViewMode>("month");
