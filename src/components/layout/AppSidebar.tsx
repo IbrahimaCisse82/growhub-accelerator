@@ -44,6 +44,7 @@ function useNavGroups() {
       label: t("nav.acceleration"),
       items: [
         { label: t("nav.applications"), icon: "✦", path: "/app/candidatures", badgeKey: "pendingApps", badgeType: "alert" },
+        { label: "Funnel Builder", icon: "⚙", path: "/app/funnel-builder" },
         { label: t("nav.startups"), icon: "△", path: "/app/entreprises", badgeKey: "startups" },
         { label: t("nav.cohorts"), icon: "◉", path: "/app/cohortes", badgeKey: "activeCohorts" },
         { label: t("nav.alumni"), icon: "🎓", path: "/app/alumni" },

@@ -76,7 +76,7 @@ export default function SettingsPage() {
         .select("*")
         .order("template_key");
       if (error) throw error;
-      return data as Array<{ template_key: string; subject: string; body: string }>;
+      return data as unknown as Array<{ template_key: string; subject: string; body: string }>;
     },
   });
 
@@ -186,7 +186,7 @@ export default function SettingsPage() {
               placeholder="Corps du message. Variables: {{first_name}}, {{meeting_date}}, {{meeting_link}}, {{mentor_name}}"
             />
             <div className="text-[11px] text-muted-foreground">
-              Variables disponibles: `{{first_name}}`, `{{meeting_date}}`, `{{meeting_link}}`, `{{mentor_name}}`.
+              Variables disponibles: {"{{first_name}}"}, {"{{meeting_date}}"}, {"{{meeting_link}}"}, {"{{mentor_name}}"}.
             </div>
             <div className="flex justify-end">
               <GhButton onClick={() => saveTemplate.mutate()} disabled={!subject.trim() || !body.trim() || saveTemplate.isPending}>

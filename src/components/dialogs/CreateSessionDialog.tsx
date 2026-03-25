@@ -27,7 +27,7 @@ export default function CreateSessionDialog({ children }: { children: React.Reac
         .select("*")
         .in("template_key", ["coaching_invite", "coaching_confirmed", "coaching_reminder_24h"]);
       if (error) throw error;
-      return data as Array<{ template_key: string; subject: string; body: string }>;
+      return data as unknown as Array<{ template_key: string; subject: string; body: string }>;
     },
   });
 
