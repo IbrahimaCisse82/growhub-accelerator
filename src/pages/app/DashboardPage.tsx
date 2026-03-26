@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import StatCard from "@/components/shared/StatCard";
+import { Triangle, DollarSign, FolderKanban, CircleDot, Headphones, Users, CheckSquare, BookOpen, Target, BarChart3 } from "lucide-react";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
@@ -88,24 +89,24 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         {isAdmin ? (
           <>
-            <div onClick={() => navigate("/app/entreprises")} className="cursor-pointer"><StatCard label={t("dash.activeStartups")} value={loadingStartups ? "…" : String(startupsCount)} note="" icon="△" color="green" /></div>
-            <div onClick={() => navigate("/app/grants")} className="cursor-pointer"><StatCard label={t("dash.funding")} value={loadingGrants ? "…" : new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(totalFunding)} note={`${activeGrants.length} grants actifs`} icon="◎" color="blue" /></div>
-            <div onClick={() => navigate("/app/projets")} className="cursor-pointer"><StatCard label={t("dash.projects")} value={loadingProjects ? "…" : String(projects?.length ?? 0)} note="" icon="◑" color="amber" /></div>
-            <div onClick={() => navigate("/app/cohortes")} className="cursor-pointer"><StatCard label={t("dash.activeCohorts")} value={String(activeCohorts)} note="" icon="◉" color="purple" /></div>
+            <div onClick={() => navigate("/app/entreprises")} className="cursor-pointer"><StatCard label={t("dash.activeStartups")} value={loadingStartups ? "…" : String(startupsCount)} note="" icon={<Triangle size={20} />} color="green" sparkData={[2,4,3,6,5,8,7]} /></div>
+            <div onClick={() => navigate("/app/grants")} className="cursor-pointer"><StatCard label={t("dash.funding")} value={loadingGrants ? "…" : new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(totalFunding)} note={`${activeGrants.length} grants actifs`} icon={<DollarSign size={20} />} color="blue" sparkData={[10,15,12,18,22,20,25]} /></div>
+            <div onClick={() => navigate("/app/projets")} className="cursor-pointer"><StatCard label={t("dash.projects")} value={loadingProjects ? "…" : String(projects?.length ?? 0)} note="" icon={<FolderKanban size={20} />} color="amber" sparkData={[3,5,4,7,6,8,9]} /></div>
+            <div onClick={() => navigate("/app/cohortes")} className="cursor-pointer"><StatCard label={t("dash.activeCohorts")} value={String(activeCohorts)} note="" icon={<CircleDot size={20} />} color="purple" sparkData={[1,2,2,3,3,4,4]} /></div>
           </>
         ) : isMentor ? (
           <>
-            <StatCard label={t("dash.mySessions")} value={String(mySessions.length)} note={`${upcomingSessions.length} ${t("dash.upcoming")}`} icon="◎" color="blue" />
-            <StatCard label={t("dash.followedStartups")} value={String(new Set(mySessions.map(s => s.startup_id)).size)} note="" icon="△" color="green" />
-            <StatCard label={t("dash.completedSessions")} value={String(mySessions.filter(s => s.status === "completed").length)} note="" icon="◑" color="amber" />
-            <StatCard label={t("dash.availableCourses")} value={String(courses?.filter(c => c.is_published).length ?? 0)} note="" icon="◇" color="purple" />
+            <StatCard label={t("dash.mySessions")} value={String(mySessions.length)} note={`${upcomingSessions.length} ${t("dash.upcoming")}`} icon={<Headphones size={20} />} color="blue" sparkData={[1,3,2,4,5,3,6]} />
+            <StatCard label={t("dash.followedStartups")} value={String(new Set(mySessions.map(s => s.startup_id)).size)} note="" icon={<Users size={20} />} color="green" />
+            <StatCard label={t("dash.completedSessions")} value={String(mySessions.filter(s => s.status === "completed").length)} note="" icon={<CheckSquare size={20} />} color="amber" />
+            <StatCard label={t("dash.availableCourses")} value={String(courses?.filter(c => c.is_published).length ?? 0)} note="" icon={<BookOpen size={20} />} color="purple" />
           </>
         ) : (
           <>
-            <StatCard label={t("dash.myStartup")} value={myStartup?.name ?? "—"} note={myStartup?.stage ?? ""} icon="△" color="green" />
-            <StatCard label={t("dash.score")} value={myStartup?.score != null ? `${myStartup.score}/100` : "—"} note="" icon="◎" color="blue" />
-            <StatCard label={t("dash.projects")} value={String(projects?.filter(p => p.startup_id === myStartup?.id).length ?? 0)} note="" icon="◑" color="amber" />
-            <StatCard label={t("dash.availableCourses")} value={String(courses?.filter(c => c.is_published).length ?? 0)} note="" icon="◇" color="purple" />
+            <StatCard label={t("dash.myStartup")} value={myStartup?.name ?? "—"} note={myStartup?.stage ?? ""} icon={<Triangle size={20} />} color="green" />
+            <StatCard label={t("dash.score")} value={myStartup?.score != null ? `${myStartup.score}/100` : "—"} note="" icon={<Target size={20} />} color="blue" />
+            <StatCard label={t("dash.projects")} value={String(projects?.filter(p => p.startup_id === myStartup?.id).length ?? 0)} note="" icon={<FolderKanban size={20} />} color="amber" />
+            <StatCard label={t("dash.availableCourses")} value={String(courses?.filter(c => c.is_published).length ?? 0)} note="" icon={<BookOpen size={20} />} color="purple" />
           </>
         )}
       </div>
