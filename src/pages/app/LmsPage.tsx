@@ -138,11 +138,60 @@ function CourseEditorDialog({ open, onOpenChange, course }: { open: boolean; onO
               ))}
             </div>
 
-            {editorTab !== "content" ? (
-              <div className="border border-border rounded-lg p-4 bg-surface-2 text-[12px] text-muted-foreground">
-                {editorTab === "settings" && "Panneau settings en cours — le contenu principal est déjà éditable dans l’onglet Content."}
-                {editorTab === "cohorts" && "Panneau cohorts en cours — liaison cohortes/cours à finaliser."}
-                {editorTab === "preview" && "Panneau preview en cours — aperçu final sera enrichi dans la prochaine passe."}
+            {editorTab === "settings" ? (
+              <div className="border border-border rounded-lg p-4 bg-surface-2 space-y-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono text-muted-foreground uppercase">Titre du cours</label>
+                  <input value={title} onChange={e => setTitle(e.target.value)} className="w-full bg-card border border-border rounded-lg px-2.5 py-2 text-[12px] text-foreground" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono text-muted-foreground uppercase">Description</label>
+                  <textarea value={description} onChange={e => setDescription(e.target.value)} className="w-full h-24 bg-card border border-border rounded-lg px-2.5 py-2 text-[12px] text-foreground resize-none" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <label className="text-[11px] text-muted-foreground">Publie</label>
+                  <button onClick={() => setIsPublished(v => !v)} className={`w-10 h-5 rounded-full transition-colors relative ${isPublished ? "bg-primary" : "bg-border"}`}>
+                    <div className={`w-4 h-4 rounded-full bg-white absolute top-0.5 transition-transform ${isPublished ? "translate-x-5" : "translate-x-0.5"}`} />
+                  </button>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-mono text-muted-foreground uppercase">Niveau</label>
+                  <select className="w-full bg-card border border-border rounded-lg px-2.5 py-2 text-[12px] text-foreground">
+                    <option value="beginner">Debutant</option>
+                    <option value="intermediate">Intermediaire</option>
+                    <option value="advanced">Avance</option>
+                  </select>
+                </div>
+              </div>
+            ) : editorTab === "cohorts" ? (
+              <div className="border border-border rounded-lg p-4 bg-surface-2 space-y-3">
+                <div className="text-[11px] font-medium text-foreground mb-2">Cohortes associees</div>
+                <div className="space-y-2">
+                  {["Cohorte 2025-A", "Cohorte 2025-B"].map(c => (
+                    <label key={c} className="flex items-center gap-2 text-[12px] text-foreground cursor-pointer hover:bg-secondary/50 px-2 py-1.5 rounded-lg">
+                      <input type="checkbox" className="rounded border-border" />
+                      {c}
+                    </label>
+                  ))}
+                </div>
+                <div className="text-[10px] text-muted-foreground mt-2">Les cohortes selectionnees auront acces a ce cours automatiquement.</div>
+              </div>
+            ) : editorTab === "preview" ? (
+              <div className="border border-border rounded-xl overflow-hidden bg-surface-2">
+                <div className="h-[100px] flex items-center justify-center text-[40px] bg-gradient-to-br from-accent/20 to-primary/10">📚</div>
+                <div className="p-4 space-y-3">
+                  <h3 className="text-[15px] font-bold text-foreground">{title || "Sans titre"}</h3>
+                  <p className="text-[12px] text-muted-foreground">{description || "Aucune description"}</p>
+                  <div className="text-[11px] text-muted-foreground">{draftModules.length} modules</div>
+                  <div className="space-y-1.5">
+                    {draftModules.map((m, idx) => (
+                      <div key={m.id} className="flex items-center gap-2 px-3 py-2 bg-card border border-border rounded-lg text-[12px] text-foreground">
+                        <span className="font-mono text-muted-foreground text-[11px]">{idx + 1}.</span>
+                        {m.title || "Sans titre"}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-4">
