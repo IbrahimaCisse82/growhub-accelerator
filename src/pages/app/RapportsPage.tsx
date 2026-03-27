@@ -8,12 +8,13 @@ import { useGrants } from "@/hooks/useGrants";
 import { useProjects } from "@/hooks/useProjects";
 import { useCohorts } from "@/hooks/useCohorts";
 import { exportToJSON, exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import { Triangle, Target, FolderKanban, TrendingUp, FileText, Download, Printer, type LucideIcon } from "lucide-react";
 
-const reports = [
-  { id: "startups", title: "Rapport Entreprises", description: "Vue d'ensemble des entreprises accompagnées, secteurs, stades et scores", icon: "△" },
-  { id: "financial", title: "Rapport Financier", description: "Synthèse des grants, budgets, décaissements et taux d'utilisation", icon: "◎" },
-  { id: "programs", title: "Rapport Programmes", description: "Performance des programmes, cohortes et taux de complétion", icon: "◇" },
-  { id: "impact", title: "Rapport d'Impact", description: "Métriques d'impact : emplois créés, levées de fonds, croissance", icon: "◈" },
+const reports: { id: string; title: string; description: string; Icon: LucideIcon }[] = [
+  { id: "startups", title: "Rapport Entreprises", description: "Vue d'ensemble des entreprises accompagnées, secteurs, stades et scores", Icon: Triangle },
+  { id: "financial", title: "Rapport Financier", description: "Synthèse des grants, budgets, décaissements et taux d'utilisation", Icon: Target },
+  { id: "programs", title: "Rapport Programmes", description: "Performance des programmes, cohortes et taux de complétion", Icon: FolderKanban },
+  { id: "impact", title: "Rapport d'Impact", description: "Métriques d'impact : emplois créés, levées de fonds, croissance", Icon: TrendingUp },
 ];
 
 export default function RapportsPage() {

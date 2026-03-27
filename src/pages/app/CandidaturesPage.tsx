@@ -17,17 +17,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useAssignableUsers } from "@/hooks/useAssignableUsers";
+import { Inbox, Search, Mic, BarChart3 as BarChartIcon, CheckCircle2, XCircle, type LucideIcon } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type ApplicationStatus = Database["public"]["Enums"]["application_status"];
 
-const pipelineLabels: { key: string; label: string; icon: string }[] = [
-  { key: "submitted", label: "Reçues", icon: "📥" },
-  { key: "screening", label: "Examen", icon: "🔍" },
-  { key: "interview", label: "Entretien", icon: "🎤" },
-  { key: "due_diligence", label: "Due Diligence", icon: "📊" },
-  { key: "accepted", label: "Acceptées", icon: "✅" },
-  { key: "rejected", label: "Refusées", icon: "❌" },
+const pipelineLabels: { key: string; label: string; Icon: LucideIcon }[] = [
+  { key: "submitted", label: "Reçues", Icon: Inbox },
+  { key: "screening", label: "Examen", Icon: Search },
+  { key: "interview", label: "Entretien", Icon: Mic },
+  { key: "due_diligence", label: "Due Diligence", Icon: BarChartIcon },
+  { key: "accepted", label: "Acceptées", Icon: CheckCircle2 },
+  { key: "rejected", label: "Refusées", Icon: XCircle },
 ];
 
 const stepColor: Record<string, "blue" | "amber" | "purple" | "green" | "rose" | "gray"> = {
