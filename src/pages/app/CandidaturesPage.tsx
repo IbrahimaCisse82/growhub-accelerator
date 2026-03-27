@@ -397,7 +397,7 @@ export default function CandidaturesPage() {
             {filter === step.key && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
             {/* Funnel connector */}
             {idx > 0 && <span className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 text-muted-foreground text-[10px]">→</span>}
-            <div className="text-base mb-0.5">{step.icon}</div>
+            <div className="flex justify-center mb-0.5"><step.Icon size={18} className="text-muted-foreground" /></div>
             <div className="font-mono text-2xl font-semibold text-foreground">
               {pipeline ? pipeline[step.key as keyof typeof pipeline] ?? 0 : "—"}
             </div>
@@ -509,7 +509,7 @@ export default function CandidaturesPage() {
             return (
               <div key={step.key} className="min-w-[260px] flex-shrink-0 ui-panel p-2.5">
                 <div className="flex items-center gap-2 mb-2 px-1">
-                  <span className="text-sm">{step.icon}</span>
+                  <step.Icon size={14} className="text-muted-foreground" />
                   <span className="text-[11px] uppercase tracking-wide font-bold text-foreground">{step.label}</span>
                   <span className="font-mono text-[10px] text-muted-foreground bg-muted px-1.5 py-px rounded-full ml-auto">{colApps.length}</span>
                 </div>
