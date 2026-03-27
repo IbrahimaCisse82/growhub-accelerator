@@ -8,20 +8,26 @@ import { usePrograms } from "@/hooks/usePrograms";
 import { useGrants } from "@/hooks/useGrants";
 import { toast } from "sonner";
 import GhButton from "@/components/shared/GhButton";
-import { ChevronDown, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Trash2, FileText, Target, Layers, Lightbulb, Users, RefreshCw, BarChart3, Activity, DollarSign, CheckCircle2 } from "lucide-react";
 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 const textareaCls = inputCls + " h-24 resize-none";
+const textareaLgCls = inputCls + " h-36 resize-none";
 const labelCls = "text-sm font-medium text-foreground";
 const helpCls = "text-[11px] text-muted-foreground mt-1";
+const sectionTitleCls = "text-sm font-bold text-foreground uppercase tracking-wider border-b border-border pb-2 mb-3";
 
 const STEPS = [
-  { key: "info", label: "Informations", icon: "📋" },
-  { key: "logframe", label: "Cadre logique & WP", icon: "🎯" },
-  { key: "toc", label: "Théorie du changement", icon: "🔄" },
-  { key: "kpi-milestones", label: "Indicateurs & Jalons", icon: "📊" },
-  { key: "budget", label: "Budget", icon: "💰" },
-  { key: "validate", label: "Validation", icon: "✅" },
+  { key: "identification", label: "Identification", icon: FileText },
+  { key: "contexte", label: "Contexte & Justification", icon: FileText },
+  { key: "logframe", label: "Objectifs & Cadre logique", icon: Target },
+  { key: "strategie", label: "Stratégie & Méthodologie", icon: Lightbulb },
+  { key: "beneficiaires", label: "Bénéficiaires & Parties prenantes", icon: Users },
+  { key: "toc", label: "Théorie du changement", icon: RefreshCw },
+  { key: "kpi-milestones", label: "Indicateurs & Jalons", icon: BarChart3 },
+  { key: "suivi", label: "Suivi-Évaluation & Durabilité", icon: Activity },
+  { key: "budget", label: "Budget", icon: DollarSign },
+  { key: "validate", label: "Validation", icon: CheckCircle2 },
 ];
 
 // --- Work Package Draft ---
@@ -58,6 +64,27 @@ const DEFAULT_BUDGET_LINES: BudgetLine[] = [
 const lineTotal = (l: BudgetLine) => (l.qty || 0) * (l.montant || 0) * ((l.alloc || 100) / 100);
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
+// --- Metadata interface for new sections ---
+interface ProjectMetadata {
+  introduction?: string;
+  contexte_territorial?: string;
+  contraintes?: string;
+  alignement_strategique?: string;
+  justification?: string;
+  strategie_objectif?: string;
+  strategie_axes?: string[];
+  strategie_modalites?: string;
+  methodologie?: string;
+  population_cible?: string;
+  estimation_beneficiaires?: string;
+  personnel_cle?: { role: string; profil: string }[];
+  partenaires?: { categorie: string; description: string }[];
+  suivi_outils?: string;
+  suivi_evaluation?: string;
+  suivi_rapports?: string;
+  plan_sortie?: string;
+}
+
 // --- Array Editor ---
 function ArrayEditor({ items, onChange, placeholder }: { items: string[]; onChange: (v: string[]) => void; placeholder: string }) {
   const add = () => onChange([...items, ""]);
@@ -87,11 +114,9 @@ function flattenWpObjectives(wps: WpDraft[]): string[] {
   return wps.map(wp => wp.title ? `${wp.title}: ${wp.objective}` : wp.objective);
 }
 
-// Parse existing data back into WPs
 function parseWpsFromLogframe(logframe: { specific_objectives?: unknown; activities?: unknown; expected_results?: unknown }): WpDraft[] {
   const objectives = toArr(logframe.specific_objectives);
   if (objectives.length === 0) return [emptyWp()];
-
   return objectives.map((obj, idx) => {
     const wpNum = idx + 1;
     let title = "";
@@ -101,17 +126,14 @@ function parseWpsFromLogframe(logframe: { specific_objectives?: unknown; activit
       title = obj.substring(0, colonIdx).trim();
       objective = obj.substring(colonIdx + 1).trim();
     }
-
     const activities = toArr(logframe.activities)
       .filter(a => new RegExp(`^A${wpNum}\\.\\d`, "i").test(a.trim()))
       .map(a => a.replace(/^A\d+\.\d+\s*/i, "").trim());
     const results = toArr(logframe.expected_results)
       .filter(r => new RegExp(`^R${wpNum}\\.\\d`, "i").test(r.trim()))
       .map(r => r.replace(/^R\d+\.\d+\s*/i, "").trim());
-
     return {
-      title,
-      objective,
+      title, objective,
       activities: activities.length > 0 ? activities : [""],
       results: results.length > 0 ? results : [""],
     };
@@ -136,7 +158,7 @@ export default function ProjectWizardPage() {
   const { data: grants } = useGrants();
   const qc = useQueryClient();
 
-  // Step 0: Info
+  // Step 0: Identification
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
@@ -144,14 +166,36 @@ export default function ProjectWizardPage() {
   const [grantId, setGrantId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [country, setCountry] = useState("");
+  const [locations, setLocations] = useState<string[]>([""]);
+  const [durationMonths, setDurationMonths] = useState("");
 
-  // Step 1: Cadre logique + WPs
+  // Step 1: Contexte & Justification (metadata)
+  const [introduction, setIntroduction] = useState("");
+  const [contexteT, setContexteT] = useState("");
+  const [contraintes, setContraintes] = useState("");
+  const [alignement, setAlignement] = useState("");
+  const [justification, setJustification] = useState("");
+
+  // Step 2: Cadre logique + WPs
   const [overallObjective, setOverallObjective] = useState("");
   const [wps, setWps] = useState<WpDraft[]>([emptyWp()]);
   const [assumptions, setAssumptions] = useState("");
   const [preConditions, setPreConditions] = useState("");
 
-  // Step 2: Théorie du changement
+  // Step 3: Stratégie & Méthodologie (metadata)
+  const [strategieObjectif, setStrategieObjectif] = useState("");
+  const [strategieAxes, setStrategieAxes] = useState<string[]>([""]);
+  const [strategieModalites, setStrategieModalites] = useState("");
+  const [methodologie, setMethodologie] = useState("");
+
+  // Step 4: Bénéficiaires & Parties prenantes (metadata)
+  const [populationCible, setPopulationCible] = useState("");
+  const [estimationBeneficiaires, setEstimationBeneficiaires] = useState("");
+  const [personnelCle, setPersonnelCle] = useState<{ role: string; profil: string }[]>([{ role: "", profil: "" }]);
+  const [partenaires, setPartenaires] = useState<{ categorie: string; description: string }[]>([{ categorie: "", description: "" }]);
+
+  // Step 5: Théorie du changement
   const [tocInputs, setTocInputs] = useState<string[]>([""]);
   const [tocActivities, setTocActivities] = useState<string[]>([""]);
   const [tocOutputs, setTocOutputs] = useState<string[]>([""]);
@@ -160,11 +204,17 @@ export default function ProjectWizardPage() {
   const [tocAssumptions, setTocAssumptions] = useState<string[]>([""]);
   const [tocRisks, setTocRisks] = useState<string[]>([""]);
 
-  // Step 3: KPIs & Milestones per WP
+  // Step 6: KPIs & Milestones per WP
   const [kpis, setKpis] = useState<KpiRow[]>([emptyKpi(0)]);
   const [milestones, setMilestones] = useState<MilestoneDraft[]>([emptyMilestone(0)]);
 
-  // Step 4: Budget
+  // Step 7: Suivi-Évaluation & Durabilité (metadata)
+  const [suiviOutils, setSuiviOutils] = useState("");
+  const [suiviEvaluation, setSuiviEvaluation] = useState("");
+  const [suiviRapports, setSuiviRapports] = useState("");
+  const [planSortie, setPlanSortie] = useState("");
+
+  // Step 8: Budget
   const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([...DEFAULT_BUDGET_LINES]);
 
   const linesA = budgetLines.filter(l => l.section === "A");
@@ -235,7 +285,7 @@ export default function ProjectWizardPage() {
     enabled: !!projectId,
   });
 
-  // Hydrate
+  // Hydrate from existing project
   useEffect(() => {
     if (existingProject) {
       setName(existingProject.name || "");
@@ -244,6 +294,30 @@ export default function ProjectWizardPage() {
       setProgramId(existingProject.program_id || "");
       setStartDate(existingProject.start_date || "");
       setEndDate(existingProject.end_date || "");
+      // New fields
+      const p = existingProject as any;
+      setCountry(p.country || "");
+      setLocations(p.locations?.length > 0 ? p.locations : [""]);
+      setDurationMonths(p.duration_months ? String(p.duration_months) : "");
+      // Metadata
+      const meta: ProjectMetadata = (p.metadata as ProjectMetadata) || {};
+      setIntroduction(meta.introduction || "");
+      setContexteT(meta.contexte_territorial || "");
+      setContraintes(meta.contraintes || "");
+      setAlignement(meta.alignement_strategique || "");
+      setJustification(meta.justification || "");
+      setStrategieObjectif(meta.strategie_objectif || "");
+      setStrategieAxes(meta.strategie_axes?.length ? meta.strategie_axes : [""]);
+      setStrategieModalites(meta.strategie_modalites || "");
+      setMethodologie(meta.methodologie || "");
+      setPopulationCible(meta.population_cible || "");
+      setEstimationBeneficiaires(meta.estimation_beneficiaires || "");
+      setPersonnelCle(meta.personnel_cle?.length ? meta.personnel_cle : [{ role: "", profil: "" }]);
+      setPartenaires(meta.partenaires?.length ? meta.partenaires : [{ categorie: "", description: "" }]);
+      setSuiviOutils(meta.suivi_outils || "");
+      setSuiviEvaluation(meta.suivi_evaluation || "");
+      setSuiviRapports(meta.suivi_rapports || "");
+      setPlanSortie(meta.plan_sortie || "");
     }
   }, [existingProject]);
 
@@ -278,7 +352,6 @@ export default function ProjectWizardPage() {
   useEffect(() => {
     if (existingKpis && existingKpis.length > 0) {
       setKpis(existingKpis.map(k => {
-        // Detect WP index from name prefix
         const match = k.name.match(/^I(\d+)\.\d+\s*/i);
         const wpIdx = match ? parseInt(match[1]) - 1 : 0;
         return {
@@ -320,19 +393,29 @@ export default function ProjectWizardPage() {
   useEffect(() => {
     if (!projectId || !existingProject) return;
     let resumeStep = 1;
-    if (existingLogframe) resumeStep = 2;
-    if (existingToc) resumeStep = 3;
-    if (existingKpis && existingKpis.length > 0) resumeStep = 4;
-    if (existingBudgetLines && existingBudgetLines.length > 0) resumeStep = 5;
+    const p = existingProject as any;
+    const meta: ProjectMetadata = (p.metadata as ProjectMetadata) || {};
+    if (meta.introduction || meta.justification) resumeStep = 2;
+    if (existingLogframe) resumeStep = 3;
+    if (meta.strategie_objectif || meta.methodologie) resumeStep = 4;
+    if (meta.population_cible) resumeStep = 5;
+    if (existingToc) resumeStep = 6;
+    if (existingKpis && existingKpis.length > 0) resumeStep = 7;
+    if (meta.suivi_outils || meta.plan_sortie) resumeStep = 8;
+    if (existingBudgetLines && existingBudgetLines.length > 0) resumeStep = 9;
     setStep(resumeStep);
   }, [projectId, existingProject, existingLogframe, existingToc, existingKpis, existingBudgetLines]);
 
   const canNext = () => {
     if (step === 0) return name && programId;
-    if (step === 1) return overallObjective && wps.some(wp => wp.objective);
-    if (step === 2) return tocImpact;
-    if (step === 3) return kpis.some(k => k.name);
-    if (step === 4) return budgetLines.some(b => b.desc && (b.qty > 0 || b.montant > 0));
+    if (step === 1) return true; // optional context
+    if (step === 2) return overallObjective && wps.some(wp => wp.objective);
+    if (step === 3) return true; // optional strategy
+    if (step === 4) return true; // optional beneficiaries
+    if (step === 5) return tocImpact;
+    if (step === 6) return kpis.some(k => k.name);
+    if (step === 7) return true; // optional M&E
+    if (step === 8) return budgetLines.some(b => b.desc && (b.qty > 0 || b.montant > 0));
     return true;
   };
 
@@ -348,13 +431,25 @@ export default function ProjectWizardPage() {
     setMilestones(milestones.filter(m => m.wpIndex !== idx).map(m => ({ ...m, wpIndex: m.wpIndex > idx ? m.wpIndex - 1 : m.wpIndex })));
   };
 
+  // --- Build metadata ---
+  const buildMetadata = (): ProjectMetadata => ({
+    introduction, contexte_territorial: contexteT, contraintes, alignement_strategique: alignement, justification,
+    strategie_objectif: strategieObjectif, strategie_axes: strategieAxes.filter(Boolean), strategie_modalites: strategieModalites,
+    methodologie, population_cible: populationCible, estimation_beneficiaires: estimationBeneficiaires,
+    personnel_cle: personnelCle.filter(p => p.role), partenaires: partenaires.filter(p => p.categorie),
+    suivi_outils: suiviOutils, suivi_evaluation: suiviEvaluation, suivi_rapports: suiviRapports, plan_sortie: planSortie,
+  });
+
   // --- Save functions ---
   const saveStep0 = async () => {
+    const meta = buildMetadata();
     if (projectId) {
       await supabase.from("projects").update({
         name, code: code || null, description: description || null,
         program_id: programId, start_date: startDate || null, end_date: endDate || null,
-      }).eq("id", projectId).throwOnError();
+        country: country || null, locations: locations.filter(Boolean).length > 0 ? locations.filter(Boolean) : null,
+        duration_months: durationMonths ? parseInt(durationMonths) : null, metadata: meta as any,
+      } as any).eq("id", projectId).throwOnError();
       return projectId;
     } else {
       const { data } = await supabase.from("projects").insert({
@@ -362,12 +457,19 @@ export default function ProjectWizardPage() {
         program_id: programId, owner_id: user?.id,
         start_date: startDate || null, end_date: endDate || null,
         status: "draft", validation_status: "draft",
-      }).select("id").single().throwOnError();
+        country: country || null, locations: locations.filter(Boolean).length > 0 ? locations.filter(Boolean) : null,
+        duration_months: durationMonths ? parseInt(durationMonths) : null, metadata: meta as any,
+      } as any).select("id").single().throwOnError();
       return data.id;
     }
   };
 
-  const saveStep1 = async (pid: string) => {
+  const saveMetadata = async (pid: string) => {
+    const meta = buildMetadata();
+    await supabase.from("projects").update({ metadata: meta as any } as any).eq("id", pid).throwOnError();
+  };
+
+  const saveLogframe = async (pid: string) => {
     const payload = {
       project_id: pid,
       overall_objective: overallObjective,
@@ -377,23 +479,20 @@ export default function ProjectWizardPage() {
       assumptions: assumptions || null,
       pre_conditions: preConditions || null,
     };
-    // Use upsert to avoid RLS conflicts when existingLogframe state is stale
     await supabase.from("logical_frameworks").upsert(payload, { onConflict: "project_id" }).throwOnError();
   };
 
-  const saveStep2 = async (pid: string) => {
+  const saveToc = async (pid: string) => {
     const payload = {
       project_id: pid,
       inputs: tocInputs.filter(Boolean), activities: tocActivities.filter(Boolean),
       outputs: tocOutputs.filter(Boolean), outcomes: tocOutcomes.filter(Boolean),
       impact: tocImpact, assumptions: tocAssumptions.filter(Boolean), risks: tocRisks.filter(Boolean),
     };
-    // Use upsert to avoid RLS conflicts when existingToc state is stale
     await supabase.from("theory_of_change").upsert(payload, { onConflict: "project_id" }).throwOnError();
   };
 
-  const saveStep3 = async (pid: string) => {
-    // KPIs
+  const saveKpisMilestones = async (pid: string) => {
     await supabase.from("project_indicators").delete().eq("project_id", pid);
     const validKpis = kpis.filter(k => k.name);
     if (validKpis.length > 0) {
@@ -412,7 +511,6 @@ export default function ProjectWizardPage() {
         })
       ).throwOnError();
     }
-    // Milestones
     await supabase.from("milestones").delete().eq("project_id", pid);
     const validMilestones = milestones.filter(m => m.title);
     if (validMilestones.length > 0) {
@@ -421,17 +519,15 @@ export default function ProjectWizardPage() {
         validMilestones.map(m => {
           mCounters[m.wpIndex] = (mCounters[m.wpIndex] || 0) + 1;
           return {
-            project_id: pid,
-            title: `M${m.wpIndex + 1}.${mCounters[m.wpIndex]} ${m.title}`,
-            due_date: m.dueDate || null,
-            status: "pending",
+            project_id: pid, title: `M${m.wpIndex + 1}.${mCounters[m.wpIndex]} ${m.title}`,
+            due_date: m.dueDate || null, status: "pending",
           };
         })
       ).throwOnError();
     }
   };
 
-  const saveStep4 = async (pid: string) => {
+  const saveBudget = async (pid: string) => {
     await supabase.from("project_budget_lines").delete().eq("project_id", pid);
     const validBudget = budgetLines.filter(b => b.desc);
     if (validBudget.length > 0) {
@@ -458,11 +554,32 @@ export default function ProjectWizardPage() {
     setSaving(true);
     try {
       let pid = projectId;
-      if (step === 0) { pid = await saveStep0(); setProjectId(pid); setSearchParams({ id: pid }); qc.invalidateQueries({ queryKey: ["project-draft", pid] }); }
-      else if (step === 1 && pid) { await saveStep1(pid); qc.invalidateQueries({ queryKey: ["project-logframe", pid] }); }
-      else if (step === 2 && pid) { await saveStep2(pid); qc.invalidateQueries({ queryKey: ["project-toc", pid] }); }
-      else if (step === 3 && pid) { await saveStep3(pid); qc.invalidateQueries({ queryKey: ["project-kpis", pid] }); qc.invalidateQueries({ queryKey: ["project-milestones-draft", pid] }); }
-      else if (step === 4 && pid) { await saveStep4(pid); qc.invalidateQueries({ queryKey: ["project-budget-lines", pid] }); }
+      if (step === 0) {
+        pid = await saveStep0();
+        setProjectId(pid); setSearchParams({ id: pid });
+        qc.invalidateQueries({ queryKey: ["project-draft", pid] });
+      } else if (step === 1 && pid) {
+        await saveMetadata(pid);
+      } else if (step === 2 && pid) {
+        await saveLogframe(pid);
+        qc.invalidateQueries({ queryKey: ["project-logframe", pid] });
+      } else if (step === 3 && pid) {
+        await saveMetadata(pid);
+      } else if (step === 4 && pid) {
+        await saveMetadata(pid);
+      } else if (step === 5 && pid) {
+        await saveToc(pid);
+        qc.invalidateQueries({ queryKey: ["project-toc", pid] });
+      } else if (step === 6 && pid) {
+        await saveKpisMilestones(pid);
+        qc.invalidateQueries({ queryKey: ["project-kpis", pid] });
+        qc.invalidateQueries({ queryKey: ["project-milestones-draft", pid] });
+      } else if (step === 7 && pid) {
+        await saveMetadata(pid);
+      } else if (step === 8 && pid) {
+        await saveBudget(pid);
+        qc.invalidateQueries({ queryKey: ["project-budget-lines", pid] });
+      }
       toast.success("Données enregistrées ✓");
       setStep(step + 1);
     } catch (e) { toast.error((e as Error).message); }
@@ -489,36 +606,45 @@ export default function ProjectWizardPage() {
         </p>
       </div>
 
-      {/* Stepper */}
-      <div className="flex items-center gap-1 mb-8 bg-card border border-border rounded-xl p-2">
-        {STEPS.map((s, i) => (
-          <button key={s.key} onClick={() => i <= step && setStep(i)}
-            className={`flex-1 flex items-center gap-2 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-              i === step ? "bg-primary text-primary-foreground shadow-sm" :
-              i < step ? "bg-surface-2 text-foreground cursor-pointer hover:bg-surface-3" :
-              "text-muted-foreground cursor-default"
-            }`}>
-            <span>{s.icon}</span>
-            <span className="hidden lg:inline">{s.label}</span>
-            <span className="lg:hidden">{i + 1}</span>
-          </button>
-        ))}
+      {/* Stepper - scrollable */}
+      <div className="flex items-center gap-1 mb-8 bg-card border border-border rounded-xl p-2 overflow-x-auto">
+        {STEPS.map((s, i) => {
+          const Icon = s.icon;
+          return (
+            <button key={s.key} onClick={() => i <= step && setStep(i)}
+              className={`shrink-0 flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-[11px] font-semibold transition-all ${
+                i === step ? "bg-primary text-primary-foreground shadow-sm" :
+                i < step ? "bg-surface-2 text-foreground cursor-pointer hover:bg-surface-3" :
+                "text-muted-foreground cursor-default"
+              }`}>
+              <Icon className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden xl:inline whitespace-nowrap">{s.label}</span>
+              <span className="xl:hidden">{i + 1}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Step content */}
       <AnimatePresence mode="wait">
         <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="bg-card border border-border rounded-xl p-6">
 
-          {/* STEP 0: Info */}
+          {/* STEP 0: Identification du projet */}
           {step === 0 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Informations générales</h2>
-                <p className={helpCls}>Décrivez le projet, son rattachement programmatique et sa durée prévisionnelle.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">Identification du projet</h2>
+                <p className={helpCls}>Informations générales d'identification : intitulé, rattachement programmatique, pays, lieux d'implémentation et durée prévisionnelle.</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2 col-span-2 sm:col-span-1"><label className={labelCls}>Nom du projet *</label><input value={name} onChange={e => setName(e.target.value)} required className={inputCls} placeholder="Ex: Programme d'appui aux PME vertes" /></div>
+                <div className="space-y-2 col-span-2"><label className={labelCls}>Intitulé du projet *</label><input value={name} onChange={e => setName(e.target.value)} required className={inputCls} placeholder="Ex: Projet d'Appui à l'Entrepreneuriat Rural Innovant et Durable (PAERID)" /></div>
                 <div className="space-y-2"><label className={labelCls}>Code</label><input value={code} onChange={e => setCode(e.target.value)} className={inputCls} placeholder="PRJ-2026-001" /></div>
+                <div className="space-y-2"><label className={labelCls}>Pays</label><input value={country} onChange={e => setCountry(e.target.value)} className={inputCls} placeholder="Ex: Sénégal" /></div>
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Lieu(x) d'implémentation</label>
+                <ArrayEditor items={locations} onChange={setLocations} placeholder="Région / Ville" />
+                <p className={helpCls}>Indiquez les régions ou villes où le projet sera mis en œuvre.</p>
               </div>
               <div className="space-y-2"><label className={labelCls}>Programme de rattachement *</label>
                 <select value={programId} onChange={e => setProgramId(e.target.value)} required className={inputCls}>
@@ -533,24 +659,55 @@ export default function ProjectWizardPage() {
                 </select>
                 <p className={helpCls}>Lier à une subvention pour le suivi budgétaire automatique.</p>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2"><label className={labelCls}>Date de début</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputCls} /></div>
                 <div className="space-y-2"><label className={labelCls}>Date de fin</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={inputCls} /></div>
+                <div className="space-y-2"><label className={labelCls}>Durée (mois)</label><input type="number" value={durationMonths} onChange={e => setDurationMonths(e.target.value)} className={inputCls} placeholder="Ex: 36" /></div>
               </div>
-              <div className="space-y-2"><label className={labelCls}>Description</label><textarea value={description} onChange={e => setDescription(e.target.value)} className={textareaCls} placeholder="Contexte, justification et résumé du projet…" /></div>
+              <div className="space-y-2"><label className={labelCls}>Résumé du projet</label><textarea value={description} onChange={e => setDescription(e.target.value)} className={textareaLgCls} placeholder="Résumé exécutif du projet…" /></div>
             </div>
           )}
 
-          {/* STEP 1: Cadre logique + Work Packages */}
+          {/* STEP 1: Contexte et justification */}
           {step === 1 && (
-            <div className="space-y-6">
+            <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Cadre logique & Work Packages</h2>
-                <p className={helpCls}>Structurez la logique d'intervention en Work Packages. Chaque WP regroupe un objectif spécifique, ses activités et ses résultats attendus.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">Contexte et justification</h2>
+                <p className={helpCls}>Décrivez le contexte dans lequel s'inscrit le projet, les contraintes identifiées et la justification de l'intervention.</p>
               </div>
               <div className="space-y-2">
-                <label className={labelCls}>Objectif global (impact) *</label>
-                <textarea value={overallObjective} onChange={e => setOverallObjective(e.target.value)} required className={textareaCls} placeholder="Ex: Contribuer à la réduction de la pauvreté par le développement de l'entrepreneuriat innovant" />
+                <label className={labelCls}>Introduction</label>
+                <textarea value={introduction} onChange={e => setIntroduction(e.target.value)} className={textareaLgCls} placeholder="Présentation générale du contexte et de la problématique adressée par le projet…" />
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Contexte territorial</label>
+                <textarea value={contexteT} onChange={e => setContexteT(e.target.value)} className={textareaLgCls} placeholder="Description du contexte géographique, socio-économique et institutionnel des zones d'intervention…" />
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Contraintes structurelles et vulnérabilités</label>
+                <textarea value={contraintes} onChange={e => setContraintes(e.target.value)} className={textareaLgCls} placeholder="Contraintes identifiées : accès limité aux financements, faible productivité, vulnérabilité climatique…" />
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Alignement avec les orientations stratégiques</label>
+                <textarea value={alignement} onChange={e => setAlignement(e.target.value)} className={textareaCls} placeholder="Cohérence avec les politiques nationales, stratégies des bailleurs et ODD…" />
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Justification de l'intervention</label>
+                <textarea value={justification} onChange={e => setJustification(e.target.value)} className={textareaLgCls} placeholder="Pourquoi ce projet est nécessaire et comment il répond aux problèmes identifiés…" />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 2: Objectifs & Cadre logique + Work Packages */}
+          {step === 2 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-display font-bold text-foreground">Objectifs & Cadre logique</h2>
+                <p className={helpCls}>Définissez l'objectif général, les objectifs spécifiques par Work Packages, les activités et les résultats attendus.</p>
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Objectif général (impact) *</label>
+                <textarea value={overallObjective} onChange={e => setOverallObjective(e.target.value)} required className={textareaCls} placeholder="Ex: Contribuer à la transformation structurelle et durable des économies rurales…" />
               </div>
 
               {/* Work Packages */}
@@ -572,8 +729,94 @@ export default function ProjectWizardPage() {
             </div>
           )}
 
-          {/* STEP 2: Théorie du changement */}
-          {step === 2 && (
+          {/* STEP 3: Stratégie & Méthodologie */}
+          {step === 3 && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-lg font-display font-bold text-foreground">Stratégie d'implémentation & Méthodologie</h2>
+                <p className={helpCls}>Décrivez la stratégie globale de mise en œuvre, les principaux axes d'action et la méthodologie retenue.</p>
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Objectif de la stratégie</label>
+                <textarea value={strategieObjectif} onChange={e => setStrategieObjectif(e.target.value)} className={textareaCls} placeholder="Quel est l'objectif de votre stratégie d'implémentation…" />
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Principaux axes d'action</label>
+                <ArrayEditor items={strategieAxes} onChange={setStrategieAxes} placeholder="Axe d'action" />
+                <p className={helpCls}>Ex: Amélioration de l'accès au marché, Renforcement de la résilience, Autonomisation et emplois…</p>
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Modalités de mise en œuvre</label>
+                <textarea value={strategieModalites} onChange={e => setStrategieModalites(e.target.value)} className={textareaLgCls} placeholder="Approche intégrée, capitalisation sur l'expertise locale, mécanismes de suivi et ajustement…" />
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Méthodologie</label>
+                <textarea value={methodologie} onChange={e => setMethodologie(e.target.value)} className={textareaLgCls} placeholder="Méthodes de mise en œuvre : approche participative, accompagnement structuré, formation par les pairs…" />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 4: Bénéficiaires & Parties prenantes */}
+          {step === 4 && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-lg font-display font-bold text-foreground">Bénéficiaires & Parties prenantes</h2>
+                <p className={helpCls}>Identifiez la population cible, estimez le nombre de bénéficiaires, décrivez le personnel clé et les partenaires du projet.</p>
+              </div>
+
+              <div className="space-y-2">
+                <label className={labelCls}>Population cible / Bénéficiaires</label>
+                <textarea value={populationCible} onChange={e => setPopulationCible(e.target.value)} className={textareaLgCls} placeholder="TPE et PME rurales, GIE, coopératives, femmes entrepreneures, jeunes entrepreneurs…" />
+              </div>
+
+              <div className="space-y-2">
+                <label className={labelCls}>Estimation des bénéficiaires</label>
+                <textarea value={estimationBeneficiaires} onChange={e => setEstimationBeneficiaires(e.target.value)} className={textareaCls} placeholder="Nombre estimé de bénéficiaires directs et indirects, ventilation par région…" />
+              </div>
+
+              {/* Personnel clé */}
+              <div className="space-y-3">
+                <div className={sectionTitleCls}>Personnel clé impliqué</div>
+                {personnelCle.map((p, i) => (
+                  <div key={i} className="border border-border rounded-lg p-3 bg-surface-2 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] font-mono text-muted-foreground">Poste {i + 1}</span>
+                      {personnelCle.length > 1 && <button type="button" onClick={() => setPersonnelCle(personnelCle.filter((_, j) => j !== i))} className="text-destructive text-xs hover:underline">Supprimer</button>}
+                    </div>
+                    <input value={p.role} onChange={e => { const n = [...personnelCle]; n[i] = { ...n[i], role: e.target.value }; setPersonnelCle(n); }} className={inputCls} placeholder="Rôle / Fonction (ex: Chef de projet)" />
+                    <textarea value={p.profil} onChange={e => { const n = [...personnelCle]; n[i] = { ...n[i], profil: e.target.value }; setPersonnelCle(n); }} className={textareaCls} placeholder="Profil requis et responsabilités…" />
+                  </div>
+                ))}
+                <button type="button" onClick={() => setPersonnelCle([...personnelCle, { role: "", profil: "" }])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un poste</button>
+              </div>
+
+              {/* Partenaires */}
+              <div className="space-y-3">
+                <div className={sectionTitleCls}>Partenaires cibles du programme</div>
+                {partenaires.map((p, i) => (
+                  <div key={i} className="border border-border rounded-lg p-3 bg-surface-2 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] font-mono text-muted-foreground">Partenaire {i + 1}</span>
+                      {partenaires.length > 1 && <button type="button" onClick={() => setPartenaires(partenaires.filter((_, j) => j !== i))} className="text-destructive text-xs hover:underline">Supprimer</button>}
+                    </div>
+                    <select value={p.categorie} onChange={e => { const n = [...partenaires]; n[i] = { ...n[i], categorie: e.target.value }; setPartenaires(n); }} className={inputCls}>
+                      <option value="">Catégorie…</option>
+                      <option value="institutionnel">Institutionnel & Gouvernemental</option>
+                      <option value="financier">Financier</option>
+                      <option value="technique">Technique & Recherche</option>
+                      <option value="prive">Secteur Privé</option>
+                      <option value="autre">Autre</option>
+                    </select>
+                    <textarea value={p.description} onChange={e => { const n = [...partenaires]; n[i] = { ...n[i], description: e.target.value }; setPartenaires(n); }} className={textareaCls} placeholder="Description du partenaire, rôle et justification…" />
+                  </div>
+                ))}
+                <button type="button" onClick={() => setPartenaires([...partenaires, { categorie: "", description: "" }])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un partenaire</button>
+              </div>
+            </div>
+          )}
+
+          {/* STEP 5: Théorie du changement */}
+          {step === 5 && (
             <div className="space-y-5">
               <div>
                 <h2 className="text-lg font-display font-bold text-foreground">Théorie du changement</h2>
@@ -599,8 +842,8 @@ export default function ProjectWizardPage() {
             </div>
           )}
 
-          {/* STEP 3: KPIs & Milestones per WP */}
-          {step === 3 && (
+          {/* STEP 6: KPIs & Milestones per WP */}
+          {step === 6 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-display font-bold text-foreground">Indicateurs & Jalons par Work Package</h2>
@@ -675,11 +918,41 @@ export default function ProjectWizardPage() {
             </div>
           )}
 
-          {/* STEP 4: Budget */}
-          {step === 4 && (
+          {/* STEP 7: Suivi-Évaluation & Durabilité */}
+          {step === 7 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Budget — Annexe 1b</h2>
+                <h2 className="text-lg font-display font-bold text-foreground">Suivi-Évaluation & Plan de durabilité</h2>
+                <p className={helpCls}>Décrivez le dispositif de suivi-évaluation, les outils utilisés et la stratégie de sortie / durabilité.</p>
+              </div>
+
+              <div className={sectionTitleCls}>Suivi et Évaluation</div>
+              <div className="space-y-2">
+                <label className={labelCls}>Outils et méthodes de suivi</label>
+                <textarea value={suiviOutils} onChange={e => setSuiviOutils(e.target.value)} className={textareaLgCls} placeholder="Tableau de bord KPIs, base de données bénéficiaires, rapports d'activités, visites de terrain, enquêtes de satisfaction, mécanisme d'alerte précoce…" />
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Évaluation</label>
+                <textarea value={suiviEvaluation} onChange={e => setSuiviEvaluation(e.target.value)} className={textareaCls} placeholder="Évaluation à mi-parcours, évaluation finale, critères CAD/OCDE…" />
+              </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Rapports et communication des résultats</label>
+                <textarea value={suiviRapports} onChange={e => setSuiviRapports(e.target.value)} className={textareaCls} placeholder="Fréquence des rapports narratifs et financiers, ateliers de restitution, plan de communication…" />
+              </div>
+
+              <div className={sectionTitleCls + " mt-6"}>Plan de sortie / Stratégie de durabilité</div>
+              <div className="space-y-2">
+                <label className={labelCls}>Exit Strategy</label>
+                <textarea value={planSortie} onChange={e => setPlanSortie(e.target.value)} className={textareaLgCls} placeholder="Institutionnalisation des services, mobilisation de nouvelles ressources, autonomie des bénéficiaires, influence sur les politiques publiques…" />
+              </div>
+            </div>
+          )}
+
+          {/* STEP 8: Budget */}
+          {step === 8 && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-lg font-display font-bold text-foreground">Budget prévisionnel — Annexe 1b</h2>
                 <p className={helpCls}>Répartition détaillée du budget. Formule : Qté × Montant unitaire × Allocation%.</p>
               </div>
               <div className="grid grid-cols-3 gap-3">
@@ -733,45 +1006,70 @@ export default function ProjectWizardPage() {
               </div>
               {grantId && (
                 <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-                  <p className="text-xs text-foreground">🔗 Ce budget sera automatiquement lié à la subvention <strong>{grants?.find(g => g.id === grantId)?.name}</strong>.</p>
+                  <p className="text-xs text-foreground">Ce budget sera automatiquement lié à la subvention <strong>{grants?.find(g => g.id === grantId)?.name}</strong>.</p>
                 </div>
               )}
             </div>
           )}
 
-          {/* STEP 5: Validation */}
-          {step === 5 && (
+          {/* STEP 9: Validation */}
+          {step === 9 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-display font-bold text-foreground">Récapitulatif et validation</h2>
                 <p className={helpCls}>Vérifiez les informations avant de soumettre le projet.</p>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">📋 Projet</div>
+                  <div className="flex items-center gap-2 mb-2"><FileText className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Projet</span></div>
                   <div className="text-sm font-bold text-foreground">{name}</div>
                   <div className="text-xs text-muted-foreground mt-1">{programs?.find(p => p.id === programId)?.name}</div>
-                  {startDate && <div className="text-[10px] font-mono text-muted-foreground mt-2">{startDate} → {endDate || "…"}</div>}
+                  {country && <div className="text-[10px] text-muted-foreground mt-1">{country}{locations.filter(Boolean).length > 0 ? ` — ${locations.filter(Boolean).join(", ")}` : ""}</div>}
+                  {startDate && <div className="text-[10px] font-mono text-muted-foreground mt-1">{startDate} → {endDate || "…"}{durationMonths ? ` (${durationMonths} mois)` : ""}</div>}
                 </div>
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">📦 Work Packages</div>
+                  <div className="flex items-center gap-2 mb-2"><FileText className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Contexte</span></div>
+                  <div className="text-xs text-muted-foreground">
+                    {[introduction, contexteT, contraintes, justification].filter(Boolean).length} section(s) renseignées
+                  </div>
+                </div>
+                <div className="bg-surface-2 border border-border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2"><Layers className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Work Packages</span></div>
                   <div className="text-sm font-bold text-foreground">{wps.length} WP{wps.length > 1 ? "s" : ""}</div>
                   <div className="text-[10px] text-muted-foreground mt-1">
                     {wps.map((wp, i) => `WP${i + 1}: ${wp.title || "Sans titre"}`).join(" · ")}
                   </div>
                 </div>
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">📊 Indicateurs & Jalons</div>
+                  <div className="flex items-center gap-2 mb-2"><Lightbulb className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Stratégie</span></div>
+                  <div className="text-xs text-muted-foreground">
+                    {strategieAxes.filter(Boolean).length} axe(s) · {methodologie ? "Méthodologie ✓" : "—"}
+                  </div>
+                </div>
+                <div className="bg-surface-2 border border-border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2"><Users className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Parties prenantes</span></div>
+                  <div className="text-xs text-muted-foreground">
+                    {personnelCle.filter(p => p.role).length} poste(s) · {partenaires.filter(p => p.categorie).length} partenaire(s)
+                  </div>
+                </div>
+                <div className="bg-surface-2 border border-border rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-2"><BarChart3 className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Indicateurs & Jalons</span></div>
                   <div className="text-sm font-bold text-foreground">{kpis.filter(k => k.name).length} KPIs · {milestones.filter(m => m.title).length} Jalons</div>
                 </div>
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="text-[10px] font-mono uppercase text-muted-foreground mb-2">💰 Budget</div>
+                  <div className="flex items-center gap-2 mb-2"><Activity className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Suivi & Durabilité</span></div>
+                  <div className="text-xs text-muted-foreground">
+                    {[suiviOutils, suiviEvaluation, planSortie].filter(Boolean).length} / 3 sections renseignées
+                  </div>
+                </div>
+                <div className="bg-surface-2 border border-border rounded-lg p-4 sm:col-span-2">
+                  <div className="flex items-center gap-2 mb-2"><DollarSign className="w-3.5 h-3.5 text-primary" /><span className="text-[10px] font-mono uppercase text-primary">Budget</span></div>
                   <div className="text-lg font-display font-bold text-primary">{fmt(totalBudget)} €</div>
                   <div className="text-[10px] text-muted-foreground">{budgetLines.filter(b => b.desc).length} lignes · A: {fmt(totalA)} € · B: {fmt(totalB)} €</div>
                 </div>
               </div>
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-                <p className="text-xs text-foreground font-semibold mb-1">📌 Prochaines étapes</p>
+                <p className="text-xs text-foreground font-semibold mb-1">Prochaines étapes</p>
                 <p className="text-xs text-muted-foreground">Le projet sera soumis en statut « En attente de validation ». Une fois validé, vous pourrez ouvrir les candidatures.</p>
               </div>
             </div>
