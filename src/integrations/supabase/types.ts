@@ -2510,10 +2510,14 @@ export type Database = {
           applications_start_date: string | null
           budget: number | null
           code: string | null
+          country: string | null
           created_at: string
           description: string | null
+          duration_months: number | null
           end_date: string | null
           id: string
+          locations: string[] | null
+          metadata: Json | null
           name: string
           owner_id: string | null
           program_id: string | null
@@ -2532,10 +2536,14 @@ export type Database = {
           applications_start_date?: string | null
           budget?: number | null
           code?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
+          duration_months?: number | null
           end_date?: string | null
           id?: string
+          locations?: string[] | null
+          metadata?: Json | null
           name: string
           owner_id?: string | null
           program_id?: string | null
@@ -2554,10 +2562,14 @@ export type Database = {
           applications_start_date?: string | null
           budget?: number | null
           code?: string | null
+          country?: string | null
           created_at?: string
           description?: string | null
+          duration_months?: number | null
           end_date?: string | null
           id?: string
+          locations?: string[] | null
+          metadata?: Json | null
           name?: string
           owner_id?: string | null
           program_id?: string | null
