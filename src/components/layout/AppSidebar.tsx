@@ -8,7 +8,7 @@ import {
   AlertTriangle, FileText, Settings as SettingsIcon, Filter, Triangle, CircleDot, GraduationCap,
   Users, Link2, Headphones, CalendarDays, BookOpen, ClipboardList, BarChart3, DollarSign,
   PieChart, Wallet, Store, Handshake, Diamond, MessageCircle, FolderOpen, LineChart,
-  FileBarChart, Zap, LogOut, type LucideIcon
+  FileBarChart, Zap, LogOut, Globe, type LucideIcon
 } from "lucide-react";
 
 interface NavItem {
@@ -98,6 +98,7 @@ function useNavGroups() {
       adminOnly: true,
       items: [
         { label: t("nav.reports"), icon: FileBarChart, path: "/app/rapports" },
+        { label: "AfriDataHub", icon: Globe, path: "/app/afridatahub" },
       ],
     },
     {
