@@ -45,6 +45,7 @@ const EvenementsPage = lazy(() => import("@/pages/app/EvenementsPage"));
 const MessagingPage = lazy(() => import("@/pages/app/MessagingPage"));
 const ResourcesPage = lazy(() => import("@/pages/app/ResourcesPage"));
 const AnalyticsPage = lazy(() => import("@/pages/app/AnalyticsPage"));
+const AfriDataHubPage = lazy(() => import("@/pages/app/AfriDataHubPage"));
 const RapportsPage = lazy(() => import("@/pages/app/RapportsPage"));
 const UsersPage = lazy(() => import("@/pages/app/UsersPage"));
 const ProfilePage = lazy(() => import("@/pages/app/ProfilePage"));
@@ -132,6 +133,7 @@ const App = () => (
                 <Route path="messagerie" element={<MessagingPage />} />
                 <Route path="ressources" element={<ResourcesPage />} />
                 <Route path="analytics" element={<AnalyticsPage />} />
+                <Route path="afridatahub" element={<AdminRoute><AfriDataHubPage /></AdminRoute>} />
                 <Route path="rapports" element={<AdminRoute><RapportsPage /></AdminRoute>} />
                 <Route path="partenaires" element={<PartnersPage />} />
                 <Route path="enquetes" element={<SurveysPage />} />

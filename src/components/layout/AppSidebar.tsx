@@ -98,6 +98,7 @@ function useNavGroups() {
       adminOnly: true,
       items: [
         { label: t("nav.reports"), icon: FileBarChart, path: "/app/rapports" },
+        { label: "AfriDataHub", icon: Globe, path: "/app/afridatahub" },
       ],
     },
     {
