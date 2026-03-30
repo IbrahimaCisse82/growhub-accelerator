@@ -346,8 +346,8 @@ function Th({ children }: { children: React.ReactNode }) {
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border-l-2 border-primary/20 pl-4">
-      <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-1">{label}</div>
+    <div className="bg-muted/30 border border-border rounded-lg p-4">
+      <div className="font-semibold text-xs text-muted-foreground uppercase tracking-wider mb-2">{label}</div>
       <p className="text-[13px] text-foreground/85 leading-relaxed whitespace-pre-line">{value}</p>
     </div>
   );
