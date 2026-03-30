@@ -67,6 +67,7 @@ const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigit
 // --- Metadata interface for new sections ---
 interface ProjectMetadata {
   introduction?: string;
+  contexte_justification?: string;
   contexte_territorial?: string;
   contraintes?: string;
   alignement_strategique?: string;
