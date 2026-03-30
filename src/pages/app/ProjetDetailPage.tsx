@@ -221,11 +221,12 @@ export default function ProjetDetailPage() {
       )}
 
       {/* Tabs */}
-      <Tabs defaultValue="identification" className="w-full">
+      <Tabs defaultValue="introduction" className="w-full">
         <TabsList className="bg-secondary border border-border flex-wrap">
-          <TabsTrigger value="identification">Identification</TabsTrigger>
-          <TabsTrigger value="contexte">Contexte & Justification</TabsTrigger>
-          <TabsTrigger value="workpackages">Objectifs & Cadre logique ({workPackages.length})</TabsTrigger>
+          <TabsTrigger value="introduction">1. Introduction</TabsTrigger>
+          <TabsTrigger value="contexte">2. Contexte & Justification</TabsTrigger>
+          <TabsTrigger value="objectifs">3. Objectifs ({workPackages.length})</TabsTrigger>
+          <TabsTrigger value="resultats">4. Résultats attendus</TabsTrigger>
           <TabsTrigger value="toc">Théorie du changement</TabsTrigger>
           <TabsTrigger value="budget">Budget ({budgetLines?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
