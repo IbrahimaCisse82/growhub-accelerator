@@ -67,6 +67,7 @@ const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigit
 // --- Metadata interface for new sections ---
 interface ProjectMetadata {
   introduction?: string;
+  contexte_justification?: string;
   contexte_territorial?: string;
   contraintes?: string;
   alignement_strategique?: string;
@@ -172,6 +173,7 @@ export default function ProjectWizardPage() {
 
   // Step 1: Contexte & Justification (metadata)
   const [introduction, setIntroduction] = useState("");
+  const [contexteJustification, setContexteJustification] = useState("");
   const [contexteT, setContexteT] = useState("");
   const [contraintes, setContraintes] = useState("");
   const [alignement, setAlignement] = useState("");
@@ -302,6 +304,7 @@ export default function ProjectWizardPage() {
       // Metadata
       const meta: ProjectMetadata = (p.metadata as ProjectMetadata) || {};
       setIntroduction(meta.introduction || "");
+      setContexteJustification(meta.contexte_justification || "");
       setContexteT(meta.contexte_territorial || "");
       setContraintes(meta.contraintes || "");
       setAlignement(meta.alignement_strategique || "");
@@ -433,7 +436,7 @@ export default function ProjectWizardPage() {
 
   // --- Build metadata ---
   const buildMetadata = (): ProjectMetadata => ({
-    introduction, contexte_territorial: contexteT, contraintes, alignement_strategique: alignement, justification,
+    introduction, contexte_justification: contexteJustification, contexte_territorial: contexteT, contraintes, alignement_strategique: alignement, justification,
     strategie_objectif: strategieObjectif, strategie_axes: strategieAxes.filter(Boolean), strategie_modalites: strategieModalites,
     methodologie, population_cible: populationCible, estimation_beneficiaires: estimationBeneficiaires,
     personnel_cle: personnelCle.filter(p => p.role), partenaires: partenaires.filter(p => p.categorie),
@@ -680,7 +683,10 @@ export default function ProjectWizardPage() {
                 <textarea value={introduction} onChange={e => setIntroduction(e.target.value)} className={textareaLgCls} placeholder="Présentation générale du contexte et de la problématique adressée par le projet…" />
               </div>
               <div className="space-y-2">
-                <label className={labelCls}>Contexte territorial</label>
+                <label className={labelCls}>Contexte et justification du projet</label>
+                <textarea value={contexteJustification} onChange={e => setContexteJustification(e.target.value)} className={textareaLgCls} placeholder="Décrivez le contexte global et la justification du projet : pourquoi ce projet est pertinent dans le contexte actuel…" />
+              </div>
+              <div className="space-y-2">
                 <textarea value={contexteT} onChange={e => setContexteT(e.target.value)} className={textareaLgCls} placeholder="Description du contexte géographique, socio-économique et institutionnel des zones d'intervention…" />
               </div>
               <div className="space-y-2">

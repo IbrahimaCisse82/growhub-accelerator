@@ -376,12 +376,13 @@ function Empty({ text }: { text: string }) {
 function ContexteJustificationTab({ metadata }: { metadata: Record<string, unknown> | null }) {
   const meta = metadata ?? {};
   const introduction = meta.introduction as string | undefined;
+  const contexteJustification = meta.contexte_justification as string | undefined;
   const contexte = meta.contexte_territorial as string | undefined;
   const contraintes = meta.contraintes_vulnerabilites as string | undefined;
   const alignement = meta.alignement_strategique as string | undefined;
   const justification = meta.justification as string | undefined;
 
-  const hasContent = introduction || contexte || contraintes || alignement || justification;
+  const hasContent = introduction || contexteJustification || contexte || contraintes || alignement || justification;
 
   if (!hasContent) return <Empty text="Contexte et justification non renseignés — complétez via le Wizard" />;
 
@@ -392,6 +393,7 @@ function ContexteJustificationTab({ metadata }: { metadata: Record<string, unkno
         <p className="text-xs text-muted-foreground">Décrivez le contexte dans lequel s'inscrit le projet, les contraintes identifiées et la justification de l'intervention.</p>
       </div>
       {introduction && <Field label="Introduction" value={introduction} />}
+      {contexteJustification && <Field label="Contexte et justification du projet" value={contexteJustification} />}
       {contexte && <Field label="Contexte territorial" value={contexte} />}
       {contraintes && <Field label="Contraintes structurelles et vulnérabilités" value={contraintes} />}
       {alignement && <Field label="Alignement stratégique" value={alignement} />}
