@@ -382,29 +382,109 @@ function Empty({ text }: { text: string }) {
 
 function ContexteJustificationTab({ metadata }: { metadata: Record<string, unknown> | null }) {
   const meta = metadata ?? {};
-  const introduction = meta.introduction as string | undefined;
   const contexteJustification = meta.contexte_justification as string | undefined;
   const contexte = meta.contexte_territorial as string | undefined;
   const contraintes = meta.contraintes_vulnerabilites as string | undefined;
   const alignement = meta.alignement_strategique as string | undefined;
   const justification = meta.justification as string | undefined;
 
-  const hasContent = introduction || contexteJustification || contexte || contraintes || alignement || justification;
+  const hasContent = contexteJustification || contexte || contraintes || alignement || justification;
 
   if (!hasContent) return <Empty text="Contexte et justification non renseignés — complétez via le Wizard" />;
 
   return (
     <div className="bg-card border border-border rounded-xl p-5 space-y-6">
       <div>
-        <h2 className="text-lg font-bold text-foreground mb-1">Contexte et justification</h2>
-        <p className="text-xs text-muted-foreground">Décrivez le contexte dans lequel s'inscrit le projet, les contraintes identifiées et la justification de l'intervention.</p>
+        <h2 className="text-lg font-bold text-foreground mb-1">2. Contexte et justification du projet</h2>
+        <p className="text-xs text-muted-foreground">Contexte dans lequel s'inscrit le projet, contraintes identifiées et justification de l'intervention.</p>
       </div>
-      {introduction && <Field label="Introduction" value={introduction} />}
-      {contexteJustification && <Field label="Contexte et justification du projet" value={contexteJustification} />}
-      {contexte && <Field label="Contexte territorial" value={contexte} />}
-      {contraintes && <Field label="Contraintes structurelles et vulnérabilités" value={contraintes} />}
-      {alignement && <Field label="Alignement stratégique" value={alignement} />}
-      {justification && <Field label="Justification du projet" value={justification} />}
+      {contexteJustification && <Field label="2. Contexte et justification du projet" value={contexteJustification} />}
+      {contexte && <Field label="2.1. Contexte territorial" value={contexte} />}
+      {contraintes && <Field label="2.2. Contraintes structurelles et vulnérabilités" value={contraintes} />}
+      {alignement && <Field label="2.3. Alignement avec les orientations stratégiques" value={alignement} />}
+      {justification && <Field label="2.4. Justification de l'intervention" value={justification} />}
+    </div>
+  );
+}
+
+function ObjectifsTab({ logFrame, workPackages }: { logFrame: any; workPackages: any[] }) {
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 space-y-6">
+      <div>
+        <h2 className="text-lg font-bold text-foreground mb-1">3. Objectif général et spécifiques du projet</h2>
+        <p className="text-xs text-muted-foreground">Objectifs poursuivis par le projet.</p>
+      </div>
+      {logFrame?.overall_objective ? (
+        <Field label="3.1. Objectif général du projet" value={logFrame.overall_objective} />
+      ) : (
+        <Empty text="Objectif général non renseigné" />
+      )}
+      {logFrame?.specific_objectives && Array.isArray(logFrame.specific_objectives) && logFrame.specific_objectives.length > 0 ? (
+        <div className="border-l-2 border-accent/20 pl-4">
+          <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-2">3.2. Objectifs spécifiques</div>
+          <ul className="space-y-1.5">
+            {(logFrame.specific_objectives as string[]).map((obj: string, i: number) => (
+              <li key={i} className="flex items-start gap-2 text-[13px] text-foreground/85">
+                <span className="text-primary mt-0.5 shrink-0">OS{i + 1}.</span>
+                <span>{typeof obj === "string" ? obj : JSON.stringify(obj)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <Empty text="Aucun objectif spécifique renseigné" />
+      )}
+      {workPackages.length > 0 && (
+        <div className="space-y-4 mt-4">
+          <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">Work Packages associés</div>
+          {workPackages.map((wp) => (
+            <WorkPackageCard key={wp.number} wp={wp} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResultatsAttendusTab({ logFrame, indicators }: { logFrame: any; indicators: any[] }) {
+  const results = logFrame?.expected_results;
+  const hasResults = results && Array.isArray(results) && results.length > 0;
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 space-y-6">
+      <div>
+        <h2 className="text-lg font-bold text-foreground mb-1">4. Résultats attendus</h2>
+        <p className="text-xs text-muted-foreground">Résultats concrets attendus du projet et indicateurs associés.</p>
+      </div>
+      {hasResults ? (
+        <div className="border-l-2 border-accent/20 pl-4">
+          <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Résultats attendus</div>
+          <ul className="space-y-1.5">
+            {(results as string[]).map((r: string, i: number) => (
+              <li key={i} className="flex items-start gap-2 text-[13px] text-foreground/85">
+                <span className="text-primary mt-0.5 shrink-0">R{i + 1}.</span>
+                <span>{typeof r === "string" ? r : JSON.stringify(r)}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <Empty text="Aucun résultat attendu renseigné" />
+      )}
+      {indicators.length > 0 && (
+        <div className="border-l-2 border-primary/20 pl-4">
+          <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-2">Indicateurs ({indicators.length})</div>
+          <ul className="space-y-2">
+            {indicators.map((ind) => (
+              <li key={ind.id} className="text-[13px] text-foreground/85">
+                <span className="font-medium">{ind.name}</span>
+                {ind.target_value != null && <span className="text-muted-foreground"> — Cible : {ind.target_value} {ind.unit ?? ""}</span>}
+                {ind.current_value != null && <span className="text-primary ml-1">(Actuel : {ind.current_value})</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
