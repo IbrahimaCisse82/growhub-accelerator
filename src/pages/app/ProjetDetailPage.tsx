@@ -221,13 +221,35 @@ export default function ProjetDetailPage() {
       )}
 
       {/* Tabs */}
-      <Tabs defaultValue="workpackages" className="w-full">
-        <TabsList className="bg-secondary border border-border">
-          <TabsTrigger value="workpackages">Work Packages ({workPackages.length})</TabsTrigger>
+      <Tabs defaultValue="identification" className="w-full">
+        <TabsList className="bg-secondary border border-border flex-wrap">
+          <TabsTrigger value="identification">Identification</TabsTrigger>
+          <TabsTrigger value="contexte">Contexte & Justification</TabsTrigger>
+          <TabsTrigger value="workpackages">Objectifs & Cadre logique ({workPackages.length})</TabsTrigger>
           <TabsTrigger value="toc">Théorie du changement</TabsTrigger>
           <TabsTrigger value="budget">Budget ({budgetLines?.length ?? 0})</TabsTrigger>
-          <TabsTrigger value="documents">📁 Documents</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
+
+        {/* Identification tab */}
+        <TabsContent value="identification" className="mt-4">
+          <div className="bg-card border border-border rounded-xl p-5 space-y-5">
+            {description && <Field label="Description" value={description} />}
+            {project.country && <Field label="Pays" value={project.country} />}
+            {project.locations && (project.locations as string[]).length > 0 && (
+              <JsonList label="Lieux d'implémentation" items={project.locations} />
+            )}
+            {project.duration_months && <Field label="Durée" value={`${project.duration_months} mois`} />}
+            {project.start_date && <Field label="Date de début" value={new Date(project.start_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} />}
+            {project.end_date && <Field label="Date de fin" value={new Date(project.end_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} />}
+            {!description && !project.country && !project.start_date && <Empty text="Aucune information d'identification renseignée" />}
+          </div>
+        </TabsContent>
+
+        {/* Contexte & Justification tab */}
+        <TabsContent value="contexte" className="mt-4">
+          <ContexteJustificationTab metadata={project.metadata as Record<string, unknown> | null} />
+        </TabsContent>
 
         {/* Work Packages tab */}
         <TabsContent value="workpackages" className="mt-4">
@@ -347,6 +369,33 @@ function Empty({ text }: { text: string }) {
     <div className="bg-card border border-border rounded-xl flex flex-col items-center justify-center py-12">
       <span className="text-3xl mb-2">📋</span>
       <p className="text-sm text-muted-foreground">{text}</p>
+    </div>
+  );
+}
+
+function ContexteJustificationTab({ metadata }: { metadata: Record<string, unknown> | null }) {
+  const meta = metadata ?? {};
+  const introduction = meta.introduction as string | undefined;
+  const contexte = meta.contexte_territorial as string | undefined;
+  const contraintes = meta.contraintes_vulnerabilites as string | undefined;
+  const alignement = meta.alignement_strategique as string | undefined;
+  const justification = meta.justification as string | undefined;
+
+  const hasContent = introduction || contexte || contraintes || alignement || justification;
+
+  if (!hasContent) return <Empty text="Contexte et justification non renseignés — complétez via le Wizard" />;
+
+  return (
+    <div className="bg-card border border-border rounded-xl p-5 space-y-6">
+      <div>
+        <h2 className="text-lg font-bold text-foreground mb-1">Contexte et justification</h2>
+        <p className="text-xs text-muted-foreground">Décrivez le contexte dans lequel s'inscrit le projet, les contraintes identifiées et la justification de l'intervention.</p>
+      </div>
+      {introduction && <Field label="Introduction" value={introduction} />}
+      {contexte && <Field label="Contexte territorial" value={contexte} />}
+      {contraintes && <Field label="Contraintes structurelles et vulnérabilités" value={contraintes} />}
+      {alignement && <Field label="Alignement stratégique" value={alignement} />}
+      {justification && <Field label="Justification du projet" value={justification} />}
     </div>
   );
 }
