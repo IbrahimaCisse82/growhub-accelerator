@@ -436,7 +436,7 @@ export default function ProjectWizardPage() {
 
   // --- Build metadata ---
   const buildMetadata = (): ProjectMetadata => ({
-    introduction, contexte_territorial: contexteT, contraintes, alignement_strategique: alignement, justification,
+    introduction, contexte_justification: contexteJustification, contexte_territorial: contexteT, contraintes, alignement_strategique: alignement, justification,
     strategie_objectif: strategieObjectif, strategie_axes: strategieAxes.filter(Boolean), strategie_modalites: strategieModalites,
     methodologie, population_cible: populationCible, estimation_beneficiaires: estimationBeneficiaires,
     personnel_cle: personnelCle.filter(p => p.role), partenaires: partenaires.filter(p => p.categorie),
