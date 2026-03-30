@@ -304,6 +304,7 @@ export default function ProjectWizardPage() {
       // Metadata
       const meta: ProjectMetadata = (p.metadata as ProjectMetadata) || {};
       setIntroduction(meta.introduction || "");
+      setContexteJustification(meta.contexte_justification || "");
       setContexteT(meta.contexte_territorial || "");
       setContraintes(meta.contraintes || "");
       setAlignement(meta.alignement_strategique || "");
