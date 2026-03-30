@@ -173,6 +173,7 @@ export default function ProjectWizardPage() {
 
   // Step 1: Contexte & Justification (metadata)
   const [introduction, setIntroduction] = useState("");
+  const [contexteJustification, setContexteJustification] = useState("");
   const [contexteT, setContexteT] = useState("");
   const [contraintes, setContraintes] = useState("");
   const [alignement, setAlignement] = useState("");
