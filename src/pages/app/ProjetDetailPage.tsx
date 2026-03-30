@@ -221,13 +221,35 @@ export default function ProjetDetailPage() {
       )}
 
       {/* Tabs */}
-      <Tabs defaultValue="workpackages" className="w-full">
-        <TabsList className="bg-secondary border border-border">
-          <TabsTrigger value="workpackages">Work Packages ({workPackages.length})</TabsTrigger>
+      <Tabs defaultValue="identification" className="w-full">
+        <TabsList className="bg-secondary border border-border flex-wrap">
+          <TabsTrigger value="identification">Identification</TabsTrigger>
+          <TabsTrigger value="contexte">Contexte & Justification</TabsTrigger>
+          <TabsTrigger value="workpackages">Objectifs & Cadre logique ({workPackages.length})</TabsTrigger>
           <TabsTrigger value="toc">Théorie du changement</TabsTrigger>
           <TabsTrigger value="budget">Budget ({budgetLines?.length ?? 0})</TabsTrigger>
-          <TabsTrigger value="documents">📁 Documents</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
+
+        {/* Identification tab */}
+        <TabsContent value="identification" className="mt-4">
+          <div className="bg-card border border-border rounded-xl p-5 space-y-5">
+            {description && <Field label="Description" value={description} />}
+            {project.country && <Field label="Pays" value={project.country} />}
+            {project.locations && (project.locations as string[]).length > 0 && (
+              <JsonList label="Lieux d'implémentation" items={project.locations} />
+            )}
+            {project.duration_months && <Field label="Durée" value={`${project.duration_months} mois`} />}
+            {project.start_date && <Field label="Date de début" value={new Date(project.start_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} />}
+            {project.end_date && <Field label="Date de fin" value={new Date(project.end_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} />}
+            {!description && !project.country && !project.start_date && <Empty text="Aucune information d'identification renseignée" />}
+          </div>
+        </TabsContent>
+
+        {/* Contexte & Justification tab */}
+        <TabsContent value="contexte" className="mt-4">
+          <ContexteJustificationTab metadata={project.metadata as Record<string, unknown> | null} />
+        </TabsContent>
 
         {/* Work Packages tab */}
         <TabsContent value="workpackages" className="mt-4">
