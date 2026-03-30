@@ -232,10 +232,17 @@ export default function ProjetDetailPage() {
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
-        {/* Identification tab */}
-        <TabsContent value="identification" className="mt-4">
+        {/* 1. Introduction */}
+        <TabsContent value="introduction" className="mt-4">
           <div className="bg-card border border-border rounded-xl p-5 space-y-5">
-            {description && <Field label="Description" value={description} />}
+            <div>
+              <h2 className="text-lg font-bold text-foreground mb-1">1. Introduction</h2>
+              <p className="text-xs text-muted-foreground">Présentation générale du projet et de son contexte d'intervention.</p>
+            </div>
+            {description && <Field label="Description du projet" value={description} />}
+            {(project.metadata as Record<string, unknown> | null)?.introduction && (
+              <Field label="Introduction" value={(project.metadata as Record<string, unknown>).introduction as string} />
+            )}
             {project.country && <Field label="Pays" value={project.country} />}
             {project.locations && (project.locations as string[]).length > 0 && (
               <JsonList label="Lieux d'implémentation" items={project.locations} />
@@ -243,26 +250,25 @@ export default function ProjetDetailPage() {
             {project.duration_months && <Field label="Durée" value={`${project.duration_months} mois`} />}
             {project.start_date && <Field label="Date de début" value={new Date(project.start_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} />}
             {project.end_date && <Field label="Date de fin" value={new Date(project.end_date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })} />}
-            {!description && !project.country && !project.start_date && <Empty text="Aucune information d'identification renseignée" />}
+            {!description && !(project.metadata as Record<string, unknown> | null)?.introduction && !project.country && !project.start_date && (
+              <Empty text="Aucune information d'introduction renseignée" />
+            )}
           </div>
         </TabsContent>
 
-        {/* Contexte & Justification tab */}
+        {/* 2. Contexte & Justification */}
         <TabsContent value="contexte" className="mt-4">
           <ContexteJustificationTab metadata={project.metadata as Record<string, unknown> | null} />
         </TabsContent>
 
-        {/* Work Packages tab */}
-        <TabsContent value="workpackages" className="mt-4">
-          {workPackages.length > 0 ? (
-            <div className="space-y-4">
-              {workPackages.map((wp) => (
-                <WorkPackageCard key={wp.number} wp={wp} />
-              ))}
-            </div>
-          ) : (
-            <Empty text="Aucun Work Package défini — renseignez le cadre logique avec des objectifs spécifiques" />
-          )}
+        {/* 3. Objectifs */}
+        <TabsContent value="objectifs" className="mt-4">
+          <ObjectifsTab logFrame={logFrame} workPackages={workPackages} />
+        </TabsContent>
+
+        {/* 4. Résultats attendus */}
+        <TabsContent value="resultats" className="mt-4">
+          <ResultatsAttendusTab logFrame={logFrame} indicators={indicators ?? []} />
         </TabsContent>
 
         {/* Theory of Change tab */}
