@@ -376,6 +376,7 @@ function Empty({ text }: { text: string }) {
 function ContexteJustificationTab({ metadata }: { metadata: Record<string, unknown> | null }) {
   const meta = metadata ?? {};
   const introduction = meta.introduction as string | undefined;
+  const contexteJustification = meta.contexte_justification as string | undefined;
   const contexte = meta.contexte_territorial as string | undefined;
   const contraintes = meta.contraintes_vulnerabilites as string | undefined;
   const alignement = meta.alignement_strategique as string | undefined;

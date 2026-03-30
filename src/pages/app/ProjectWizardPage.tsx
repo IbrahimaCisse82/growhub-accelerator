@@ -683,7 +683,10 @@ export default function ProjectWizardPage() {
                 <textarea value={introduction} onChange={e => setIntroduction(e.target.value)} className={textareaLgCls} placeholder="Présentation générale du contexte et de la problématique adressée par le projet…" />
               </div>
               <div className="space-y-2">
-                <label className={labelCls}>Contexte territorial</label>
+                <label className={labelCls}>Contexte et justification du projet</label>
+                <textarea value={contexteJustification} onChange={e => setContexteJustification(e.target.value)} className={textareaLgCls} placeholder="Décrivez le contexte global et la justification du projet : pourquoi ce projet est pertinent dans le contexte actuel…" />
+              </div>
+              <div className="space-y-2">
                 <textarea value={contexteT} onChange={e => setContexteT(e.target.value)} className={textareaLgCls} placeholder="Description du contexte géographique, socio-économique et institutionnel des zones d'intervention…" />
               </div>
               <div className="space-y-2">
