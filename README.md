@@ -1,73 +1,91 @@
-# Welcome to your Lovable project
+# Application Cloudflare Workers + Pages (Full-Stack)
 
-## Project info
+Cette application est configurée pour être déployée sur Cloudflare avec Workers (backend API) et Pages (frontend).
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Architecture
 
-## How can I edit this code?
+- **Frontend**: React + Vite, déployé sur Cloudflare Pages
+- **Backend API**: Cloudflare Workers via `functions/_middleware.ts`
+- **Routes API**: Disponibles sous `/api/`
+- **KV Store**: Cache et stockage distribué (optionnel)
 
-There are several ways of editing your application.
+## Déploiement
 
-**Use Lovable**
+### Option 1: Déploiement via GitHub (Recommandé)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+1. Poussez votre code sur un dépôt GitHub
+2. Connectez-vous à [Cloudflare Pages](https://pages.cloudflare.com/)
+3. Cliquez sur "Create a project" et sélectionnez votre dépôt
+4. Configurez les paramètres:
+   - **Build command**: `npm run build`
+   - **Build output directory**: `dist`
+   - **Root directory**: `/`
+5. Sous "Settings" > "Functions":
+   - Configuration automatique avec `functions/_middleware.ts`
+6. Cliquez sur "Save and Deploy"
 
-Changes made via Lovable will be committed automatically to this repo.
+### Option 2: Déploiement via Wrangler CLI
 
-**Use your preferred IDE**
+```bash
+npm install
+npm run build
+wrangler pages deploy dist
+```
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Configuration Environnement
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Variables d'environnement Cloudflare Pages
 
-Follow these steps:
+Dans les paramètres du projet Cloudflare:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. **Settings** > **Environment variables**
+2. Ajouter les variables (préfixées par `VITE_` pour le client):
+   ```
+   VITE_SUPABASE_URL=https://your-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-anon-key
+   ENVIRONMENT=production
+   ```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+3. **Functions** > **KV Namespace Bindings** (optionnel)
+   ```
+   KV_NAMESPACE → votre-namespace-id
+   ```
 
-# Step 3: Install the necessary dependencies.
-npm i
+## API Endpoints
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+- `GET /api/health` - Vérifier l'état du service
+- `GET /api/config` - Récupérer la configuration
+
+## Développement Local
+
+```bash
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+## Build Production
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+npm run build
+npm run preview
+```
 
-**Use GitHub Codespaces**
+## Déploiement avec Script
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```bash
+npm run deploy
+```
 
-## What technologies are used for this project?
+## Fichiers Clés
 
-This project is built with:
+- `wrangler.toml` - Configuration Cloudflare Workers/Pages
+- `functions/_middleware.ts` - Handler API global
+- `vite.config.ts` - Configuration Vite
+- `_headers` - En-têtes HTTP de sécurité
+- `_redirects` - Routage SPA
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Documentation Utile
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- [Cloudflare Pages Documentation](https://developers.cloudflare.com/pages/)
+- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
+- [Cloudflare KV Documentation](https://developers.cloudflare.com/workers/runtime-apis/kv/)
