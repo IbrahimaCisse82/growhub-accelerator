@@ -1,117 +1,102 @@
-import React, { useState, useEffect } from 'react'
-import './App.css'
-import { supabase } from './integrations/supabase/client'
-import type { User } from '@supabase/supabase-js'
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/hooks/useAuth";
+import { Toaster } from "@/components/ui/sonner";
+
+import LoginPage from "@/pages/auth/LoginPage";
+import SignupPage from "@/pages/auth/SignupPage";
+import ForgotPasswordPage from "@/pages/auth/ForgotPasswordPage";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
+import PublicApplicationPage from "@/pages/public/PublicApplicationPage";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AdminRoute from "@/components/auth/AdminRoute";
+import AppLayout from "@/components/layout/AppLayout";
+
+import DashboardPage from "@/pages/app/DashboardPage";
+import PortfoliosPage from "@/pages/app/PortfoliosPage";
+import PortfolioDetailPage from "@/pages/app/PortfolioDetailPage";
+import ProgrammesPage from "@/pages/app/ProgrammesPage";
+import ProgramDetailPage from "@/pages/app/ProgramDetailPage";
+import ProjetsPage from "@/pages/app/ProjetsPage";
+import ProjetDetailPage from "@/pages/app/ProjetDetailPage";
+import CohortesPage from "@/pages/app/CohortesPage";
+import CohortDetailPage from "@/pages/app/CohortDetailPage";
+import StartupsPage from "@/pages/app/StartupsPage";
+import StartupDetailPage from "@/pages/app/StartupDetailPage";
+import CandidaturesPage from "@/pages/app/CandidaturesPage";
+import MentorsPage from "@/pages/app/MentorsPage";
+import CoachingPage from "@/pages/app/CoachingPage";
+import LmsPage from "@/pages/app/LmsPage";
+import GrantsPage from "@/pages/app/GrantsPage";
+import GrantDetailPage from "@/pages/app/GrantDetailPage";
+import GrantsAnalyticsPage from "@/pages/app/GrantsAnalyticsPage";
+import MessagingPage from "@/pages/app/MessagingPage";
+import AnalyticsPage from "@/pages/app/AnalyticsPage";
+import UsersPage from "@/pages/app/UsersPage";
+import SettingsPage from "@/pages/app/SettingsPage";
+import ProfilePage from "@/pages/app/ProfilePage";
+import NotFound from "@/pages/NotFound";
 
 function App() {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault()
-    try {
-      if (authMode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        if (error) alert(error.message)
-      } else {
-        const { error } = await supabase.auth.signUp({ email, password })
-        if (error) alert(error.message)
-        else alert('Account created successfully!')
-      }
-    } catch (error) {
-      console.error('Error:', error)
-    }
-  }
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut()
-  }
-
-  if (loading) {
-    return <div className="app"><p>Loading...</p></div>
-  }
-
-  if (!user) {
-    return (
-      <div className="app">
-        <header className="header">
-          <h1>GrowHub Accelerator</h1>
-          <p>Plateforme de gestion d'accélérateur</p>
-        </header>
-        <main className="main">
-          <div className="card">
-            <h2>{authMode === 'login' ? 'Login' : 'Sign Up'}</h2>
-            <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
-              <input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid #ccc' }}
-              />
-              <button type="submit" style={{ padding: '0.75rem', borderRadius: '4px', background: '#0070f3', color: 'white', border: 'none', cursor: 'pointer' }}>
-                {authMode === 'login' ? 'Login' : 'Sign Up'}
-              </button>
-            </form>
-            <p style={{ marginTop: '1rem' }}>
-              {authMode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-              <button onClick={() => setAuthMode(authMode === 'login' ? 'signup' : 'login')} style={{ background: 'none', border: 'none', color: '#0070f3', cursor: 'pointer', textDecoration: 'underline' }}>
-                {authMode === 'login' ? 'Sign Up' : 'Login'}
-              </button>
-            </p>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
   return (
-    <div className="app">
-      <header className="header">
-        <h1>GrowHub Accelerator</h1>
-        <p>Welcome, {user.email}</p>
-      </header>
-      <main className="main">
-        <div className="card">
-          <h2>Dashboard</h2>
-          <p>You are now logged in to GrowHub Accelerator!</p>
-          <div style={{ marginTop: '2rem', display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-            <span style={{ padding: '0.5rem 1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>React + Vite</span>
-            <span style={{ padding: '0.5rem 1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>Vercel</span>
-            <span style={{ padding: '0.5rem 1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '4px' }}>Supabase</span>
-          </div>
-          <button onClick={handleSignOut} style={{ marginTop: '2rem', padding: '0.75rem 2rem', borderRadius: '4px', background: '#ff4444', color: 'white', border: 'none', cursor: 'pointer' }}>
-            Sign Out
-          </button>
-        </div>
-      </main>
-    </div>
-  )
+    <BrowserRouter>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<Navigate to="/connexion" replace />} />
+          <Route path="/connexion" element={<LoginPage />} />
+          <Route path="/inscription" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/postuler" element={<PublicApplicationPage />} />
+
+          <Route
+            path="/app/*"
+            element={
+              <ProtectedRoute>
+                <AppLayout>
+                  <Routes>
+                    <Route path="dashboard" element={<DashboardPage />} />
+                    <Route path="portefeuilles" element={<PortfoliosPage />} />
+                    <Route path="portefeuilles/:id" element={<PortfolioDetailPage />} />
+                    <Route path="programmes" element={<ProgrammesPage />} />
+                    <Route path="programmes/:id" element={<ProgramDetailPage />} />
+                    <Route path="projets" element={<ProjetsPage />} />
+                    <Route path="projets/:id" element={<ProjetDetailPage />} />
+                    <Route path="cohortes" element={<CohortesPage />} />
+                    <Route path="cohortes/:id" element={<CohortDetailPage />} />
+                    <Route path="startups" element={<StartupsPage />} />
+                    <Route path="startups/:id" element={<StartupDetailPage />} />
+                    <Route path="candidatures" element={<CandidaturesPage />} />
+                    <Route path="mentors" element={<MentorsPage />} />
+                    <Route path="coaching" element={<CoachingPage />} />
+                    <Route path="lms" element={<LmsPage />} />
+                    <Route path="subventions" element={<GrantsPage />} />
+                    <Route path="subventions/:id" element={<GrantDetailPage />} />
+                    <Route path="subventions-analytics" element={<GrantsAnalyticsPage />} />
+                    <Route path="messagerie" element={<MessagingPage />} />
+                    <Route path="analytics" element={<AnalyticsPage />} />
+                    <Route
+                      path="utilisateurs"
+                      element={
+                        <AdminRoute>
+                          <UsersPage />
+                        </AdminRoute>
+                      }
+                    />
+                    <Route path="parametres" element={<SettingsPage />} />
+                    <Route path="profil" element={<ProfilePage />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </AppLayout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <Toaster />
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;
