@@ -385,7 +385,7 @@ function Empty({ text }: { text: string }) {
   );
 }
 
-function ContexteJustificationTab({ metadata }: { metadata: Record<string, unknown> | null }) {
+function ContexteJustificationTab({ metadata, projectId, isAdmin }: { metadata: Record<string, unknown> | null; projectId: string; isAdmin: boolean }) {
   const meta = metadata ?? {};
   const contexteJustification = meta.contexte_justification as string | undefined;
   const contexte = meta.contexte_territorial as string | undefined;
@@ -403,11 +403,11 @@ function ContexteJustificationTab({ metadata }: { metadata: Record<string, unkno
         <h2 className="text-lg font-bold text-foreground mb-1">2. Contexte et justification du projet</h2>
         <p className="text-xs text-muted-foreground">Contexte dans lequel s'inscrit le projet, contraintes identifiées et justification de l'intervention.</p>
       </div>
-      {contexteJustification && <Field label="2. Contexte et justification du projet" value={contexteJustification} />}
-      {contexte && <Field label="2.1. Contexte territorial" value={contexte} />}
-      {contraintes && <Field label="2.2. Contraintes structurelles et vulnérabilités" value={contraintes} />}
-      {alignement && <Field label="2.3. Alignement avec les orientations stratégiques" value={alignement} />}
-      {justification && <Field label="2.4. Justification de l'intervention" value={justification} />}
+      {contexteJustification && <InlineEditField projectId={projectId} fieldKey="metadata.contexte_justification" label="2. Contexte et justification du projet" value={contexteJustification} isAdmin={isAdmin} />}
+      {contexte && <InlineEditField projectId={projectId} fieldKey="metadata.contexte_territorial" label="2.1. Contexte territorial" value={contexte} isAdmin={isAdmin} />}
+      {contraintes && <InlineEditField projectId={projectId} fieldKey="metadata.contraintes_vulnerabilites" label="2.2. Contraintes structurelles et vulnérabilités" value={contraintes} isAdmin={isAdmin} />}
+      {alignement && <InlineEditField projectId={projectId} fieldKey="metadata.alignement_strategique" label="2.3. Alignement avec les orientations stratégiques" value={alignement} isAdmin={isAdmin} />}
+      {justification && <InlineEditField projectId={projectId} fieldKey="metadata.justification" label="2.4. Justification de l'intervention" value={justification} isAdmin={isAdmin} />}
     </div>
   );
 }
