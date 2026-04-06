@@ -10,12 +10,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import WorkPackageCard from "@/components/projects/WorkPackageCard";
+import InlineEditField from "@/components/projects/InlineEditField";
 import { buildWorkPackages } from "@/lib/workPackageUtils";
 import EntityDocumentsTab from "@/components/shared/EntityDocumentsTab";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserProfile } from "@/hooks/useAssignableUsers";
 import { EditProjectDialog } from "@/components/dialogs/EditEntityDialogs";
 import ValidateEntityDialog from "@/components/dialogs/ValidateEntityDialog";
+import { exportProjectPdf } from "@/lib/projectPdfExport";
 
 const statusMap: Record<string, { label: string; color: "green" | "blue" | "amber" | "gray" }> = {
   active: { label: "Actif", color: "green" },
@@ -163,6 +165,9 @@ export default function ProjetDetailPage() {
               )}
             </div>
             <div className="flex gap-2 shrink-0">
+              <GhButton size="sm" variant="ghost" onClick={() => exportProjectPdf({ project, logFrame: logFrame ?? null, indicators: indicators ?? [], budgetLines: budgetLines ?? [] })}>
+                📄 Export PDF
+              </GhButton>
               {isAdmin && (
                 <>
                   <GhButton size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
@@ -239,9 +244,9 @@ export default function ProjetDetailPage() {
               <h2 className="text-lg font-bold text-foreground mb-1">1. Introduction</h2>
               <p className="text-xs text-muted-foreground">Présentation générale du projet et de son contexte d'intervention.</p>
             </div>
-            {description && <Field label="Description du projet" value={description} />}
+            {description && <InlineEditField projectId={project.id} fieldKey="description" label="Description du projet" value={description} isAdmin={isAdmin} />}
             {(project.metadata as Record<string, unknown> | null)?.introduction && (
-              <Field label="Introduction" value={(project.metadata as Record<string, unknown>).introduction as string} />
+              <InlineEditField projectId={project.id} fieldKey="metadata.introduction" label="Introduction" value={(project.metadata as Record<string, unknown>).introduction as string} isAdmin={isAdmin} />
             )}
             {project.country && <Field label="Pays" value={project.country} />}
             {project.locations && (project.locations as string[]).length > 0 && (
@@ -258,7 +263,7 @@ export default function ProjetDetailPage() {
 
         {/* 2. Contexte & Justification */}
         <TabsContent value="contexte" className="mt-4">
-          <ContexteJustificationTab metadata={project.metadata as Record<string, unknown> | null} />
+          <ContexteJustificationTab metadata={project.metadata as Record<string, unknown> | null} projectId={project.id} isAdmin={isAdmin} />
         </TabsContent>
 
         {/* 3. Objectifs */}
@@ -380,7 +385,7 @@ function Empty({ text }: { text: string }) {
   );
 }
 
-function ContexteJustificationTab({ metadata }: { metadata: Record<string, unknown> | null }) {
+function ContexteJustificationTab({ metadata, projectId, isAdmin }: { metadata: Record<string, unknown> | null; projectId: string; isAdmin: boolean }) {
   const meta = metadata ?? {};
   const contexteJustification = meta.contexte_justification as string | undefined;
   const contexte = meta.contexte_territorial as string | undefined;
@@ -398,11 +403,11 @@ function ContexteJustificationTab({ metadata }: { metadata: Record<string, unkno
         <h2 className="text-lg font-bold text-foreground mb-1">2. Contexte et justification du projet</h2>
         <p className="text-xs text-muted-foreground">Contexte dans lequel s'inscrit le projet, contraintes identifiées et justification de l'intervention.</p>
       </div>
-      {contexteJustification && <Field label="2. Contexte et justification du projet" value={contexteJustification} />}
-      {contexte && <Field label="2.1. Contexte territorial" value={contexte} />}
-      {contraintes && <Field label="2.2. Contraintes structurelles et vulnérabilités" value={contraintes} />}
-      {alignement && <Field label="2.3. Alignement avec les orientations stratégiques" value={alignement} />}
-      {justification && <Field label="2.4. Justification de l'intervention" value={justification} />}
+      {contexteJustification && <InlineEditField projectId={projectId} fieldKey="metadata.contexte_justification" label="2. Contexte et justification du projet" value={contexteJustification} isAdmin={isAdmin} />}
+      {contexte && <InlineEditField projectId={projectId} fieldKey="metadata.contexte_territorial" label="2.1. Contexte territorial" value={contexte} isAdmin={isAdmin} />}
+      {contraintes && <InlineEditField projectId={projectId} fieldKey="metadata.contraintes_vulnerabilites" label="2.2. Contraintes structurelles et vulnérabilités" value={contraintes} isAdmin={isAdmin} />}
+      {alignement && <InlineEditField projectId={projectId} fieldKey="metadata.alignement_strategique" label="2.3. Alignement avec les orientations stratégiques" value={alignement} isAdmin={isAdmin} />}
+      {justification && <InlineEditField projectId={projectId} fieldKey="metadata.justification" label="2.4. Justification de l'intervention" value={justification} isAdmin={isAdmin} />}
     </div>
   );
 }
