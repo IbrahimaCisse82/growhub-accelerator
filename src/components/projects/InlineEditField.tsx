@@ -25,7 +25,7 @@ export default function InlineEditField({ projectId, fieldKey, label, value, isA
         const { data: current } = await supabase.from("projects").select("metadata").eq("id", projectId).single();
         const meta = (current?.metadata ?? {}) as Record<string, unknown>;
         meta[metaKey] = draft;
-        const { error } = await supabase.from("projects").update({ metadata: meta }).eq("id", projectId);
+        const { error } = await supabase.from("projects").update({ metadata: meta as any }).eq("id", projectId);
         if (error) throw error;
       } else if (fieldKey === "logframe.overall_objective") {
         const { data: existing } = await supabase.from("logical_frameworks").select("id").eq("project_id", projectId).maybeSingle();
