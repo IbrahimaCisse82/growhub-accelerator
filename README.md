@@ -1,118 +1,73 @@
-# Application Vercel + Bolt (Full-Stack)
+# Welcome to your Lovable project
 
-Cette application est configurée pour être déployée sur Vercel (frontend) avec un backend sur Bolt.
+## Project info
 
-## Architecture
+**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
-- **Frontend**: React + Vite, déployé sur Vercel
-- **Backend API**: Bolt via le dossier `/api`
-- **Base de données**: Supabase
-- **Routes API**: Disponibles sous `/api/`
+## How can I edit this code?
 
-## Déploiement
+There are several ways of editing your application.
 
-### Option 1: Déploiement via GitHub (Recommandé)
+**Use Lovable**
 
-1. Poussez votre code sur un dépôt GitHub
-2. Connectez-vous à [Vercel](https://vercel.com/)
-3. Cliquez sur "Import Project" et sélectionnez votre dépôt
-4. Configuration automatique détectée:
-   - **Framework Preset**: Vite
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-   - **Install Command**: `npm install`
-5. Ajoutez les variables d'environnement (voir ci-dessous)
-6. Cliquez sur "Deploy"
+Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
 
-### Option 2: Déploiement via Vercel CLI
+Changes made via Lovable will be committed automatically to this repo.
 
-```bash
-npm install -g vercel
-vercel login
-vercel
-```
+**Use your preferred IDE**
 
-## Configuration Environnement
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
 
-### Variables d'environnement Vercel
+The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
-Dans le dashboard Vercel, allez dans **Settings** > **Environment Variables** et ajoutez:
+Follow these steps:
 
-```
-VITE_API_URL=/api
-VITE_SUPABASE_URL=https://your-project.supabase.co
-VITE_SUPABASE_ANON_KEY=your-anon-key
-NODE_ENV=production
-```
+```sh
+# Step 1: Clone the repository using the project's Git URL.
+git clone <YOUR_GIT_URL>
 
-### Variables locales
+# Step 2: Navigate to the project directory.
+cd <YOUR_PROJECT_NAME>
 
-Créez un fichier `.env` à la racine:
-```bash
-cp .env.example .env
-```
+# Step 3: Install the necessary dependencies.
+npm i
 
-Puis remplissez les valeurs avec vos credentials Supabase.
-
-## API Endpoints (Backend Bolt)
-
-- `GET /api/health` - Vérification de l'état du service
-- `GET /api/config` - Configuration de l'application
-
-Pour ajouter de nouveaux endpoints, créez des fichiers `.ts` dans le dossier `api/`.
-
-## Développement Local
-
-```bash
-npm install
+# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
 
-L'application sera disponible sur `http://localhost:5173`
+**Edit a file directly in GitHub**
 
-## Build Production
+- Navigate to the desired file(s).
+- Click the "Edit" button (pencil icon) at the top right of the file view.
+- Make your changes and commit the changes.
 
-```bash
-npm run build
-npm run preview
-```
+**Use GitHub Codespaces**
 
-## Structure du Projet
+- Navigate to the main page of your repository.
+- Click on the "Code" button (green button) near the top right.
+- Select the "Codespaces" tab.
+- Click on "New codespace" to launch a new Codespace environment.
+- Edit files directly within the Codespace and commit and push your changes once you're done.
 
-```
-.
-├── api/                    # Backend API (Bolt)
-│   ├── health.ts          # Endpoint de santé
-│   ├── config.ts          # Endpoint de configuration
-│   └── README.md          # Documentation API
-├── src/                   # Frontend React
-│   ├── App.tsx
-│   ├── main.tsx
-│   └── ...
-├── dist/                  # Build de production
-├── vercel.json           # Configuration Vercel
-├── vite.config.ts        # Configuration Vite
-└── package.json
-```
+## What technologies are used for this project?
 
-## Fichiers Clés
+This project is built with:
 
-- `vercel.json` - Configuration Vercel (routing, headers, rewrites)
-- `api/` - Endpoints backend déployés sur Bolt
-- `vite.config.ts` - Configuration Vite
-- `.env.example` - Template des variables d'environnement
+- Vite
+- TypeScript
+- React
+- shadcn-ui
+- Tailwind CSS
 
-## Connexion Supabase
+## How can I deploy this project?
 
-L'application est configurée pour utiliser Supabase comme base de données. Assurez-vous d'avoir:
+Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
 
-1. Un projet Supabase créé sur [supabase.com](https://supabase.com)
-2. Les variables d'environnement configurées dans Vercel
-3. Les migrations de base de données appliquées si nécessaire
+## Can I connect a custom domain to my Lovable project?
 
-## Documentation Utile
+Yes, you can!
 
-- [Vercel Documentation](https://vercel.com/docs)
-- [Vite Documentation](https://vitejs.dev/)
-- [Supabase Documentation](https://supabase.com/docs)
-- [React Documentation](https://react.dev/)
+To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+
+Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
