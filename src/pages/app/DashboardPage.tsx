@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import StatCard from "@/components/shared/StatCard";
-import { Triangle, DollarSign, FolderKanban, CircleDot, Headphones, Users, CheckSquare, BookOpen, Target, BarChart3 } from "lucide-react";
+import { Triangle, DollarSign, FolderKanban, CircleDot, Headphones, Users, CheckSquare, BookOpen, Target, BarChart3, TrendingUp } from "lucide-react";
+import { PipelineBarChart, StatusPieChart, TrendLineChart } from "@/components/dashboard/DashboardCharts";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
@@ -237,18 +238,46 @@ export default function DashboardPage() {
         {/* Sidebar — Pipeline + Quick Access */}
         <div className="flex flex-col gap-4">
           {isAdmin ? (
-            <GhCard title={t("dash.pipeline")} action={<GhButton variant="ghost" onClick={() => navigate("/app/candidatures")}>{t("dash.viewAll")}</GhButton>}>
-              <div className="flex flex-col gap-2">
-                {pipelineSteps.map((step) => (
-                  <div key={step.key} className="flex justify-between items-center py-1.5 border-b border-border last:border-b-0">
-                    <span className="text-[11.5px] text-muted-foreground">{step.label}</span>
-                    <span className="font-mono text-sm font-semibold text-foreground">
-                      {pipeline ? pipeline[step.key as keyof typeof pipeline] ?? 0 : "—"}
-                    </span>
+            <>
+              <GhCard title={t("dash.pipeline")} action={<GhButton variant="ghost" onClick={() => navigate("/app/candidatures")}>{t("dash.viewAll")}</GhButton>}>
+                {pipeline ? (
+                  <PipelineBarChart data={pipelineSteps.map(step => ({ label: step.label, value: Number(pipeline[step.key as keyof typeof pipeline] ?? 0) }))} />
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    {pipelineSteps.map((step) => (
+                      <div key={step.key} className="flex justify-between items-center py-1.5 border-b border-border last:border-b-0">
+                        <span className="text-[11.5px] text-muted-foreground">{step.label}</span>
+                        <span className="font-mono text-sm font-semibold text-foreground">—</span>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </GhCard>
+                )}
+              </GhCard>
+              {/* Project status distribution */}
+              {projects && projects.length > 0 && (
+                <GhCard title={t("dash.projectDistribution") || "Répartition projets"}>
+                  <StatusPieChart data={[
+                    { name: "Actif", value: projects.filter(p => p.status === "active").length },
+                    { name: "Brouillon", value: projects.filter(p => p.status === "draft").length },
+                    { name: "En pause", value: projects.filter(p => p.status === "paused").length },
+                    { name: "Terminé", value: projects.filter(p => p.status === "completed").length },
+                  ]} />
+                  <div className="flex flex-wrap gap-2 mt-2 justify-center">
+                    {[
+                      { label: "Actif", color: "bg-primary" },
+                      { label: "Brouillon", color: "bg-accent" },
+                      { label: "En pause", color: "bg-[hsl(142,71%,45%)]" },
+                      { label: "Terminé", color: "bg-[hsl(38,92%,50%)]" },
+                    ].map(item => (
+                      <div key={item.label} className="flex items-center gap-1.5">
+                        <div className={`w-2 h-2 rounded-full ${item.color}`} />
+                        <span className="text-[10px] text-muted-foreground">{item.label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </GhCard>
+              )}
+            </>
           ) : isEntrepreneur && !isMentor ? (
             /* Entrepreneur: KPIs widget */
             <GhCard title={t("entrepreneur.myKpis")} action={<GhButton variant="ghost" onClick={() => myStartup && navigate(`/app/entreprises/${myStartup.id}`)}>{t("dash.viewAll")}</GhButton>}>
@@ -334,29 +363,39 @@ export default function DashboardPage() {
       {/* Bottom row — admin only */}
       {isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
+          {/* Funding progress chart */}
           <GhCard title={t("dash.activeFunding")} action={<GhButton variant="ghost" onClick={() => navigate("/app/grants")}>{t("dash.viewAll")}</GhButton>}>
-            <div className="flex flex-col gap-2.5">
-              {loadingGrants ? (
-                Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-6 rounded" />)
-              ) : activeGrants.length === 0 ? (
-                <div className="text-[11.5px] text-muted-foreground text-center py-4">{t("dash.noFunding")}</div>
-              ) : (
-                activeGrants.slice(0, 5).map((g) => {
-                  const pct = g.amount_total > 0 ? Math.round(((g.amount_disbursed ?? 0) / g.amount_total) * 100) : 0;
-                  return (
-                    <div key={g.id} className="cursor-pointer hover:bg-secondary/50 rounded-lg p-1.5 -mx-1.5 transition-colors" onClick={() => navigate(`/app/grants/${g.id}`)}>
-                      <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-                        <span className="font-medium text-foreground">{g.name}</span>
-                        <span className="font-mono">{pct}%</span>
+            {loadingGrants ? (
+              Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-6 rounded" />)
+            ) : activeGrants.length === 0 ? (
+              <div className="text-[11.5px] text-muted-foreground text-center py-4">{t("dash.noFunding")}</div>
+            ) : (
+              <>
+                <TrendLineChart
+                  data={activeGrants.slice(0, 6).map(g => ({
+                    label: g.code || g.name.substring(0, 8),
+                    value: g.amount_total > 0 ? Math.round(((g.amount_disbursed ?? 0) / g.amount_total) * 100) : 0,
+                  }))}
+                  color="hsl(var(--accent))"
+                />
+                <div className="mt-3 flex flex-col gap-2">
+                  {activeGrants.slice(0, 4).map((g) => {
+                    const pct = g.amount_total > 0 ? Math.round(((g.amount_disbursed ?? 0) / g.amount_total) * 100) : 0;
+                    return (
+                      <div key={g.id} className="cursor-pointer hover:bg-secondary/50 rounded-lg p-1.5 -mx-1.5 transition-colors" onClick={() => navigate(`/app/grants/${g.id}`)}>
+                        <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                          <span className="font-medium text-foreground">{g.name}</span>
+                          <span className="font-mono">{pct}%</span>
+                        </div>
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-accent transition-all duration-600" style={{ width: `${pct}%` }} />
+                        </div>
                       </div>
-                      <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-accent transition-all duration-600" style={{ width: `${pct}%` }} />
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </GhCard>
 
           <GhCard title={t("dash.recentActivity")} action={<GhButton variant="ghost" onClick={() => navigate("/app/activites")}>{t("dash.viewAll")}</GhButton>}>
