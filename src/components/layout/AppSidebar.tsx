@@ -152,7 +152,7 @@ export default function AppSidebar({ mobile, onNavigate }: AppSidebarProps) {
     }>
       <div className="px-[18px] py-[22px] border-b border-border flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <img src={logo} alt="GrowHub Accelerator" className="h-8 w-auto" />
+          <img src={logo} alt="Grow Hub Management System" className="h-8 w-auto" />
         </div>
       </div>
 

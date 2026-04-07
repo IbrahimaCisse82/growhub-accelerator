@@ -50,7 +50,7 @@ export default function CertificateDialog({ startupName, programName, cohortName
           <div style={{ border: "3px double #1a6b4a", borderRadius: 12, padding: 32 }}>
             {/* Header */}
             <div style={{ fontSize: 12, letterSpacing: 4, textTransform: "uppercase", color: "#6b7280", marginBottom: 8 }}>
-              GrowHub Accelerator
+              Grow Hub Management System
             </div>
             <div style={{ fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700, color: "#1a6b4a", marginBottom: 4 }}>
               Attestation de Participation

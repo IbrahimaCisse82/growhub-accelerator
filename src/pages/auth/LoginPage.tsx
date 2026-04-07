@@ -31,10 +31,10 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-background/60 backdrop-blur-sm" />
       <div className="relative w-full max-w-[400px] space-y-8 bg-card/90 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-border">
         <div className="flex flex-col items-center gap-4">
-          <img src={logo} alt="GrowHub Accelerator" className="h-10 w-auto" />
+          <img src={logo} alt="Grow Hub Management System" className="h-10 w-auto" />
           <div className="text-center">
             <h1 className="text-xl font-display font-bold text-foreground">Connexion</h1>
-            <p className="text-sm text-muted-foreground mt-1">Accédez à votre espace GrowHub Accelerator</p>
+            <p className="text-sm text-muted-foreground mt-1">Accédez à votre espace Grow Hub Management System</p>
           </div>
         </div>
 

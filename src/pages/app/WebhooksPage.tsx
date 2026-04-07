@@ -115,7 +115,7 @@ export default function WebhooksPage() {
           event: webhook.event_type,
           timestamp: new Date().toISOString(),
           test: true,
-          source: "GrowHub Accelerator",
+          source: "Grow Hub Management System",
         }),
       });
       toast({ title: "✓ Test envoyé", description: "Vérifiez l'historique de votre Zap pour confirmer." });

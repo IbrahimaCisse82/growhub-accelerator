@@ -73,7 +73,7 @@ export default function DashboardPage() {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
       <SectionHeader
         title={`${t("dash.welcome")}${profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}`}
-        subtitle={isAdmin ? t("dash.adminView") : isMentor ? t("dash.mentorView") : isEntrepreneur ? t("dash.entrepreneurView") : "GrowHub Accelerator"}
+        subtitle={isAdmin ? t("dash.adminView") : isMentor ? t("dash.mentorView") : isEntrepreneur ? t("dash.entrepreneurView") : "Grow Hub Management System"}
         actions={
           <>
             <GhButton variant="secondary" onClick={() => {
