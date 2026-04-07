@@ -13,6 +13,41 @@ const roleLabels: Record<string, string> = {
   super_admin: "Super Admin", coordinator: "Coordinateur", project_manager: "Chef de projet", mentor: "Mentor",
   entrepreneur: "Entrepreneur", evaluator: "Évaluateur", investor: "Investisseur", funder: "Bailleur",
 };
+function PasswordChangeForm() {
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [changing, setChanging] = useState(false);
+
+  const handleChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPw.length < 6) { toast({ title: "Le mot de passe doit faire au moins 6 caractères", variant: "destructive" }); return; }
+    if (newPw !== confirmPw) { toast({ title: "Les mots de passe ne correspondent pas", variant: "destructive" }); return; }
+    setChanging(true);
+    const { error } = await supabase.auth.updateUser({ password: newPw });
+    if (error) toast({ title: "Erreur", description: error.message, variant: "destructive" });
+    else { toast({ title: "✓ Mot de passe modifié" }); setNewPw(""); setConfirmPw(""); }
+    setChanging(false);
+  };
+
+  return (
+    <form onSubmit={handleChange} className="space-y-3">
+      <div className="text-sm font-semibold text-foreground mb-2">🔒 Changer le mot de passe</div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Nouveau mot de passe</label>
+          <input type="password" value={newPw} onChange={e => setNewPw(e.target.value)} className={inputCls} required minLength={6} />
+        </div>
+        <div className="space-y-1">
+          <label className="text-xs font-medium text-muted-foreground">Confirmer</label>
+          <input type="password" value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className={inputCls} required />
+        </div>
+      </div>
+      <GhButton type="submit" variant="secondary" size="sm" disabled={changing}>
+        {changing ? "Modification…" : "Modifier le mot de passe"}
+      </GhButton>
+    </form>
+  );
+}
 
 export default function ProfilePage() {
   const { profile, roles, refetchProfile, user } = useAuth();
