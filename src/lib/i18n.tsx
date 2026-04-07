@@ -127,7 +127,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "common.more": "Plus",
     // Auth
     "auth.login": "Connexion",
-    "auth.loginSubtitle": "Accédez à votre espace GrowHub Accelerator",
+    "auth.loginSubtitle": "Accédez à votre espace Grow Hub Management System",
     "auth.email": "Email",
     "auth.password": "Mot de passe",
     "auth.forgotPassword": "Mot de passe oublié ?",
@@ -321,7 +321,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "common.more": "More",
     // Auth
     "auth.login": "Login",
-    "auth.loginSubtitle": "Access your GrowHub Accelerator space",
+    "auth.loginSubtitle": "Access your Grow Hub Management System space",
     "auth.email": "Email",
     "auth.password": "Password",
     "auth.forgotPassword": "Forgot password?",
@@ -484,7 +484,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "common.myCourses": "دوراتي",
     "common.myProfile": "ملفي الشخصي",
     "auth.login": "تسجيل الدخول",
-    "auth.loginSubtitle": "الوصول إلى منصة GrowHub Accelerator",
+    "auth.loginSubtitle": "الوصول إلى منصة Grow Hub Management System",
     "auth.email": "البريد الإلكتروني",
     "auth.password": "كلمة المرور",
     "auth.forgotPassword": "نسيت كلمة المرور؟",

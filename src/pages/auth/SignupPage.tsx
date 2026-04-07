@@ -34,7 +34,7 @@ export default function SignupPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="w-full max-w-[400px] text-center space-y-4">
-          <img src={logo} alt="GrowHub Accelerator" className="h-10 w-auto mx-auto" />
+          <img src={logo} alt="Grow Hub Management System" className="h-10 w-auto mx-auto" />
           <div className="bg-primary/10 border border-primary/20 rounded-lg px-6 py-8 space-y-3">
             <div className="text-2xl">✉️</div>
             <h2 className="text-lg font-display font-bold text-foreground">Inscription réussie</h2>
@@ -52,10 +52,10 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-[400px] space-y-8">
         <div className="flex flex-col items-center gap-4">
-          <img src={logo} alt="GrowHub Accelerator" className="h-10 w-auto" />
+          <img src={logo} alt="Grow Hub Management System" className="h-10 w-auto" />
           <div className="text-center">
             <h1 className="text-xl font-display font-bold text-foreground">Créer un compte</h1>
-            <p className="text-sm text-muted-foreground mt-1">Rejoignez GrowHub Accelerator</p>
+            <p className="text-sm text-muted-foreground mt-1">Rejoignez Grow Hub Management System</p>
           </div>
         </div>
         <form onSubmit={handleSignup} className="space-y-4">
