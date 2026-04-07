@@ -91,6 +91,11 @@ export default function ProfilePage() {
                 {saving ? "⏳ Enregistrement…" : "✓ Enregistrer"}
               </GhButton>
             </form>
+
+            {/* Password change */}
+            <div className="mt-6 pt-6 border-t border-border">
+              <PasswordChangeForm />
+            </div>
           </div>
         </div>
         <div>
