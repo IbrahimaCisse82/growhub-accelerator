@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import SectionHeader from "@/components/shared/SectionHeader";
+import AuditTrailPanel from "@/components/audit/AuditTrailPanel";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
 import { toast } from "@/hooks/use-toast";
@@ -202,6 +203,10 @@ export default function SettingsPage() {
               </GhButton>
             </div>
           </div>
+        </GhCard>
+
+        <GhCard title="📋 Historique d'activité" className="mt-4">
+          <AuditTrailPanel limit={30} />
         </GhCard>
       </div>
     </motion.div>

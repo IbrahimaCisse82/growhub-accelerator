@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useStartups } from "@/hooks/useStartups";
 import CreateStartupDialog from "@/components/dialogs/CreateStartupDialog";
 import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import CsvImportDialog from "@/components/shared/CsvImportDialog";
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 const sectorColor: Record<string, "green" | "blue" | "purple" | "rose" | "amber" | "gray"> = { fintech: "blue", agritech: "green", edtech: "purple", healthtech: "rose", cleantech: "green", logistique: "amber" };
@@ -22,6 +24,7 @@ const exportCols = [
 export default function StartupsPage() {
   const { data: startups, isLoading } = useStartups();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const [search, setSearch] = useState("");
   const filtered = startups?.filter(s => !search || s.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -32,6 +35,19 @@ export default function StartupsPage() {
           <input className="bg-surface-2 border border-border rounded-lg px-3 py-[7px] text-[12.5px] text-foreground outline-none focus:border-primary/50 w-[140px] sm:w-[200px] placeholder:text-muted-foreground" placeholder="Rechercher…" value={search} onChange={e => setSearch(e.target.value)} />
           <GhButton variant="ghost" onClick={() => filtered && exportToCSV(filtered, "startups", exportCols)}>⤓ CSV</GhButton>
           <GhButton variant="ghost" onClick={() => filtered && exportToPDF("Entreprises", filtered, exportCols)}>⎙ PDF</GhButton>
+          <CsvImportDialog
+            tableName="startups"
+            label="des entreprises"
+            requiredColumns={[
+              { key: "name", label: "Nom", required: true },
+              { key: "sector", label: "Secteur" },
+              { key: "stage", label: "Stade" },
+              { key: "country", label: "Pays" },
+              { key: "city", label: "Ville" },
+              { key: "description", label: "Description" },
+            ]}
+            onSuccess={() => qc.invalidateQueries({ queryKey: ["startups"] })}
+          />
           <CreateStartupDialog><GhButton>+ Ajouter</GhButton></CreateStartupDialog>
         </>} />
       <GhCard title="Toutes les entreprises" badge={String(filtered?.length ?? 0)} noPadding>
