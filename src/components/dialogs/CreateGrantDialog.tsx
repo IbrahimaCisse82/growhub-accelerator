@@ -37,6 +37,7 @@ export default function CreateGrantDialog({ children }: { children: React.ReactN
         code,
         amount_total: parseFloat(amountTotal) || 0,
         organization: organization || null,
+        project_id: projectId || null,
       });
       if (error) throw error;
     },

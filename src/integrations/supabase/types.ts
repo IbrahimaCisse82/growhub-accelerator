@@ -1641,6 +1641,7 @@ export type Database = {
           name: string
           organization: string | null
           program_id: string | null
+          project_id: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["grant_status"]
           updated_at: string
@@ -1657,6 +1658,7 @@ export type Database = {
           name: string
           organization?: string | null
           program_id?: string | null
+          project_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["grant_status"]
           updated_at?: string
@@ -1673,6 +1675,7 @@ export type Database = {
           name?: string
           organization?: string | null
           program_id?: string | null
+          project_id?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["grant_status"]
           updated_at?: string
@@ -1683,6 +1686,13 @@ export type Database = {
             columns: ["program_id"]
             isOneToOne: false
             referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grants_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]

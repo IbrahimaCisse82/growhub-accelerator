@@ -94,6 +94,17 @@ function useProjectBudgetLines(id: string | undefined) {
   });
 }
 
+function useProjectGrants(id: string | undefined) {
+  return useQuery({
+    queryKey: ["project-grants", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data } = await supabase.from("grants").select("*").eq("project_id", id!).order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+}
+
 function useProjectMilestones(id: string | undefined) {
   return useQuery({
     queryKey: ["project-milestones", id],
@@ -115,6 +126,7 @@ export default function ProjetDetailPage() {
   const { data: indicators } = useProjectIndicators(id);
   const { data: budgetLines } = useProjectBudgetLines(id);
   const { data: milestones } = useProjectMilestones(id);
+  const { data: projectGrants } = useProjectGrants(id);
   const { data: projectManager } = useUserProfile(project?.owner_id);
   const [descExpanded, setDescExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -234,6 +246,7 @@ export default function ProjetDetailPage() {
           <TabsTrigger value="resultats">4. Résultats attendus</TabsTrigger>
           <TabsTrigger value="toc">Théorie du changement</TabsTrigger>
           <TabsTrigger value="budget">Budget ({budgetLines?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="bailleurs">Bailleurs ({projectGrants?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
@@ -322,7 +335,68 @@ export default function ProjetDetailPage() {
             </div>
           ) : <Empty text="Aucune ligne budgétaire" />}
         </TabsContent>
-        <TabsContent value="documents" className="mt-4">
+
+        {/* Bailleurs tab */}
+        <TabsContent value="bailleurs" className="mt-4">
+          {projectGrants && projectGrants.length > 0 ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <StatBox icon="🏦" label="Bailleurs" value={String(projectGrants.length)} />
+                <StatBox icon="💰" label="Total financé" value={`${projectGrants.reduce((s, g) => s + (g.amount_total ?? 0), 0).toLocaleString("fr-FR")} XOF`} />
+                <StatBox icon="📤" label="Total décaissé" value={`${projectGrants.reduce((s, g) => s + (g.amount_disbursed ?? 0), 0).toLocaleString("fr-FR")} XOF`} />
+                <StatBox icon="📊" label="Taux décaissement" value={`${projectGrants.reduce((s, g) => s + (g.amount_total ?? 0), 0) > 0 ? Math.round((projectGrants.reduce((s, g) => s + (g.amount_disbursed ?? 0), 0) / projectGrants.reduce((s, g) => s + (g.amount_total ?? 0), 0)) * 100) : 0}%`} />
+              </div>
+              <div className="bg-card border border-border rounded-xl overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border bg-secondary">
+                      <Th>Code</Th><Th>Bailleur / Organisation</Th><Th>Montant</Th><Th>Décaissé</Th><Th>Statut</Th><Th>Période</Th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projectGrants.map(g => {
+                      const pct = g.amount_total > 0 ? Math.round(((g.amount_disbursed ?? 0) / g.amount_total) * 100) : 0;
+                      return (
+                        <tr key={g.id} className="border-b border-border last:border-b-0 hover:bg-secondary/50 transition-colors cursor-pointer" onClick={() => navigate(`/app/grants/${g.id}`)}>
+                          <td className="px-4 py-3">
+                            <span className="font-mono text-[10px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">{g.code}</span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="text-foreground font-semibold text-xs">{g.name}</div>
+                            <div className="text-[10px] text-muted-foreground">{g.organization ?? "—"}</div>
+                          </td>
+                          <td className="px-4 py-3 text-xs font-mono font-semibold text-foreground">{g.amount_total.toLocaleString("fr-FR")} {g.currency ?? "XOF"}</td>
+                          <td className="px-4 py-3">
+                            <div className="text-xs font-mono text-foreground">{(g.amount_disbursed ?? 0).toLocaleString("fr-FR")}</div>
+                            <div className="text-[10px] text-muted-foreground">{pct}%</div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Pill color={g.status === "active" ? "green" : g.status === "disbursing" ? "blue" : g.status === "closing" ? "amber" : "gray"}>
+                              {g.status === "active" ? "Active" : g.status === "disbursing" ? "Décaissement" : g.status === "draft" ? "Brouillon" : g.status === "closing" ? "Clôture" : "Clôturé"}
+                            </Pill>
+                          </td>
+                          <td className="px-4 py-3 text-[10px] font-mono text-muted-foreground">{g.start_date ?? "—"} → {g.end_date ?? "—"}</td>
+                        </tr>
+                      );
+                    })}
+                    <tr className="bg-secondary/80">
+                      <td colSpan={2} className="px-4 py-3 text-xs font-bold text-foreground uppercase">Total multi-bailleurs</td>
+                      <td className="px-4 py-3 text-sm font-mono font-extrabold text-primary">{projectGrants.reduce((s, g) => s + (g.amount_total ?? 0), 0).toLocaleString("fr-FR")} XOF</td>
+                      <td className="px-4 py-3 text-xs font-mono font-semibold text-foreground">{projectGrants.reduce((s, g) => s + (g.amount_disbursed ?? 0), 0).toLocaleString("fr-FR")}</td>
+                      <td colSpan={2}></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-card border border-border rounded-xl p-8 text-center">
+              <div className="text-3xl mb-2">🏦</div>
+              <div className="text-sm font-semibold text-foreground mb-1">Aucun bailleur rattaché</div>
+              <div className="text-xs text-muted-foreground mb-4">Créez un grant dans le GTS et rattachez-le à ce projet</div>
+              <GhButton size="sm" onClick={() => navigate("/app/grants")}>Aller au GTS →</GhButton>
+            </div>
+          )}
           <EntityDocumentsTab entityType="project" entityId={project.id} label="Documents du projet" />
         </TabsContent>
       </Tabs>

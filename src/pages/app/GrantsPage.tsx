@@ -165,6 +165,9 @@ export default function GrantsPage() {
                       <span className="font-mono text-[10px] bg-primary/10 text-primary px-[7px] py-px rounded font-semibold">{g.code}</span>
                       <div className="text-[13px] font-bold text-foreground mt-1.5 truncate group-hover:text-primary transition-colors">{g.name}</div>
                       <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{g.organization ?? "—"}</div>
+                      {(g as any).projects?.name && (
+                        <div className="text-[10px] text-primary/70 mt-0.5 truncate">📁 {(g as any).projects.name}</div>
+                      )}
                     </div>
                     <Pill color={st.color}>{st.label}</Pill>
                   </div>
