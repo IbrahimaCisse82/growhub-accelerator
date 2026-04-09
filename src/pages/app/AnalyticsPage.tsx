@@ -98,7 +98,7 @@ export default function AnalyticsPage() {
       const cohortStartups = startups.filter(s => s.cohort_id === c.id);
       const total = cohortStartups.length;
       const graduated = cohortStartups.filter(s => s.stage === "growth" || s.stage === "scale").length;
-      const active = cohortStartups.filter(s => s.status === "active").length;
+      const active = cohortStartups.filter(s => !s.is_alumni).length;
       return {
         name: c.name.length > 15 ? c.name.slice(0, 15) + "…" : c.name,
         total,
