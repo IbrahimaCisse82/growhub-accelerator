@@ -59,7 +59,7 @@ export default function RapportsPage() {
     }
     const latest = Array.from(latestByStartupMetric.values());
 
-    const sum = (metric: string) => latest.filter(k => k.metric_name?.toLowerCase().includes(metric)).reduce((s, k) => s + (Number(k.value) || 0), 0);
+    const sum = (metric: string) => latest.filter(k => k.metric_name?.toLowerCase().includes(metric)).reduce((s, k) => s + (Number(k.metric_value) || 0), 0);
 
     return {
       totalRevenue: sum("chiffre") + sum("revenue") + sum("ca"),
