@@ -126,6 +126,7 @@ export default function ProjetDetailPage() {
   const { data: indicators } = useProjectIndicators(id);
   const { data: budgetLines } = useProjectBudgetLines(id);
   const { data: milestones } = useProjectMilestones(id);
+  const { data: projectGrants } = useProjectGrants(id);
   const { data: projectManager } = useUserProfile(project?.owner_id);
   const [descExpanded, setDescExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -245,6 +246,7 @@ export default function ProjetDetailPage() {
           <TabsTrigger value="resultats">4. Résultats attendus</TabsTrigger>
           <TabsTrigger value="toc">Théorie du changement</TabsTrigger>
           <TabsTrigger value="budget">Budget ({budgetLines?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="bailleurs">Bailleurs ({projectGrants?.length ?? 0})</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
         </TabsList>
 
