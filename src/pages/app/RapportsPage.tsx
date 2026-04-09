@@ -1,14 +1,23 @@
 import { motion } from "framer-motion";
+import { useMemo } from "react";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
 import StatCard from "@/components/shared/StatCard";
-import { useStartupsCount } from "@/hooks/useStartups";
+import { useStartups, useStartupsCount } from "@/hooks/useStartups";
 import { useGrants } from "@/hooks/useGrants";
 import { useProjects } from "@/hooks/useProjects";
 import { useCohorts } from "@/hooks/useCohorts";
+import { useStartupKpis } from "@/hooks/useStartupKpis";
+import { useCoachingSessions } from "@/hooks/useCoachingSessions";
 import { exportToJSON, exportToCSV, exportToPDF } from "@/lib/exportUtils";
-import { Triangle, Target, FolderKanban, TrendingUp, FileText, Download, Printer, type LucideIcon } from "lucide-react";
+import { Triangle, Target, FolderKanban, TrendingUp, FileText, Download, Printer, Users, DollarSign, Briefcase, type LucideIcon } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, LineChart, Line } from "recharts";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+const COLORS = ["hsl(165,100%,41%)", "hsl(199,90%,48%)", "hsl(37,91%,55%)", "hsl(258,73%,62%)", "hsl(348,90%,60%)"];
+const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
 const reports: { id: string; title: string; description: string; Icon: LucideIcon }[] = [
   { id: "startups", title: "Rapport Entreprises", description: "Vue d'ensemble des entreprises accompagnées, secteurs, stades et scores", Icon: Triangle },
@@ -17,32 +26,102 @@ const reports: { id: string; title: string; description: string; Icon: LucideIco
   { id: "impact", title: "Rapport d'Impact", description: "Métriques d'impact : emplois créés, levées de fonds, croissance", Icon: TrendingUp },
 ];
 
+function useAllStartupKpis() {
+  return useQuery({
+    queryKey: ["all-startup-kpis"],
+    queryFn: async () => {
+      const { data } = await supabase.from("startup_kpis").select("*").order("recorded_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+}
+
 export default function RapportsPage() {
   const { data: startupsCount } = useStartupsCount();
+  const { data: startups } = useStartups();
   const { data: grants } = useGrants();
   const { data: projects } = useProjects();
   const { data: cohorts } = useCohorts();
+  const { data: sessions } = useCoachingSessions();
+  const { data: allKpis } = useAllStartupKpis();
 
   const activeGrants = grants?.filter(g => g.status === "active" || g.status === "disbursing") ?? [];
   const totalFunding = activeGrants.reduce((a, g) => a + g.amount_total, 0);
+
+  // Impact KPIs aggregation
+  const impactMetrics = useMemo(() => {
+    if (!allKpis || allKpis.length === 0) return null;
+    // Get latest KPI per startup per metric
+    const latestByStartupMetric = new Map<string, typeof allKpis[0]>();
+    for (const kpi of allKpis) {
+      const key = `${kpi.startup_id}-${kpi.metric_name}`;
+      if (!latestByStartupMetric.has(key)) latestByStartupMetric.set(key, kpi);
+    }
+    const latest = Array.from(latestByStartupMetric.values());
+
+    const sum = (metric: string) => latest.filter(k => k.metric_name?.toLowerCase().includes(metric)).reduce((s, k) => s + (Number(k.value) || 0), 0);
+
+    return {
+      totalRevenue: sum("chiffre") + sum("revenue") + sum("ca"),
+      totalJobs: sum("emploi") + sum("job") + sum("effectif"),
+      totalFundsRaised: sum("levée") + sum("fundrais") + sum("funding"),
+      totalClients: sum("client") + sum("customer") + sum("utilisateur"),
+    };
+  }, [allKpis]);
+
+  // Sector distribution
+  const sectorData = useMemo(() => {
+    if (!startups) return [];
+    const sectors = new Map<string, number>();
+    startups.forEach(s => {
+      const sector = s.sector ?? "Non défini";
+      sectors.set(sector, (sectors.get(sector) ?? 0) + 1);
+    });
+    return Array.from(sectors.entries()).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 6);
+  }, [startups]);
+
+  // Stage distribution
+  const stageData = useMemo(() => {
+    if (!startups) return [];
+    const stages = new Map<string, number>();
+    startups.forEach(s => {
+      const stage = s.stage ?? "Non défini";
+      stages.set(stage, (stages.get(stage) ?? 0) + 1);
+    });
+    return Array.from(stages.entries()).map(([name, value]) => ({ name, value }));
+  }, [startups]);
+
+  // Coaching stats
+  const coachingStats = useMemo(() => {
+    if (!sessions) return { total: 0, completed: 0, hours: 0 };
+    return {
+      total: sessions.length,
+      completed: sessions.filter(s => s.status === "completed").length,
+      hours: sessions.reduce((s, se) => s + (se.duration_minutes ?? 60), 0) / 60,
+    };
+  }, [sessions]);
 
   const handleExportJSON = (reportId: string) => {
     const data = {
       generatedAt: new Date().toISOString(),
       reportType: reportId,
-      summary: { totalStartups: startupsCount ?? 0, totalGrants: grants?.length ?? 0, totalFunding, totalProjects: projects?.length ?? 0, totalCohorts: cohorts?.length ?? 0 },
+      summary: {
+        totalStartups: startupsCount ?? 0, totalGrants: grants?.length ?? 0, totalFunding,
+        totalProjects: projects?.length ?? 0, totalCohorts: cohorts?.length ?? 0,
+        ...(impactMetrics ?? {}),
+      },
     };
     exportToJSON(data, `rapport-${reportId}-${new Date().toISOString().slice(0, 10)}`);
   };
 
   const handleExportCSV = (reportId: string) => {
     if (reportId === "financial" && grants) {
-      exportToCSV(grants, `rapport-financier-${new Date().toISOString().slice(0, 10)}`, [
+      exportToCSV(grants, `rapport-financier`, [
         { key: "name", label: "Nom" }, { key: "code", label: "Code" }, { key: "amount_total", label: "Montant total" },
         { key: "amount_disbursed", label: "Décaissé" }, { key: "status", label: "Statut" },
       ]);
     } else if (reportId === "programs" && cohorts) {
-      exportToCSV(cohorts, `rapport-programmes-${new Date().toISOString().slice(0, 10)}`, [
+      exportToCSV(cohorts, `rapport-programmes`, [
         { key: "name", label: "Nom" }, { key: "status", label: "Statut" }, { key: "max_startups", label: "Max Entreprises" },
       ]);
     } else {
@@ -56,23 +135,72 @@ export default function RapportsPage() {
         { key: "name", label: "Nom" }, { key: "code", label: "Code" }, { key: "amount_total", label: "Montant" },
         { key: "amount_disbursed", label: "Décaissé" }, { key: "status", label: "Statut" },
       ]);
+    } else if (reportId === "impact") {
+      const impactRows = [
+        { metric: "Entreprises accompagnées", value: startupsCount ?? 0 },
+        { metric: "Emplois créés", value: impactMetrics?.totalJobs ?? 0 },
+        { metric: "CA cumulé (XOF)", value: fmt(impactMetrics?.totalRevenue ?? 0) },
+        { metric: "Fonds levés (XOF)", value: fmt(impactMetrics?.totalFundsRaised ?? 0) },
+        { metric: "Heures de coaching", value: Math.round(coachingStats.hours) },
+        { metric: "Sessions coaching", value: coachingStats.completed },
+      ];
+      exportToPDF("Rapport d'Impact", impactRows, [{ key: "metric", label: "Indicateur" }, { key: "value", label: "Valeur" }]);
     } else if (reportId === "programs" && projects) {
       exportToPDF("Rapport Programmes", projects, [
-        { key: "name", label: "Projet" }, { key: "status", label: "Statut" }, { key: "progress", label: "Avancement %" },
+        { key: "name", label: "Projet" }, { key: "status", label: "Statut" }, { key: "progress", label: "%" },
       ]);
     }
   };
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-      <SectionHeader title="Rapports" subtitle="Génération et export de rapports" />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
-        <StatCard label="Entreprises" value={String(startupsCount ?? 0)} note="" color="green" />
-        <StatCard label="Grants actifs" value={String(activeGrants.length)} note="" color="blue" />
-        <StatCard label="Projets" value={String(projects?.length ?? 0)} note="" color="amber" />
-        <StatCard label="Cohortes" value={String(cohorts?.length ?? 0)} note="" color="purple" />
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+      <SectionHeader title="Rapports & Impact" subtitle="Vue consolidée des résultats et exports" />
+
+      {/* Impact KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+        <StatCard label="Entreprises" value={String(startupsCount ?? 0)} note="accompagnées" color="green" />
+        <StatCard label="Grants actifs" value={String(activeGrants.length)} note={`${fmt(totalFunding)} XOF`} color="blue" />
+        <StatCard label="Emplois créés" value={String(impactMetrics?.totalJobs ?? 0)} note="estimés" color="amber" />
+        <StatCard label="CA cumulé" value={`${fmt(impactMetrics?.totalRevenue ?? 0)}`} note="XOF" color="purple" />
+        <StatCard label="Fonds levés" value={`${fmt(impactMetrics?.totalFundsRaised ?? 0)}`} note="XOF" color="green" />
+        <StatCard label="Heures coaching" value={String(Math.round(coachingStats.hours))} note={`${coachingStats.completed} sessions`} color="blue" />
       </div>
-      <GhCard title="Rapport de Livraison GrowHub" className="mb-4">
+
+      {/* Charts */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <GhCard title="Répartition par secteur">
+          {sectorData.length === 0 ? (
+            <div className="text-sm text-muted-foreground text-center py-6">Aucune donnée</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={sectorData} cx="50%" cy="50%" innerRadius={45} outerRadius={80} paddingAngle={3} dataKey="value" label={({ name, value }) => `${name} (${value})`}>
+                  {sectorData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                </Pie>
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--foreground))" }} />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
+        </GhCard>
+        <GhCard title="Répartition par stade">
+          {stageData.length === 0 ? (
+            <div className="text-sm text-muted-foreground text-center py-6">Aucune donnée</div>
+          ) : (
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={stageData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--foreground))" }} />
+                <Bar dataKey="value" fill="hsl(165,100%,41%)" radius={[4, 4, 0, 0]} name="Entreprises" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </GhCard>
+      </div>
+
+      {/* Rapport de livraison */}
+      <GhCard title="Rapport de Livraison GrowHub">
         <p className="text-[12px] text-muted-foreground mb-4">Rapport complet de la plateforme avec captures d'écran de tous les modules, architecture technique, sécurité et guide d'utilisation.</p>
         <div className="flex flex-wrap gap-2">
           <a href="/rapport/RAPPORT_LIVRAISON_GROWHUB.html" target="_blank" rel="noopener noreferrer">
@@ -80,6 +208,8 @@ export default function RapportsPage() {
           </a>
         </div>
       </GhCard>
+
+      {/* Export cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {reports.map(r => (
           <GhCard key={r.id} title={r.title}>
