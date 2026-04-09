@@ -7,7 +7,7 @@ export function useGrants() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("grants")
-        .select("*")
+        .select("*, projects(name, code), programs(name)")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
