@@ -94,6 +94,17 @@ function useProjectBudgetLines(id: string | undefined) {
   });
 }
 
+function useProjectGrants(id: string | undefined) {
+  return useQuery({
+    queryKey: ["project-grants", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data } = await supabase.from("grants").select("*").eq("project_id", id!).order("created_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+}
+
 function useProjectMilestones(id: string | undefined) {
   return useQuery({
     queryKey: ["project-milestones", id],
