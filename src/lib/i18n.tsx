@@ -14,6 +14,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "nav.insights": "Insights",
     "nav.insightsAdmin": "Insights Admin",
     "nav.admin": "Administration",
+    "nav.management": "Management",
     // Nav items
     "nav.dashboard": "Dashboard",
     "nav.activities": "Activités",
@@ -209,6 +210,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "nav.insights": "Insights",
     "nav.insightsAdmin": "Admin Insights",
     "nav.admin": "Administration",
+    "nav.management": "Management",
     "nav.dashboard": "Dashboard",
     "nav.activities": "Activities",
     "nav.portfolios": "Portfolios",
@@ -402,6 +404,7 @@ const translations: Record<Locale, Record<string, string>> = {
     "nav.insights": "التحليلات",
     "nav.insightsAdmin": "تحليلات المشرف",
     "nav.admin": "الإدارة",
+    "nav.management": "الإدارة",
     "nav.dashboard": "لوحة القيادة",
     "nav.activities": "الأنشطة",
     "nav.portfolios": "المحافظ",

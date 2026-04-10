@@ -1697,6 +1697,171 @@ export type Database = {
           },
         ]
       }
+      hr_employees: {
+        Row: {
+          adresse: string | null
+          avance_caisse: number | null
+          avance_financiere: number | null
+          avance_tabaski: number | null
+          categorie: string | null
+          contrat: string | null
+          convention: string | null
+          created_at: string
+          date_entree: string | null
+          date_naissance: string | null
+          email: string | null
+          enfants: number | null
+          femmes: number | null
+          fonction: string | null
+          frais_medicaux: number | null
+          heures_abs_maladie: number | null
+          heures_absence: number | null
+          hs_115: number | null
+          hs_140: number | null
+          hs_160: number | null
+          hs_200: number | null
+          id: string
+          ind_kilometrique: number | null
+          is_active: boolean | null
+          lieu_naissance: string | null
+          matricule: string
+          nationalite: string | null
+          nb_paniers: number | null
+          nom: string
+          prenom: string
+          ret_cooperative: number | null
+          salaire_base: number
+          sexe: string
+          situation_famille: string | null
+          statut: string | null
+          sursalaire: number | null
+          taux_maladie: number | null
+          telephone: string | null
+          updated_at: string
+        }
+        Insert: {
+          adresse?: string | null
+          avance_caisse?: number | null
+          avance_financiere?: number | null
+          avance_tabaski?: number | null
+          categorie?: string | null
+          contrat?: string | null
+          convention?: string | null
+          created_at?: string
+          date_entree?: string | null
+          date_naissance?: string | null
+          email?: string | null
+          enfants?: number | null
+          femmes?: number | null
+          fonction?: string | null
+          frais_medicaux?: number | null
+          heures_abs_maladie?: number | null
+          heures_absence?: number | null
+          hs_115?: number | null
+          hs_140?: number | null
+          hs_160?: number | null
+          hs_200?: number | null
+          id?: string
+          ind_kilometrique?: number | null
+          is_active?: boolean | null
+          lieu_naissance?: string | null
+          matricule: string
+          nationalite?: string | null
+          nb_paniers?: number | null
+          nom: string
+          prenom: string
+          ret_cooperative?: number | null
+          salaire_base?: number
+          sexe?: string
+          situation_famille?: string | null
+          statut?: string | null
+          sursalaire?: number | null
+          taux_maladie?: number | null
+          telephone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          adresse?: string | null
+          avance_caisse?: number | null
+          avance_financiere?: number | null
+          avance_tabaski?: number | null
+          categorie?: string | null
+          contrat?: string | null
+          convention?: string | null
+          created_at?: string
+          date_entree?: string | null
+          date_naissance?: string | null
+          email?: string | null
+          enfants?: number | null
+          femmes?: number | null
+          fonction?: string | null
+          frais_medicaux?: number | null
+          heures_abs_maladie?: number | null
+          heures_absence?: number | null
+          hs_115?: number | null
+          hs_140?: number | null
+          hs_160?: number | null
+          hs_200?: number | null
+          id?: string
+          ind_kilometrique?: number | null
+          is_active?: boolean | null
+          lieu_naissance?: string | null
+          matricule?: string
+          nationalite?: string | null
+          nb_paniers?: number | null
+          nom?: string
+          prenom?: string
+          ret_cooperative?: number | null
+          salaire_base?: number
+          sexe?: string
+          situation_famille?: string | null
+          statut?: string | null
+          sursalaire?: number | null
+          taux_maladie?: number | null
+          telephone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hr_payroll_history: {
+        Row: {
+          annee: number
+          closed_by: string | null
+          created_at: string
+          id: string
+          mois: number
+          nb_employes: number | null
+          total_brut: number | null
+          total_charges: number | null
+          total_masse: number | null
+          total_net: number | null
+        }
+        Insert: {
+          annee: number
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          mois: number
+          nb_employes?: number | null
+          total_brut?: number | null
+          total_charges?: number | null
+          total_masse?: number | null
+          total_net?: number | null
+        }
+        Update: {
+          annee?: number
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          mois?: number
+          nb_employes?: number | null
+          total_brut?: number | null
+          total_charges?: number | null
+          total_masse?: number | null
+          total_net?: number | null
+        }
+        Relationships: []
+      }
       invitations: {
         Row: {
           accepted_at: string | null
