@@ -8,7 +8,7 @@ import {
   AlertTriangle, FileText, Settings as SettingsIcon, Filter, Triangle, CircleDot, GraduationCap,
   Users, Link2, Headphones, CalendarDays, BookOpen, ClipboardList, BarChart3, DollarSign,
   PieChart, Wallet, Store, Handshake, Diamond, MessageCircle, FolderOpen, LineChart,
-  FileBarChart, Zap, LogOut, Globe, type LucideIcon
+  FileBarChart, Zap, LogOut, Globe, UserCog, type LucideIcon
 } from "lucide-react";
 
 interface NavItem {
@@ -85,6 +85,12 @@ function useNavGroups() {
         { label: t("nav.events"), icon: Diamond, path: "/app/evenements" },
         { label: t("nav.messaging"), icon: MessageCircle, path: "/app/messagerie", badgeKey: "unreadNotifs", badgeType: "alert" },
         { label: t("nav.resources"), icon: FolderOpen, path: "/app/ressources" },
+      ],
+    },
+    {
+      label: t("nav.management") || "Management",
+      items: [
+        { label: "RH & Paie", icon: UserCog, path: "/app/rh" },
       ],
     },
     {
