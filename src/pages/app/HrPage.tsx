@@ -221,7 +221,7 @@ function EmployeeFormDialog({ emp, onSave, onClose, existingMats }: {
           </TabsContent>
         </Tabs>
         <div className="flex justify-end gap-2 mt-4">
-          <GhButton variant="outline" size="sm" onClick={onClose}>Annuler</GhButton>
+          <GhButton variant="ghost" size="sm" onClick={onClose}>Annuler</GhButton>
           <GhButton size="sm" onClick={handleSubmit}>{isEdit ? "Modifier" : "Créer"}</GhButton>
         </div>
       </DialogContent>
@@ -286,7 +286,7 @@ export default function HrPage() {
         subtitle="Gestion des employés, calcul de paie et bulletins de salaire — Barème sénégalais"
         actions={
           <div className="flex gap-2">
-            <GhButton size="sm" variant="outline" onClick={handleCloseMonth}>
+            <GhButton size="sm" variant="secondary" onClick={handleCloseMonth}>
               <Download size={14} className="mr-1" /> Clôturer le mois
             </GhButton>
             <GhButton size="sm" onClick={() => setShowNew(true)}>
@@ -298,10 +298,10 @@ export default function HrPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Effectif" value={employees.length} icon={<Users size={18} />} />
-        <StatCard label="Masse salariale brute" value={`${fmtXOF(totaux.brut)} F`} icon={<DollarSign size={18} />} />
-        <StatCard label="Net total" value={`${fmtXOF(totaux.net)} F`} icon={<TrendingUp size={18} />} />
-        <StatCard label="Charges patronales" value={`${fmtXOF(totaux.charges)} F`} icon={<DollarSign size={18} />} />
+        <StatCard label="Effectif" value={String(employees.length)} note="Employés actifs" color="blue" icon={<Users size={18} />} />
+        <StatCard label="Masse salariale brute" value={`${fmtXOF(totaux.brut)} F`} note="Total mensuel" color="green" icon={<DollarSign size={18} />} />
+        <StatCard label="Net total" value={`${fmtXOF(totaux.net)} F`} note="À verser" color="purple" icon={<TrendingUp size={18} />} />
+        <StatCard label="Charges patronales" value={`${fmtXOF(totaux.charges)} F`} note="Cotisations" color="amber" icon={<DollarSign size={18} />} />
       </div>
 
       {/* Search */}
@@ -311,7 +311,7 @@ export default function HrPage() {
       </div>
 
       {/* Employee Table */}
-      <GhCard className="overflow-x-auto">
+      <GhCard title="Liste des employés" className="overflow-x-auto">
         <table className="w-full text-[12px]">
           <thead>
             <tr className="border-b border-border text-left text-muted-foreground">
@@ -355,7 +355,7 @@ export default function HrPage() {
 
       {/* Payroll History */}
       {history.length > 0 && (
-        <GhCard>
+        <GhCard title="Historique des clôtures">
           <h3 className="text-sm font-bold mb-3">Historique des clôtures</h3>
           <div className="space-y-1">
             {history.map((h: any) => (
