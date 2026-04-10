@@ -1,7 +1,7 @@
 import { useState } from "react";
 import SectionHeader from "@/components/shared/SectionHeader";
-import { GhButton } from "@/components/shared/GhButton";
-import { GhCard } from "@/components/shared/GhCard";
+import GhButton from "@/components/shared/GhButton";
+import GhCard from "@/components/shared/GhCard";
 import StatCard from "@/components/shared/StatCard";
 import { useHrEmployees, useHrPayrollHistory } from "@/hooks/useHrEmployees";
 import { calculerPaie, fmtXOF, DEFAULT_PAYROLL_PARAMS, MOIS, type HrEmployee } from "@/lib/payroll";
