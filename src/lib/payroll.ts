@@ -111,13 +111,13 @@ export interface PayrollResult {
 
 export const DEFAULT_PAYROLL_PARAMS: PayrollParams = {
   CFCE: { label: "CFCE", taux: 0.03, tauxSalarial: 0, tauxPatronal: 1, plafond: null },
-  BRS: { label: "BRS", taux: 0, tauxSalarial: 0, tauxPatronal: 0, plafond: null },
-  IPRES_RG: { label: "IPRES RG", taux: 0.14, tauxSalarial: 0.5, tauxPatronal: 0.5, plafond: 432000 },
-  IPRES_RCC: { label: "IPRES RC", taux: 0.06, tauxSalarial: 0.5, tauxPatronal: 0.5, plafond: 1296000 },
-  CSS_AF: { label: "CSS AF", taux: 0.07, tauxSalarial: 0, tauxPatronal: 1, plafond: 63000 },
-  CSS_AT: { label: "CSS AT", taux: 0.05, tauxSalarial: 0, tauxPatronal: 1, plafond: 63000 },
-  IPM: { label: "IPM", taux: 0.06, tauxSalarial: 0.4, tauxPatronal: 0.6, plafond: null },
-  transport: { label: "Prime de transport", valeur: 20000 },
+  BRS: { label: "BRS", taux: 0.05, tauxSalarial: 1, tauxPatronal: 0, plafond: null },
+  IPRES_RG: { label: "IPRES R.G.", taux: 0.14, tauxSalarial: 0.4, tauxPatronal: 0.6, plafond: 432000 },
+  IPRES_RCC: { label: "IPRES R.C.C.", taux: 0.06, tauxSalarial: 0.4, tauxPatronal: 0.6, plafond: 1296000 },
+  CSS_AF: { label: "CSS Alloc. Fam.", taux: 0.07, tauxSalarial: 0, tauxPatronal: 1, plafond: 63000 },
+  CSS_AT: { label: "CSS Acc. Trav.", taux: 0.01, tauxSalarial: 0, tauxPatronal: 1, plafond: 63000 },
+  IPM: { label: "IPM", taux: 0, tauxSalarial: 0.5, tauxPatronal: 0.5, plafond: null },
+  transport: { label: "Ind. Transport", valeur: 26000 },
 };
 
 export const MOIS = ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
