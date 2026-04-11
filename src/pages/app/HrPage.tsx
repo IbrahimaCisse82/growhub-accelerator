@@ -253,7 +253,7 @@ function BulletinModal({ emp, params, entreprise, onClose }: { emp: HrEmployee; 
             <SelectContent>{years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
           </Select>
           <div className="flex-1" />
-          <GhButton size="sm" variant="destructive" onClick={openPDF}>
+          <GhButton size="sm" variant="accent" onClick={openPDF}>
             <Printer size={13} className="mr-1" /> Générer PDF
           </GhButton>
         </div>
