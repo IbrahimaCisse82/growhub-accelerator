@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhButton from "@/components/shared/GhButton";
 import GhCard from "@/components/shared/GhCard";
 import StatCard from "@/components/shared/StatCard";
 import { useHrEmployees, useHrPayrollHistory } from "@/hooks/useHrEmployees";
-import { calculerPaie, fmtXOF, DEFAULT_PAYROLL_PARAMS, MOIS, type HrEmployee } from "@/lib/payroll";
-import { Plus, FileText, Users, DollarSign, TrendingUp, Trash2, Pencil, Eye, Download, Search } from "lucide-react";
+import { calculerPaie, fmtXOF, DEFAULT_PAYROLL_PARAMS, MOIS, type HrEmployee, type PayrollParams, type PayrollResult } from "@/lib/payroll";
+import { Plus, FileText, Users, DollarSign, TrendingUp, Trash2, Pencil, Eye, Download, Search, Settings, Building2, BookOpen, BarChart3, Printer } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useTranslation } from "@/lib/i18n";
+import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Constants
+// ═══════════════════════════════════════════════════════════════════════════
 
 const EMPTY_EMP: Partial<HrEmployee> = {
   matricule: "", prenom: "", nom: "", sexe: "M", date_naissance: "", lieu_naissance: "",
@@ -24,75 +29,342 @@ const EMPTY_EMP: Partial<HrEmployee> = {
   ind_kilometrique: 0, is_active: true,
 };
 
-function BulletinModal({ emp, onClose }: { emp: HrEmployee; onClose: () => void }) {
-  const paie = calculerPaie(emp, DEFAULT_PAYROLL_PARAMS);
-  const lines = [
-    { label: "Salaire de base", val: paie.salaireBase },
-    { label: "Sursalaire", val: paie.sursalaire },
-    { label: "Prime d'ancienneté", val: paie.primeAnc },
-    { label: "Heures supplémentaires", val: paie.totalHS },
-    { label: "Retenue absences", val: -paie.retAbsence },
-    { label: "Indemnité maladie", val: paie.indMaladie },
-    { label: "──── BRUT", val: paie.brut, bold: true },
-    { label: "IR (Impôt sur le revenu)", val: -paie.ir },
-    { label: "TRIMF", val: -paie.trimf },
-    { label: "IPRES RG (salarial)", val: -paie.ipresRG_s },
-    { label: "IPRES RC (salarial)", val: -paie.ipresRC_s },
-    { label: "IPM (salarial)", val: -paie.ipm_s },
-    { label: "──── Total retenues", val: -paie.totalRet, bold: true },
-    { label: "Prime de transport", val: paie.transport },
-    { label: "Prime de panier", val: paie.primePanier },
-    { label: "Indemnité kilométrique", val: paie.indKilometrique },
-    { label: "Total avances/retenues", val: -paie.totalAvances },
-    { label: "══ NET À PAYER", val: paie.net, bold: true, highlight: true },
+const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(210, 80%, 60%)", "hsl(40, 90%, 55%)"];
+const STATUT_COLORS: Record<string, string> = { "employés": "hsl(210, 80%, 60%)", "agents de maîtrise": "hsl(40, 90%, 55%)", "cadres": "hsl(270, 70%, 65%)" };
+
+const DEFAULT_CONVENTIONS = [
+  {
+    id: "CC001", nom: "Commerce", secteur: "Commerce général", dateSignature: "1982-01-01",
+    description: "Convention collective nationale du commerce applicable au Sénégal.",
+    categories: [
+      { id: "c1", code: "1_ère", libelle: "1ère catégorie", statut: "employés", salaireMinima: 58900 },
+      { id: "c2", code: "2_ème", libelle: "2ème catégorie", statut: "employés", salaireMinima: 63200 },
+      { id: "c3", code: "3_ème", libelle: "3ème catégorie", statut: "agents de maîtrise", salaireMinima: 73400 },
+      { id: "c4", code: "4_ème", libelle: "4ème catégorie", statut: "agents de maîtrise", salaireMinima: 85600 },
+      { id: "c5", code: "5_ème", libelle: "5ème catégorie", statut: "agents de maîtrise", salaireMinima: 102000 },
+      { id: "c6", code: "6_ème", libelle: "6ème catégorie", statut: "agents de maîtrise", salaireMinima: 124000 },
+      { id: "c7", code: "7_ème A", libelle: "7ème catégorie A", statut: "agents de maîtrise", salaireMinima: 152000 },
+      { id: "c8", code: "7_ème B", libelle: "7ème catégorie B", statut: "cadres", salaireMinima: 185000 },
+      { id: "c9", code: "8_ème", libelle: "8ème catégorie", statut: "cadres", salaireMinima: 230000 },
+      { id: "c10", code: "9_ème", libelle: "9ème catégorie", statut: "cadres", salaireMinima: 295000 },
+    ]
+  },
+  {
+    id: "CC002", nom: "BTP", secteur: "Bâtiment & Travaux Publics", dateSignature: "1985-03-15",
+    description: "Convention collective du secteur BTP au Sénégal.",
+    categories: [
+      { id: "b1", code: "OS1", libelle: "Ouvrier Spécialisé 1", statut: "employés", salaireMinima: 60000 },
+      { id: "b2", code: "OS2", libelle: "Ouvrier Spécialisé 2", statut: "employés", salaireMinima: 68000 },
+      { id: "b3", code: "OQ1", libelle: "Ouvrier Qualifié 1", statut: "employés", salaireMinima: 78000 },
+      { id: "b4", code: "OQ2", libelle: "Ouvrier Qualifié 2", statut: "agents de maîtrise", salaireMinima: 92000 },
+      { id: "b5", code: "OP", libelle: "Ouvrier Principal", statut: "agents de maîtrise", salaireMinima: 115000 },
+      { id: "b6", code: "AM1", libelle: "Agent de Maîtrise 1", statut: "agents de maîtrise", salaireMinima: 145000 },
+      { id: "b7", code: "AM2", libelle: "Agent de Maîtrise 2", statut: "cadres", salaireMinima: 190000 },
+      { id: "b8", code: "C1", libelle: "Cadre 1", statut: "cadres", salaireMinima: 250000 },
+      { id: "b9", code: "C2", libelle: "Cadre 2", statut: "cadres", salaireMinima: 340000 },
+    ]
+  },
+  {
+    id: "CC003", nom: "Banques & Assurances", secteur: "Finances", dateSignature: "1990-06-01",
+    description: "Convention collective des établissements bancaires et des assurances.",
+    categories: [
+      { id: "ba1", code: "E1", libelle: "Employé classe 1", statut: "employés", salaireMinima: 95000 },
+      { id: "ba2", code: "E2", libelle: "Employé classe 2", statut: "employés", salaireMinima: 115000 },
+      { id: "ba3", code: "E3", libelle: "Employé classe 3", statut: "agents de maîtrise", salaireMinima: 145000 },
+      { id: "ba4", code: "AM", libelle: "Agent de Maîtrise", statut: "agents de maîtrise", salaireMinima: 195000 },
+      { id: "ba5", code: "C1", libelle: "Cadre 1", statut: "cadres", salaireMinima: 280000 },
+      { id: "ba6", code: "C2", libelle: "Cadre 2", statut: "cadres", salaireMinima: 380000 },
+      { id: "ba7", code: "C3", libelle: "Cadre supérieur", statut: "cadres", salaireMinima: 520000 },
+    ]
+  },
+];
+
+interface Entreprise {
+  nom: string; adresse: string; telephone: string; email: string; ninea: string; rccm: string;
+}
+
+const DEFAULT_ENTREPRISE: Entreprise = {
+  nom: "GROW HUB", adresse: "Dakar, Sénégal", telephone: "+221 77 000 00 00",
+  email: "contact@growhub.sn", ninea: "", rccm: "",
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Bulletin PDF Generator
+// ═══════════════════════════════════════════════════════════════════════════
+
+function genererBulletinHTML(emp: HrEmployee, p: PayrollResult, mois: number, annee: number, ent: Entreprise): string {
+  const periode = `${MOIS[mois]} ${annee}`;
+  const f = (n: number) => new Intl.NumberFormat("fr-FR").format(Math.round(n || 0));
+  const date_emission = new Date().toLocaleDateString("fr-FR");
+
+  const row = (label: string, val: number, opts: any = {}) => {
+    const { neg = false, bold = false, color = "#1f2937", bg = "transparent", indent = false } = opts;
+    return `<tr style="background:${bg}">
+      <td style="padding:5px 8px 5px ${indent ? '20px' : '8px'};font-size:11px;color:#374151;border-bottom:1px solid #e5e7eb;font-weight:${bold ? 700 : 400}">${label}</td>
+      <td style="padding:5px 10px;text-align:right;font-size:11px;color:${color};border-bottom:1px solid #e5e7eb;font-weight:${bold ? 700 : 400}">${neg ? '– ' : ''}<b>${f(val)} FCFA</b></td>
+    </tr>`;
+  };
+
+  const section = (title: string, bgColor: string, rows: string) => `
+    <table style="width:100%;border-collapse:collapse;margin-bottom:10px">
+      <thead><tr><th colspan="2" style="background:${bgColor};color:#fff;padding:6px 10px;text-align:left;font-size:9px;letter-spacing:1px;text-transform:uppercase">${title}</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  const infoRows = [
+    ["Matricule", emp.matricule], ["Fonction", emp.fonction || "—"],
+    ["Nom & Prénom", `${emp.prenom} ${emp.nom}`], ["Catégorie", emp.categorie || "—"],
+    ["Convention", emp.convention || "—"], ["Contrat", emp.contrat],
+    ["Date d'entrée", emp.date_entree || "—"], ["Ancienneté", `${p.anc} an${p.anc > 1 ? "s" : ""}`],
+    ["Situation fam.", emp.situation_famille || "—"], ["Enfants à charge", String(emp.enfants || 0)],
   ];
+
+  const footerItems = [
+    ent.adresse && `<span>&#128205; ${ent.adresse}</span>`,
+    ent.telephone && `<span>&#128222; ${ent.telephone}</span>`,
+    ent.email && `<span>&#9993; ${ent.email}</span>`,
+    ent.ninea && `<span>NINEA&nbsp;: ${ent.ninea}</span>`,
+    ent.rccm && `<span>RCCM&nbsp;: ${ent.rccm}</span>`,
+  ].filter(Boolean).join(`<span style="color:#d1d5db">&nbsp;|&nbsp;</span>`);
+
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><title>Bulletin – ${emp.prenom} ${emp.nom} – ${periode}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}body{font-family:Arial,sans-serif;font-size:12px;color:#1f2937;background:#fff}
+  .page{width:210mm;min-height:297mm;margin:0 auto;padding:12mm 14mm;display:flex;flex-direction:column}.content{flex:1}
+  .header{background:#064e3b;color:#fff;padding:12px 18px;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-radius:6px}
+  .emp-grid{display:grid;grid-template-columns:1fr 1fr;border:1px solid #e5e7eb;border-radius:4px;overflow:hidden;margin-bottom:11px}
+  .emp-cell{padding:5px 10px;font-size:10px;border-bottom:1px solid #e5e7eb}.emp-cell:nth-child(4n+1),.emp-cell:nth-child(4n+2){background:#f9fafb}
+  .emp-label{color:#9ca3af;font-size:8px;text-transform:uppercase;letter-spacing:.5px;display:block}.emp-val{color:#1f2937;font-weight:700}
+  table{width:100%;border-collapse:collapse;margin-bottom:9px;font-size:11px}
+  .net-box{background:#ecfdf5;border:2px solid #10b981;border-radius:6px;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;margin:10px 0}
+  .net-label{font-size:14px;font-weight:800;color:#064e3b}.net-val{font-size:20px;font-weight:900;color:#10b981}
+  .masse-box{background:#f5f3ff;border:1px solid #ddd6fe;border-radius:4px;padding:7px 14px;display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .sigs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:12px 0 8px}.sig{text-align:center}
+  .sig-name{font-size:9px;color:#6b7280;margin-bottom:24px}.sig-line{border-top:1px solid #d1d5db;padding-top:5px;font-size:8px;color:#9ca3af}
+  .footer{margin-top:auto;padding-top:10px;border-top:2px solid #10b981}
+  .footer-coords{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 0;font-size:9px;color:#4b5563;padding:6px 0;text-align:center;line-height:1.8}
+  .footer-doc{text-align:center;font-size:8px;color:#9ca3af;border-top:1px solid #e5e7eb;padding-top:5px;margin-top:4px}
+  .no-print{display:none}
+  @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{padding:10mm 12mm}}
+</style></head><body>
+<div class="page"><div class="content">
+  <div class="header">
+    <div><div style="font-size:15px;font-weight:900;letter-spacing:1px;text-transform:uppercase">${ent.nom || "ENTREPRISE"}</div>
+    ${ent.ninea ? `<div style="font-size:9px;color:#a7f3d0;margin-top:2px">NINEA : ${ent.ninea}</div>` : ""}</div>
+    <div style="text-align:right"><h2 style="font-size:15px;font-weight:900">BULLETIN DE PAIE</h2>
+    <div style="font-size:11px;color:#a7f3d0;margin-top:3px">Période : <b>${periode}</b></div>
+    <div style="font-size:9px;color:#6ee7b7;margin-top:2px">Émis le : ${date_emission}</div></div>
+  </div>
+  <div class="emp-grid">${infoRows.map(([l, v]) => `<div class="emp-cell"><span class="emp-label">${l}</span><span class="emp-val">${v}</span></div>`).join("")}</div>
+  ${section("Éléments de Salaire", "#1d4ed8",
+    row("Salaire de base", p.salaireBase, { bg: "#f9fafb" }) +
+    (p.sursalaire > 0 ? row("Sursalaire", p.sursalaire) : "") +
+    (p.primeAnc > 0 ? row(`Prime d'ancienneté (${p.anc}%)`, p.primeAnc, { indent: true, color: "#1d4ed8", bg: "#f9fafb" }) : "") +
+    (p.totalHS > 0 ? row("Heures supplémentaires", p.totalHS, { indent: true }) : "") +
+    (p.retAbsence > 0 ? row("Retenue absences", p.retAbsence, { neg: true, indent: true, color: "#dc2626" }) : "") +
+    row("SALAIRE BRUT", p.brut, { bold: true, color: "#1d4ed8" })
+  )}
+  ${section("Retenues Salariales", "#dc2626",
+    row("Impôt sur le Revenu (IR)", p.ir, { neg: true, indent: true, color: "#dc2626", bg: "#f9fafb" }) +
+    row("TRIMF", p.trimf, { neg: true, indent: true, color: "#dc2626" }) +
+    row("IPRES R.G. salarié (5,6%)", p.ipresRG_s, { neg: true, indent: true, color: "#dc2626", bg: "#f9fafb" }) +
+    (p.ipresRC_s > 0 ? row("IPRES R.C.C. salarié (2,4%)", p.ipresRC_s, { neg: true, indent: true, color: "#dc2626" }) : "") +
+    (p.ipm_s > 0 ? row("IPM salarié", p.ipm_s, { neg: true, indent: true, color: "#dc2626", bg: "#f9fafb" }) : "") +
+    row("TOTAL RETENUES", p.totalRet, { neg: true, bold: true, color: "#dc2626" })
+  )}
+  ${section("Indemnités", "#059669",
+    row("Indemnité de transport", p.transport, { color: "#065f46", bg: "#f0fdf4" }) +
+    (p.primePanier > 0 ? row("Prime de panier", p.primePanier, { color: "#065f46" }) : "") +
+    (p.indKilometrique > 0 ? row("Indemnité kilométrique", p.indKilometrique, { color: "#065f46", bg: "#f0fdf4" }) : "")
+  )}
+  ${p.totalAvances > 0 ? section("Avances & Retenues", "#b45309",
+    (p.avanceTabaski > 0 ? row("Avance Tabaski", p.avanceTabaski, { neg: true, color: "#92400e" }) : "") +
+    (p.avanceCaisse > 0 ? row("Avance caisse", p.avanceCaisse, { neg: true, color: "#92400e" }) : "") +
+    (p.avanceFinanciere > 0 ? row("Avance financière", p.avanceFinanciere, { neg: true, color: "#92400e" }) : "") +
+    (p.retCooperative > 0 ? row("Ret. coopérative", p.retCooperative, { neg: true, color: "#92400e" }) : "") +
+    (p.fraisMedicaux > 0 ? row("Frais médicaux", p.fraisMedicaux, { neg: true, color: "#92400e" }) : "") +
+    row("TOTAL AVANCES", p.totalAvances, { neg: true, bold: true, color: "#92400e" })
+  ) : ""}
+  <div class="net-box"><div><div class="net-label">NET À PAYER</div><div style="font-size:9px;color:#6b7280;margin-top:2px">Période : ${periode}</div></div><div class="net-val">${f(p.net)} FCFA</div></div>
+  ${section("Charges Patronales (informatif)", "#b45309",
+    [["CFCE (3%)", p.cfce], ["IPRES R.G. patronal (8,4%)", p.ipresRG_p],
+     p.ipresRC_p > 0 ? ["IPRES R.C.C. patronal (3,6%)", p.ipresRC_p] : null,
+     ["CSS Alloc. Familiales (7%)", p.css_af], ["CSS Acc. Travail (1%)", p.css_at],
+     p.ipm_p > 0 ? ["IPM patronal", p.ipm_p] : null].filter(Boolean)
+    .map(([l, v]: any, i: number) => row(l, v, { bg: i % 2 === 0 ? "#fffbeb" : "transparent", color: "#92400e" })).join("") +
+    row("TOTAL CHARGES PATRONALES", p.chargesPat, { bold: true, color: "#92400e", bg: "#fffbeb" })
+  )}
+  <div class="masse-box"><span style="font-size:10px;font-weight:700;color:#5b21b6">MASSE SALARIALE TOTALE</span><span style="font-size:12px;font-weight:800;color:#5b21b6">${f(p.masse)} FCFA</span></div>
+  <div class="sigs">${["Employeur", "Service RH", "Employé(e)"].map(s => `<div class="sig"><div class="sig-name">${s}</div><div class="sig-line">Signature &amp; cachet</div></div>`).join("")}</div>
+</div>
+<div class="footer"><div class="footer-coords">${footerItems}</div><div class="footer-doc">Document généré par Grow Hub Management System · ${periode} · Confidentiel</div></div>
+</div></body></html>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Bulletin Modal with period selector + PDF
+// ═══════════════════════════════════════════════════════════════════════════
+
+function BulletinModal({ emp, params, entreprise, onClose }: { emp: HrEmployee; params: PayrollParams; entreprise: Entreprise; onClose: () => void }) {
+  const now = new Date();
+  const [mois, setMois] = useState(now.getMonth());
+  const [annee, setAnnee] = useState(now.getFullYear());
+  const refDate = new Date(annee, mois + 1, 0);
+  const paie = calculerPaie(emp, params, refDate);
+  const periodeLabel = `${MOIS[mois]} ${annee}`;
+  const years = Array.from({ length: 10 }, (_, i) => now.getFullYear() - i);
+
+  const openPDF = () => {
+    const html = genererBulletinHTML(emp, paie, mois, annee, entreprise);
+    const win = window.open("", "_blank");
+    if (!win) { toast.error("Veuillez autoriser les popups"); return; }
+    win.document.write(html);
+    win.document.close();
+  };
+
+  const Row = ({ l, v, c, bold, neg }: { l: string; v: number; c?: string; bold?: boolean; neg?: boolean }) => (
+    <div className={`flex justify-between py-1 px-2 text-[12px] border-b border-border/50 ${bold ? "font-bold" : ""}`}>
+      <span className="text-muted-foreground">{l}</span>
+      <span className={c || (neg ? "text-destructive" : "")} style={{ fontWeight: bold ? 700 : 400 }}>
+        {neg ? "– " : ""}{fmtXOF(Math.abs(v))} FCFA
+      </span>
+    </div>
+  );
 
   return (
     <Dialog open onOpenChange={() => onClose()}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <FileText size={18} /> Bulletin de paie — {emp.prenom} {emp.nom}
+            <FileText size={18} /> Bulletin de Paie — {emp.prenom} {emp.nom}
           </DialogTitle>
         </DialogHeader>
-        <div className="text-xs text-muted-foreground mb-2">
-          Matricule : {emp.matricule} · {emp.fonction} · Ancienneté : {paie.anc} ans ({(paie.ancRate * 100).toFixed(0)}%)
+
+        {/* Period selector */}
+        <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg flex-wrap">
+          <span className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Période :</span>
+          <Select value={String(mois)} onValueChange={v => setMois(+v)}>
+            <SelectTrigger className="w-[140px] h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>{MOIS.map((m, i) => <SelectItem key={i} value={String(i)}>{m}</SelectItem>)}</SelectContent>
+          </Select>
+          <Select value={String(annee)} onValueChange={v => setAnnee(+v)}>
+            <SelectTrigger className="w-[90px] h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>{years.map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}</SelectContent>
+          </Select>
+          <div className="flex-1" />
+          <GhButton size="sm" variant="destructive" onClick={openPDF}>
+            <Printer size={13} className="mr-1" /> Générer PDF
+          </GhButton>
         </div>
-        <div className="space-y-1">
-          {lines.map((l, i) => (
-            <div key={i} className={`flex justify-between py-1 px-2 rounded text-[12px] ${l.bold ? "font-bold" : ""} ${l.highlight ? "bg-primary/10 text-primary font-extrabold text-sm" : ""}`}>
-              <span>{l.label}</span>
-              <span className={l.val < 0 ? "text-destructive" : ""}>{fmtXOF(Math.abs(l.val))} {l.val < 0 ? "−" : ""} F</span>
-            </div>
+
+        {/* Employee info */}
+        <div className="grid grid-cols-2 gap-1 p-3 bg-muted/20 rounded-lg text-[11px]">
+          {[["Matricule", emp.matricule], ["Fonction", emp.fonction || "—"], ["Employé", `${emp.prenom} ${emp.nom}`], ["Catégorie", emp.categorie || "—"],
+            ["Convention", emp.convention || "—"], ["Contrat", emp.contrat], ["Date d'entrée", emp.date_entree || "—"], ["Ancienneté", `${paie.anc} an${paie.anc > 1 ? "s" : ""} (${(paie.ancRate * 100).toFixed(0)}%)`]
+          ].map(([l, v]) => (
+            <div key={l}><span className="text-muted-foreground">{l} : </span><span className="font-semibold">{v}</span></div>
           ))}
         </div>
-        <div className="mt-4 pt-3 border-t border-border">
-          <h4 className="text-xs font-bold text-muted-foreground mb-2">Charges patronales</h4>
+
+        {/* Salary elements */}
+        <div>
+          <div className="text-[10px] font-bold text-primary uppercase tracking-wide mb-1">Éléments de salaire</div>
+          <Row l="Salaire de base" v={paie.salaireBase} />
+          {paie.sursalaire > 0 && <Row l="Sursalaire" v={paie.sursalaire} />}
+          {paie.primeAnc > 0 && <Row l={`Prime ancienneté (${paie.anc}%)`} v={paie.primeAnc} c="text-primary" />}
+          {paie.totalHS > 0 && <Row l="Heures supplémentaires" v={paie.totalHS} />}
+          {paie.retAbsence > 0 && <Row l="Retenue absences" v={paie.retAbsence} neg />}
+          <Row l="SALAIRE BRUT" v={paie.brut} c="text-primary" bold />
+        </div>
+
+        {/* Retenues */}
+        <div>
+          <div className="text-[10px] font-bold text-destructive uppercase tracking-wide mb-1">Retenues salariales</div>
+          <Row l="Impôt sur le Revenu (IR)" v={paie.ir} neg />
+          <Row l="TRIMF" v={paie.trimf} neg />
+          <Row l="IPRES R.G. salarié (5,6%)" v={paie.ipresRG_s} neg />
+          {paie.ipresRC_s > 0 && <Row l="IPRES R.C.C. salarié (2,4%)" v={paie.ipresRC_s} neg />}
+          {paie.ipm_s > 0 && <Row l="IPM salarié" v={paie.ipm_s} neg />}
+          <Row l="TOTAL RETENUES" v={paie.totalRet} neg bold />
+        </div>
+
+        {/* Indemnités */}
+        <div>
+          <div className="text-[10px] font-bold text-green-600 uppercase tracking-wide mb-1">Indemnités</div>
+          <Row l="Indemnité de transport" v={paie.transport} />
+          {paie.primePanier > 0 && <Row l="Prime de panier" v={paie.primePanier} />}
+          {paie.indKilometrique > 0 && <Row l="Indemnité kilométrique" v={paie.indKilometrique} />}
+        </div>
+
+        {/* Avances */}
+        {paie.totalAvances > 0 && (
+          <div>
+            <div className="text-[10px] font-bold text-amber-600 uppercase tracking-wide mb-1">Avances & retenues</div>
+            {paie.avanceTabaski > 0 && <Row l="Avance Tabaski" v={paie.avanceTabaski} neg />}
+            {paie.avanceCaisse > 0 && <Row l="Avance caisse" v={paie.avanceCaisse} neg />}
+            {paie.avanceFinanciere > 0 && <Row l="Avance financière" v={paie.avanceFinanciere} neg />}
+            {paie.retCooperative > 0 && <Row l="Ret. coopérative" v={paie.retCooperative} neg />}
+            {paie.fraisMedicaux > 0 && <Row l="Frais médicaux" v={paie.fraisMedicaux} neg />}
+            <Row l="TOTAL AVANCES" v={paie.totalAvances} neg bold />
+          </div>
+        )}
+
+        {/* NET */}
+        <div className="bg-primary/10 border-2 border-primary rounded-lg p-4 flex justify-between items-center">
+          <div><div className="font-extrabold text-sm">NET À PAYER</div><div className="text-[10px] text-muted-foreground mt-1">Période : {periodeLabel}</div></div>
+          <div className="text-xl font-black text-primary">{fmtXOF(paie.net)} FCFA</div>
+        </div>
+
+        {/* Charges patronales */}
+        <div className="p-3 bg-muted/20 rounded-lg">
+          <div className="text-[10px] font-bold text-amber-600 uppercase tracking-wide mb-2">Charges patronales (informatif)</div>
           <div className="grid grid-cols-2 gap-1 text-[11px]">
-            <span>CFCE</span><span className="text-right">{fmtXOF(paie.cfce)} F</span>
-            <span>IPRES RG</span><span className="text-right">{fmtXOF(paie.ipresRG_p)} F</span>
-            <span>IPRES RC</span><span className="text-right">{fmtXOF(paie.ipresRC_p)} F</span>
-            <span>CSS AF</span><span className="text-right">{fmtXOF(paie.css_af)} F</span>
-            <span>CSS AT</span><span className="text-right">{fmtXOF(paie.css_at)} F</span>
-            <span>IPM</span><span className="text-right">{fmtXOF(paie.ipm_p)} F</span>
-            <span className="font-bold">Total</span><span className="text-right font-bold">{fmtXOF(paie.chargesPat)} F</span>
+            {[["CFCE", paie.cfce], ["IPRES R.G. patronal", paie.ipresRG_p], ["IPRES R.C.C. patronal", paie.ipresRC_p],
+              ["CSS Alloc. Fam.", paie.css_af], ["CSS Acc. Trav.", paie.css_at], ["IPM patronal", paie.ipm_p]
+            ].filter(([, v]) => (v as number) > 0).map(([l, v]) => (
+              <div key={l as string} className="flex justify-between text-muted-foreground"><span>{l as string}</span><span>{fmtXOF(v as number)} F</span></div>
+            ))}
+          </div>
+          <div className="flex justify-between font-bold text-amber-700 border-t border-border pt-2 mt-2 text-xs">
+            <span>Total charges patronales</span><span>{fmtXOF(paie.chargesPat)} FCFA</span>
+          </div>
+          <div className="flex justify-between font-bold text-purple-600 mt-1 text-xs">
+            <span>Masse salariale totale</span><span>{fmtXOF(paie.masse)} FCFA</span>
           </div>
         </div>
-        <div className="mt-3 text-center">
-          <span className="text-xs text-muted-foreground">Masse salariale : <strong>{fmtXOF(paie.masse)} F CFA</strong></span>
+
+        <div className="text-center text-[10px] text-muted-foreground p-2 bg-primary/5 rounded-lg">
+          💡 Cliquez sur <strong>« Générer PDF »</strong> — un nouvel onglet s'ouvre. Utilisez <strong>Ctrl+P</strong> puis "Enregistrer en PDF".
         </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-function EmployeeFormDialog({ emp, onSave, onClose, existingMats }: {
+// ═══════════════════════════════════════════════════════════════════════════
+// Employee Form Dialog
+// ═══════════════════════════════════════════════════════════════════════════
+
+function EmployeeFormDialog({ emp, onSave, onClose, existingMats, conventions }: {
   emp: Partial<HrEmployee> | null; onSave: (e: Partial<HrEmployee>) => void; onClose: () => void; existingMats: string[];
+  conventions: typeof DEFAULT_CONVENTIONS;
 }) {
   const [form, setForm] = useState<Partial<HrEmployee>>(emp || { ...EMPTY_EMP });
   const isEdit = !!emp?.id;
-
   const set = (key: string, val: any) => setForm(prev => ({ ...prev, [key]: val }));
+
+  const selectedCC = conventions.find(c => c.nom === form.convention);
+  const availableCats = selectedCC?.categories || [];
+
+  const handleCatChange = (catCode: string) => {
+    set("categorie", catCode);
+    const cat = availableCats.find(c => c.code === catCode);
+    if (cat) {
+      set("statut", cat.statut);
+      if (!form.salaire_base || form.salaire_base === 0) set("salaire_base", cat.salaireMinima);
+    }
+  };
 
   const handleSubmit = () => {
     if (!form.matricule || !form.prenom || !form.nom) {
@@ -101,6 +373,10 @@ function EmployeeFormDialog({ emp, onSave, onClose, existingMats }: {
     }
     if (!isEdit && existingMats.includes(form.matricule!)) {
       toast.error("Ce matricule existe déjà");
+      return;
+    }
+    if (!(Number(form.salaire_base) > 0)) {
+      toast.error("Le salaire de base doit être supérieur à 0");
       return;
     }
     onSave(form);
@@ -146,10 +422,7 @@ function EmployeeFormDialog({ emp, onSave, onClose, existingMats }: {
                 <Select value={form.situation_famille || "Célibataire"} onValueChange={v => set("situation_famille", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Célibataire">Célibataire</SelectItem>
-                    <SelectItem value="Marié(e)">Marié(e)</SelectItem>
-                    <SelectItem value="Divorcé(e)">Divorcé(e)</SelectItem>
-                    <SelectItem value="Veuf(ve)">Veuf(ve)</SelectItem>
+                    {["Célibataire", "Marié(e)", "Divorcé(e)", "Veuf(ve)"].map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -161,8 +434,28 @@ function EmployeeFormDialog({ emp, onSave, onClose, existingMats }: {
           <TabsContent value="emploi" className="space-y-3 mt-3">
             <div className="grid grid-cols-3 gap-3">
               <div><Label className="text-[11px]">Fonction</Label><Input value={form.fonction || ""} onChange={e => set("fonction", e.target.value)} /></div>
-              <div><Label className="text-[11px]">Convention</Label><Input value={form.convention || ""} onChange={e => set("convention", e.target.value)} /></div>
-              <div><Label className="text-[11px]">Catégorie</Label><Input value={form.categorie || ""} onChange={e => set("categorie", e.target.value)} /></div>
+              <div>
+                <Label className="text-[11px]">Convention collective</Label>
+                <Select value={form.convention || ""} onValueChange={v => { set("convention", v); set("categorie", ""); }}>
+                  <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                  <SelectContent>
+                    {conventions.map(cc => <SelectItem key={cc.id} value={cc.nom}>{cc.nom} · {cc.secteur}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-[11px]">Catégorie</Label>
+                {availableCats.length > 0 ? (
+                  <Select value={form.categorie || ""} onValueChange={handleCatChange}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                    <SelectContent>
+                      {availableCats.map(cat => <SelectItem key={cat.id} value={cat.code}>{cat.code} · {cat.libelle} (min. {fmtXOF(cat.salaireMinima)} F)</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input value={form.categorie || ""} onChange={e => set("categorie", e.target.value)} placeholder="ex: 3_ème" />
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
@@ -171,8 +464,8 @@ function EmployeeFormDialog({ emp, onSave, onClose, existingMats }: {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="employés">Employé</SelectItem>
-                    <SelectItem value="cadres">Cadre</SelectItem>
                     <SelectItem value="agents de maîtrise">Agent de maîtrise</SelectItem>
+                    <SelectItem value="cadres">Cadre</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -181,36 +474,35 @@ function EmployeeFormDialog({ emp, onSave, onClose, existingMats }: {
                 <Select value={form.contrat || "CDI"} onValueChange={v => set("contrat", v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="CDI">CDI</SelectItem>
-                    <SelectItem value="CDD">CDD</SelectItem>
-                    <SelectItem value="Stage">Stage</SelectItem>
+                    {["CDI", "CDD", "Stage", "Prestation"].map(o => <SelectItem key={o} value={o}>{o}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div><Label className="text-[11px]">Date d'entrée</Label><Input type="date" value={form.date_entree || ""} onChange={e => set("date_entree", e.target.value)} /></div>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div><Label className="text-[11px]">Salaire de base (F CFA)</Label><Input type="number" value={form.salaire_base ?? 0} onChange={e => set("salaire_base", +e.target.value)} /></div>
-              <div><Label className="text-[11px]">Sursalaire (F CFA)</Label><Input type="number" value={form.sursalaire ?? 0} onChange={e => set("sursalaire", +e.target.value)} /></div>
+              <div><Label className="text-[11px]">Salaire de base (FCFA) *</Label><Input type="number" value={form.salaire_base ?? 0} onChange={e => set("salaire_base", +e.target.value)} /></div>
+              <div><Label className="text-[11px]">Sursalaire (FCFA)</Label><Input type="number" value={form.sursalaire ?? 0} onChange={e => set("sursalaire", +e.target.value)} /></div>
             </div>
+            {form.categorie && availableCats.find(c => c.code === form.categorie) && Number(form.salaire_base) < (availableCats.find(c => c.code === form.categorie)?.salaireMinima || 0) && (
+              <div className="text-xs text-destructive">⚠ Inférieur au salaire minima de la catégorie ({fmtXOF(availableCats.find(c => c.code === form.categorie)!.salaireMinima)} F)</div>
+            )}
           </TabsContent>
 
           <TabsContent value="avances" className="space-y-3 mt-3">
             <h4 className="text-xs font-bold text-muted-foreground">Heures supplémentaires</h4>
             <div className="grid grid-cols-4 gap-3">
-              <div><Label className="text-[11px]">HS 115%</Label><Input type="number" value={form.hs_115 ?? 0} onChange={e => set("hs_115", +e.target.value)} /></div>
-              <div><Label className="text-[11px]">HS 140%</Label><Input type="number" value={form.hs_140 ?? 0} onChange={e => set("hs_140", +e.target.value)} /></div>
-              <div><Label className="text-[11px]">HS 160%</Label><Input type="number" value={form.hs_160 ?? 0} onChange={e => set("hs_160", +e.target.value)} /></div>
-              <div><Label className="text-[11px]">HS 200%</Label><Input type="number" value={form.hs_200 ?? 0} onChange={e => set("hs_200", +e.target.value)} /></div>
+              {[["HS 115%", "hs_115"], ["HS 140%", "hs_140"], ["HS 160%", "hs_160"], ["HS 200%", "hs_200"]].map(([label, key]) => (
+                <div key={key}><Label className="text-[11px]">{label}</Label><Input type="number" value={(form as any)[key] ?? 0} onChange={e => set(key, +e.target.value)} /></div>
+              ))}
             </div>
             <h4 className="text-xs font-bold text-muted-foreground mt-2">Avances & retenues</h4>
             <div className="grid grid-cols-3 gap-3">
-              <div><Label className="text-[11px]">Avance Tabaski</Label><Input type="number" value={form.avance_tabaski ?? 0} onChange={e => set("avance_tabaski", +e.target.value)} /></div>
-              <div><Label className="text-[11px]">Avance caisse</Label><Input type="number" value={form.avance_caisse ?? 0} onChange={e => set("avance_caisse", +e.target.value)} /></div>
-              <div><Label className="text-[11px]">Avance financière</Label><Input type="number" value={form.avance_financiere ?? 0} onChange={e => set("avance_financiere", +e.target.value)} /></div>
-              <div><Label className="text-[11px]">Ret. coopérative</Label><Input type="number" value={form.ret_cooperative ?? 0} onChange={e => set("ret_cooperative", +e.target.value)} /></div>
-              <div><Label className="text-[11px]">Frais médicaux</Label><Input type="number" value={form.frais_medicaux ?? 0} onChange={e => set("frais_medicaux", +e.target.value)} /></div>
-              <div><Label className="text-[11px]">Ind. kilométrique</Label><Input type="number" value={form.ind_kilometrique ?? 0} onChange={e => set("ind_kilometrique", +e.target.value)} /></div>
+              {[["Avance Tabaski", "avance_tabaski"], ["Avance caisse", "avance_caisse"], ["Avance financière", "avance_financiere"],
+                ["Ret. coopérative", "ret_cooperative"], ["Frais médicaux", "frais_medicaux"], ["Ind. kilométrique", "ind_kilometrique"]
+              ].map(([label, key]) => (
+                <div key={key}><Label className="text-[11px]">{label}</Label><Input type="number" value={(form as any)[key] ?? 0} onChange={e => set(key, +e.target.value)} /></div>
+              ))}
             </div>
             <h4 className="text-xs font-bold text-muted-foreground mt-2">Absences</h4>
             <div className="grid grid-cols-3 gap-3">
@@ -229,26 +521,272 @@ function EmployeeFormDialog({ emp, onSave, onClose, existingMats }: {
   );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// Paramètres Tab
+// ═══════════════════════════════════════════════════════════════════════════
+
+function ParametresTab({ params, onSave }: { params: PayrollParams; onSave: (p: PayrollParams) => void }) {
+  const [local, setLocal] = useState<PayrollParams>(JSON.parse(JSON.stringify(params)));
+  const setP = (key: string, field: string, value: string | number) => {
+    setLocal(prev => ({ ...prev, [key]: { ...(prev as any)[key], [field]: isNaN(+value) ? value : +value } }));
+  };
+  const KEYS = ["CFCE", "BRS", "IPRES_RG", "IPRES_RCC", "CSS_AF", "CSS_AT", "IPM"] as const;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-base font-bold">Paramètres de cotisation</h3>
+          <p className="text-xs text-muted-foreground">Taux des cotisations sociales · République du Sénégal</p>
+        </div>
+        <div className="flex gap-2">
+          <GhButton size="sm" variant="ghost" onClick={() => setLocal(JSON.parse(JSON.stringify(DEFAULT_PAYROLL_PARAMS)))}>↺ Réinitialiser</GhButton>
+          <GhButton size="sm" onClick={() => { onSave(local); toast.success("Paramètres enregistrés"); }}>💾 Enregistrer</GhButton>
+        </div>
+      </div>
+
+      <GhCard title="🏛️ Cotisations Sociales">
+        <div className="overflow-x-auto">
+          <table className="w-full text-[12px]">
+            <thead>
+              <tr className="border-b border-border text-muted-foreground">
+                {["Libellé", "Taux total", "Salarié", "Patronal", "Plafond (FCFA)"].map(h => (
+                  <th key={h} className="py-2 px-3 text-left font-semibold whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {KEYS.map(key => {
+                const p = (local as any)[key];
+                return (
+                  <tr key={key} className="border-b border-border/50 hover:bg-muted/30">
+                    <td className="py-2 px-3 font-semibold">{p.label}</td>
+                    <td className="py-2 px-3">
+                      <div className="flex items-center gap-2">
+                        <Input type="number" step="0.001" min={0} max={1} value={p.taux} onChange={e => setP(key, "taux", e.target.value)} className="w-20 h-7 text-xs" />
+                        <span className="text-primary text-[10px] font-semibold w-12">{(p.taux * 100).toFixed(1)}%</span>
+                      </div>
+                    </td>
+                    <td className="py-2 px-3">
+                      <Input type="number" step="0.1" min={0} max={1} value={p.tauxSalarial} onChange={e => setP(key, "tauxSalarial", e.target.value)} className="w-16 h-7 text-xs" />
+                    </td>
+                    <td className="py-2 px-3">
+                      <Input type="number" step="0.1" min={0} max={1} value={p.tauxPatronal} onChange={e => setP(key, "tauxPatronal", e.target.value)} className="w-16 h-7 text-xs" />
+                    </td>
+                    <td className="py-2 px-3">
+                      {p.plafond !== null ? (
+                        <Input type="number" step="1000" min={0} value={p.plafond ?? ""} onChange={e => setP(key, "plafond", e.target.value)} className="w-28 h-7 text-xs" />
+                      ) : (
+                        <span className="text-muted-foreground text-[10px]">Sans plafond</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </GhCard>
+
+      <GhCard title="🚌 Indemnité de Transport">
+        <div className="flex items-center gap-4">
+          <div>
+            <Label className="text-[11px]">Montant mensuel (FCFA)</Label>
+            <Input type="number" step="500" min={0} value={local.transport.valeur} onChange={e => setP("transport", "valeur", e.target.value)} className="w-48" />
+          </div>
+          <div className="text-xl font-bold text-primary">{fmtXOF(local.transport.valeur)} FCFA</div>
+        </div>
+      </GhCard>
+
+      <GhCard title="📊 Barème IR — Code Général des Impôts Sénégal">
+        <p className="text-xs text-muted-foreground mb-3">Non modifiable — défini par la législation fiscale sénégalaise.</p>
+        <table className="w-full text-[12px]">
+          <thead><tr className="border-b border-border"><th className="py-2 px-3 text-left text-muted-foreground font-semibold">Tranche annuelle (FCFA)</th><th className="py-2 px-3 text-left text-muted-foreground font-semibold">Taux</th></tr></thead>
+          <tbody>
+            {[["0 – 630 000", "0 %"], ["630 001 – 1 500 000", "20 %"], ["1 500 001 – 4 000 000", "30 %"], ["4 000 001 – 8 000 000", "35 %"], ["8 000 001 – 13 500 000", "37 %"], ["Au-delà de 13 500 000", "40 %"]].map(([t, r], i) => (
+              <tr key={i} className="border-b border-border/50"><td className="py-2 px-3">{t}</td><td className="py-2 px-3 font-bold text-amber-600">{r}</td></tr>
+            ))}
+          </tbody>
+        </table>
+      </GhCard>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Entreprise Tab
+// ═══════════════════════════════════════════════════════════════════════════
+
+function EntrepriseTab({ entreprise, onSave }: { entreprise: Entreprise; onSave: (e: Entreprise) => void }) {
+  const [form, setForm] = useState({ ...entreprise });
+  const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }));
+
+  return (
+    <div className="space-y-4 max-w-2xl">
+      <div className="flex justify-between items-center">
+        <div>
+          <h3 className="text-base font-bold">Informations de l'entreprise</h3>
+          <p className="text-xs text-muted-foreground">Ces informations apparaissent sur les bulletins de paie</p>
+        </div>
+        <GhButton size="sm" onClick={() => { onSave(form); toast.success("Entreprise enregistrée"); }}>💾 Enregistrer</GhButton>
+      </div>
+
+      <GhCard title="📋 Coordonnées">
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label className="text-[11px]">Nom de l'entreprise *</Label><Input value={form.nom} onChange={e => set("nom", e.target.value)} /></div>
+          <div><Label className="text-[11px]">Téléphone</Label><Input value={form.telephone} onChange={e => set("telephone", e.target.value)} /></div>
+          <div><Label className="text-[11px]">Adresse</Label><Input value={form.adresse} onChange={e => set("adresse", e.target.value)} /></div>
+          <div><Label className="text-[11px]">Email</Label><Input value={form.email} onChange={e => set("email", e.target.value)} /></div>
+          <div><Label className="text-[11px]">NINEA</Label><Input value={form.ninea} onChange={e => set("ninea", e.target.value)} /></div>
+          <div><Label className="text-[11px]">RCCM</Label><Input value={form.rccm} onChange={e => set("rccm", e.target.value)} /></div>
+        </div>
+      </GhCard>
+
+      {/* Aperçu mini header bulletin */}
+      <GhCard title="Aperçu du bulletin">
+        <div className="rounded-md overflow-hidden">
+          <div className="bg-emerald-900 text-white p-3 flex justify-between items-center">
+            <div className="font-black text-sm tracking-wide">{form.nom || "Nom entreprise"}</div>
+            <div className="text-right">
+              <div className="font-bold text-xs">BULLETIN DE PAIE</div>
+              <div className="text-emerald-300 text-[10px]">Période : Avril 2026</div>
+            </div>
+          </div>
+          <div className="border-t-2 border-emerald-600 p-2 flex flex-wrap gap-3 text-[9px] text-muted-foreground bg-muted/20">
+            {form.adresse && <span>📍 {form.adresse}</span>}
+            {form.telephone && <span>📞 {form.telephone}</span>}
+            {form.email && <span>✉️ {form.email}</span>}
+            {form.ninea && <span>NINEA : {form.ninea}</span>}
+          </div>
+        </div>
+      </GhCard>
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Conventions Tab
+// ═══════════════════════════════════════════════════════════════════════════
+
+function ConventionsTab({ conventions, setConventions }: { conventions: typeof DEFAULT_CONVENTIONS; setConventions: (c: typeof DEFAULT_CONVENTIONS) => void }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const selectedCC = conventions.find(c => c.id === selected);
+
+  return (
+    <div className="space-y-4">
+      <h3 className="text-base font-bold">Conventions Collectives</h3>
+      <p className="text-xs text-muted-foreground">{conventions.length} convention{conventions.length > 1 ? "s" : ""} enregistrée{conventions.length > 1 ? "s" : ""}</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {conventions.map(cc => (
+          <div key={cc.id} onClick={() => setSelected(cc.id === selected ? null : cc.id)}
+            className={`cursor-pointer rounded-lg border p-3 transition-colors ${selected === cc.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"}`}>
+            <div className="font-bold text-sm">{cc.nom}</div>
+            <div className="text-xs text-muted-foreground mt-1">{cc.secteur}</div>
+            <div className="flex gap-2 mt-2">
+              <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-semibold">{cc.categories.length} cat.</span>
+              {cc.dateSignature && <span className="bg-muted text-muted-foreground text-[10px] px-2 py-0.5 rounded-full">{cc.dateSignature.slice(0, 4)}</span>}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {selectedCC && (
+        <GhCard title={`📊 Grille salariale — ${selectedCC.nom}`}>
+          {selectedCC.description && <p className="text-xs text-muted-foreground mb-3">{selectedCC.description}</p>}
+          {selectedCC.categories.length > 0 && (
+            <div className="flex gap-3 mb-3">
+              {[
+                { label: "Salaire min.", value: fmtXOF(Math.min(...selectedCC.categories.map(c => c.salaireMinima))) + " F" },
+                { label: "Salaire max.", value: fmtXOF(Math.max(...selectedCC.categories.map(c => c.salaireMinima))) + " F" },
+                { label: "Moyenne", value: fmtXOF(selectedCC.categories.reduce((s, c) => s + c.salaireMinima, 0) / selectedCC.categories.length) + " F" },
+              ].map(s => (
+                <div key={s.label} className="bg-muted/30 rounded-md p-2 flex-1">
+                  <div className="text-[10px] text-muted-foreground">{s.label}</div>
+                  <div className="font-bold text-sm text-primary mt-1">{s.value}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          <table className="w-full text-[12px]">
+            <thead>
+              <tr className="border-b border-border text-muted-foreground">
+                <th className="py-2 px-3 text-left">Code</th>
+                <th className="py-2 px-3 text-left">Libellé</th>
+                <th className="py-2 px-3 text-left">Statut</th>
+                <th className="py-2 px-3 text-right">Salaire Minima</th>
+              </tr>
+            </thead>
+            <tbody>
+              {selectedCC.categories.map((cat, i) => (
+                <tr key={cat.id} className="border-b border-border/50 hover:bg-muted/20">
+                  <td className="py-2 px-3"><span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-bold">{cat.code}</span></td>
+                  <td className="py-2 px-3 font-medium">{cat.libelle}</td>
+                  <td className="py-2 px-3"><span className="text-[10px] px-2 py-0.5 rounded capitalize" style={{ background: `${STATUT_COLORS[cat.statut] || "gray"}20`, color: STATUT_COLORS[cat.statut] || "gray" }}>{cat.statut}</span></td>
+                  <td className="py-2 px-3 text-right font-bold text-amber-600">{fmtXOF(cat.salaireMinima)} FCFA</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </GhCard>
+      )}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Main HrPage
+// ═══════════════════════════════════════════════════════════════════════════
+
 export default function HrPage() {
   const { t } = useTranslation();
   const { employees, isLoading, upsert, remove } = useHrEmployees();
   const { history, saveSnapshot } = useHrPayrollHistory();
-  const [showForm, setShowForm] = useState<Partial<HrEmployee> | null>(null);
   const [showNew, setShowNew] = useState(false);
+  const [showForm, setShowForm] = useState<Partial<HrEmployee> | null>(null);
   const [showBulletin, setShowBulletin] = useState<HrEmployee | null>(null);
   const [search, setSearch] = useState("");
+  const [params, setParams] = useState<PayrollParams>(DEFAULT_PAYROLL_PARAMS);
+  const [entreprise, setEntreprise] = useState<Entreprise>(DEFAULT_ENTREPRISE);
+  const [conventions, setConventions] = useState(DEFAULT_CONVENTIONS);
+  const [activeTab, setActiveTab] = useState("dashboard");
 
-  const allPaies = employees.map(e => ({ ...e, paie: calculerPaie(e, DEFAULT_PAYROLL_PARAMS) }));
+  const allPaies = useMemo(() => employees.map(e => ({ ...e, paie: calculerPaie(e, params) })), [employees, params]);
   const filtered = allPaies.filter(e =>
     `${e.prenom} ${e.nom} ${e.matricule} ${e.fonction}`.toLowerCase().includes(search.toLowerCase())
   );
 
-  const totaux = {
+  const totaux = useMemo(() => ({
     brut: allPaies.reduce((s, e) => s + e.paie.brut, 0),
     net: allPaies.reduce((s, e) => s + e.paie.net, 0),
     charges: allPaies.reduce((s, e) => s + e.paie.chargesPat, 0),
     masse: allPaies.reduce((s, e) => s + e.paie.masse, 0),
-  };
+  }), [allPaies]);
+
+  // Charts data
+  const statutData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    employees.forEach(e => { counts[e.statut || "autre"] = (counts[e.statut || "autre"] || 0) + 1; });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [employees]);
+
+  const contratData = useMemo(() => {
+    const counts: Record<string, number> = {};
+    employees.forEach(e => { counts[e.contrat || "autre"] = (counts[e.contrat || "autre"] || 0) + 1; });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [employees]);
+
+  const salaryByStatut = useMemo(() => {
+    const sums: Record<string, { brut: number; net: number; count: number }> = {};
+    allPaies.forEach(e => {
+      const key = e.statut || "autre";
+      if (!sums[key]) sums[key] = { brut: 0, net: 0, count: 0 };
+      sums[key].brut += e.paie.brut;
+      sums[key].net += e.paie.net;
+      sums[key].count += 1;
+    });
+    return Object.entries(sums).map(([name, v]) => ({ name, brut: Math.round(v.brut), net: Math.round(v.net) }));
+  }, [allPaies]);
 
   const handleSave = async (emp: Partial<HrEmployee>) => {
     await upsert.mutateAsync(emp);
@@ -283,7 +821,7 @@ export default function HrPage() {
     <div className="space-y-5">
       <SectionHeader
         title="Gestion RH & Paie"
-        subtitle="Gestion des employés, calcul de paie et bulletins de salaire — Barème sénégalais"
+        subtitle="Module complet de paie conforme au droit sénégalais — Barème fiscal, cotisations sociales et bulletins"
         actions={
           <div className="flex gap-2">
             <GhButton size="sm" variant="secondary" onClick={handleCloseMonth}>
@@ -296,84 +834,179 @@ export default function HrPage() {
         }
       />
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Effectif" value={String(employees.length)} note="Employés actifs" color="blue" icon={<Users size={18} />} />
-        <StatCard label="Masse salariale brute" value={`${fmtXOF(totaux.brut)} F`} note="Total mensuel" color="green" icon={<DollarSign size={18} />} />
-        <StatCard label="Net total" value={`${fmtXOF(totaux.net)} F`} note="À verser" color="purple" icon={<TrendingUp size={18} />} />
-        <StatCard label="Charges patronales" value={`${fmtXOF(totaux.charges)} F`} note="Cotisations" color="amber" icon={<DollarSign size={18} />} />
-      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="dashboard" className="gap-1"><BarChart3 size={13} /> Tableau de bord</TabsTrigger>
+          <TabsTrigger value="employes" className="gap-1"><Users size={13} /> Employés</TabsTrigger>
+          <TabsTrigger value="parametres" className="gap-1"><Settings size={13} /> Paramètres</TabsTrigger>
+          <TabsTrigger value="conventions" className="gap-1"><BookOpen size={13} /> Conventions</TabsTrigger>
+          <TabsTrigger value="entreprise" className="gap-1"><Building2 size={13} /> Entreprise</TabsTrigger>
+        </TabsList>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="Rechercher un employé..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 text-sm" />
-      </div>
-
-      {/* Employee Table */}
-      <GhCard title="Liste des employés" className="overflow-x-auto">
-        <table className="w-full text-[12px]">
-          <thead>
-            <tr className="border-b border-border text-left text-muted-foreground">
-              <th className="py-2 px-3">Matricule</th>
-              <th className="py-2 px-3">Nom complet</th>
-              <th className="py-2 px-3">Fonction</th>
-              <th className="py-2 px-3">Statut</th>
-              <th className="py-2 px-3">Contrat</th>
-              <th className="py-2 px-3 text-right">Salaire base</th>
-              <th className="py-2 px-3 text-right">Brut</th>
-              <th className="py-2 px-3 text-right">Net</th>
-              <th className="py-2 px-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(emp => (
-              <tr key={emp.id} className="border-b border-border/50 hover:bg-surface-2 transition-colors">
-                <td className="py-2.5 px-3 font-mono">{emp.matricule}</td>
-                <td className="py-2.5 px-3 font-medium">{emp.prenom} {emp.nom}</td>
-                <td className="py-2.5 px-3">{emp.fonction}</td>
-                <td className="py-2.5 px-3 capitalize">{emp.statut}</td>
-                <td className="py-2.5 px-3">{emp.contrat}</td>
-                <td className="py-2.5 px-3 text-right font-mono">{fmtXOF(emp.salaire_base)}</td>
-                <td className="py-2.5 px-3 text-right font-mono">{fmtXOF(emp.paie.brut)}</td>
-                <td className="py-2.5 px-3 text-right font-mono font-bold text-primary">{fmtXOF(emp.paie.net)}</td>
-                <td className="py-2.5 px-3 text-right">
-                  <div className="flex gap-1 justify-end">
-                    <button onClick={() => setShowBulletin(emp)} className="p-1.5 rounded hover:bg-primary/10 text-primary"><Eye size={13} /></button>
-                    <button onClick={() => setShowForm(emp)} className="p-1.5 rounded hover:bg-muted"><Pencil size={13} /></button>
-                    <button onClick={() => handleDelete(emp.id!)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive"><Trash2 size={13} /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filtered.length === 0 && (
-              <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">Aucun employé trouvé</td></tr>
-            )}
-          </tbody>
-        </table>
-      </GhCard>
-
-      {/* Payroll History */}
-      {history.length > 0 && (
-        <GhCard title="Historique des clôtures">
-          <h3 className="text-sm font-bold mb-3">Historique des clôtures</h3>
-          <div className="space-y-1">
-            {history.map((h: any) => (
-              <div key={h.id} className="flex justify-between items-center py-1.5 px-2 text-[11px] rounded hover:bg-surface-2">
-                <span className="font-medium">{MOIS[h.mois]} {h.annee}</span>
-                <span>{h.nb_employes} emp.</span>
-                <span className="font-mono">Brut: {fmtXOF(h.total_brut)} F</span>
-                <span className="font-mono text-primary font-bold">Net: {fmtXOF(h.total_net)} F</span>
-              </div>
-            ))}
+        {/* ═══ DASHBOARD ═══ */}
+        <TabsContent value="dashboard" className="space-y-4 mt-4">
+          {/* KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <StatCard label="Effectif" value={String(employees.length)} note="Employés actifs" color="blue" icon={<Users size={18} />} />
+            <StatCard label="Masse salariale brute" value={`${fmtXOF(totaux.brut)} F`} note="Total mensuel" color="green" icon={<DollarSign size={18} />} />
+            <StatCard label="Net total" value={`${fmtXOF(totaux.net)} F`} note="À verser" color="purple" icon={<TrendingUp size={18} />} />
+            <StatCard label="Charges patronales" value={`${fmtXOF(totaux.charges)} F`} note="Cotisations" color="amber" icon={<DollarSign size={18} />} />
           </div>
-        </GhCard>
-      )}
+
+          {/* Charts */}
+          {employees.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <GhCard title="Répartition par statut">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={statutData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, value }) => `${name} (${value})`}>
+                      {statutData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </GhCard>
+              <GhCard title="Répartition par contrat">
+                <ResponsiveContainer width="100%" height={200}>
+                  <PieChart>
+                    <Pie data={contratData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={({ name, value }) => `${name} (${value})`}>
+                      {contratData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </GhCard>
+              <GhCard title="Masse salariale par statut">
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={salaryByStatut}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                    <YAxis tick={{ fontSize: 10 }} tickFormatter={v => `${Math.round(v / 1000)}k`} />
+                    <Tooltip formatter={(v: number) => fmtXOF(v) + " F"} />
+                    <Bar dataKey="brut" name="Brut" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="net" name="Net" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </GhCard>
+            </div>
+          )}
+
+          {/* Top 5 salaires */}
+          {allPaies.length > 0 && (
+            <GhCard title="Top salaires bruts">
+              <div className="space-y-1">
+                {[...allPaies].sort((a, b) => b.paie.brut - a.paie.brut).slice(0, 5).map((emp, i) => (
+                  <div key={emp.id} className="flex justify-between items-center py-1.5 px-2 rounded hover:bg-muted/30 text-[12px]">
+                    <div className="flex items-center gap-3">
+                      <span className="w-5 h-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold flex items-center justify-center">{i + 1}</span>
+                      <span className="font-medium">{emp.prenom} {emp.nom}</span>
+                      <span className="text-muted-foreground">· {emp.fonction}</span>
+                    </div>
+                    <span className="font-mono font-bold text-primary">{fmtXOF(emp.paie.brut)} F</span>
+                  </div>
+                ))}
+              </div>
+            </GhCard>
+          )}
+
+          {/* Payroll History */}
+          {history.length > 0 && (
+            <GhCard title="Historique des clôtures">
+              <div className="space-y-1">
+                {history.map((h: any) => (
+                  <div key={h.id} className="flex justify-between items-center py-1.5 px-2 text-[11px] rounded hover:bg-muted/30">
+                    <span className="font-medium">{MOIS[h.mois]} {h.annee}</span>
+                    <span>{h.nb_employes} emp.</span>
+                    <span className="font-mono">Brut: {fmtXOF(h.total_brut)} F</span>
+                    <span className="font-mono text-primary font-bold">Net: {fmtXOF(h.total_net)} F</span>
+                  </div>
+                ))}
+              </div>
+            </GhCard>
+          )}
+        </TabsContent>
+
+        {/* ═══ EMPLOYÉS ═══ */}
+        <TabsContent value="employes" className="space-y-4 mt-4">
+          <div className="relative max-w-sm">
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Input placeholder="Rechercher un employé..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9 text-sm" />
+          </div>
+
+          <GhCard title={`Liste des employés (${filtered.length})`} className="overflow-x-auto">
+            <table className="w-full text-[12px]">
+              <thead>
+                <tr className="border-b border-border text-left text-muted-foreground">
+                  <th className="py-2 px-3">Matricule</th>
+                  <th className="py-2 px-3">Nom complet</th>
+                  <th className="py-2 px-3">Fonction</th>
+                  <th className="py-2 px-3">Statut</th>
+                  <th className="py-2 px-3">Contrat</th>
+                  <th className="py-2 px-3 text-right">Salaire base</th>
+                  <th className="py-2 px-3 text-right">Brut</th>
+                  <th className="py-2 px-3 text-right">Net</th>
+                  <th className="py-2 px-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(emp => (
+                  <tr key={emp.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors">
+                    <td className="py-2.5 px-3 font-mono">{emp.matricule}</td>
+                    <td className="py-2.5 px-3 font-medium">{emp.prenom} {emp.nom}</td>
+                    <td className="py-2.5 px-3">{emp.fonction}</td>
+                    <td className="py-2.5 px-3 capitalize">{emp.statut}</td>
+                    <td className="py-2.5 px-3">{emp.contrat}</td>
+                    <td className="py-2.5 px-3 text-right font-mono">{fmtXOF(emp.salaire_base)}</td>
+                    <td className="py-2.5 px-3 text-right font-mono">{fmtXOF(emp.paie.brut)}</td>
+                    <td className="py-2.5 px-3 text-right font-mono font-bold text-primary">{fmtXOF(emp.paie.net)}</td>
+                    <td className="py-2.5 px-3 text-right">
+                      <div className="flex gap-1 justify-end">
+                        <button onClick={() => setShowBulletin(emp)} className="p-1.5 rounded hover:bg-primary/10 text-primary" title="Bulletin"><Eye size={13} /></button>
+                        <button onClick={() => setShowForm(emp)} className="p-1.5 rounded hover:bg-muted" title="Modifier"><Pencil size={13} /></button>
+                        <button onClick={() => handleDelete(emp.id!)} className="p-1.5 rounded hover:bg-destructive/10 text-destructive" title="Supprimer"><Trash2 size={13} /></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr><td colSpan={9} className="py-8 text-center text-muted-foreground">Aucun employé trouvé</td></tr>
+                )}
+              </tbody>
+              {filtered.length > 0 && (
+                <tfoot>
+                  <tr className="border-t-2 border-primary/20 bg-primary/5 font-bold text-xs">
+                    <td colSpan={5} className="py-2 px-3 text-primary">TOTAUX — {filtered.length} employé{filtered.length > 1 ? "s" : ""}</td>
+                    <td className="py-2 px-3 text-right font-mono">{fmtXOF(filtered.reduce((s, e) => s + e.salaire_base, 0))}</td>
+                    <td className="py-2 px-3 text-right font-mono">{fmtXOF(filtered.reduce((s, e) => s + e.paie.brut, 0))}</td>
+                    <td className="py-2 px-3 text-right font-mono text-primary">{fmtXOF(filtered.reduce((s, e) => s + e.paie.net, 0))}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              )}
+            </table>
+          </GhCard>
+        </TabsContent>
+
+        {/* ═══ PARAMÈTRES ═══ */}
+        <TabsContent value="parametres" className="mt-4">
+          <ParametresTab params={params} onSave={setParams} />
+        </TabsContent>
+
+        {/* ═══ CONVENTIONS ═══ */}
+        <TabsContent value="conventions" className="mt-4">
+          <ConventionsTab conventions={conventions} setConventions={setConventions} />
+        </TabsContent>
+
+        {/* ═══ ENTREPRISE ═══ */}
+        <TabsContent value="entreprise" className="mt-4">
+          <EntrepriseTab entreprise={entreprise} onSave={setEntreprise} />
+        </TabsContent>
+      </Tabs>
 
       {/* Dialogs */}
-      {showNew && <EmployeeFormDialog emp={{ ...EMPTY_EMP }} onSave={handleSave} onClose={() => setShowNew(false)} existingMats={employees.map(e => e.matricule)} />}
-      {showForm && <EmployeeFormDialog emp={showForm} onSave={handleSave} onClose={() => setShowForm(null)} existingMats={employees.filter(e => e.id !== showForm.id).map(e => e.matricule)} />}
-      {showBulletin && <BulletinModal emp={showBulletin} onClose={() => setShowBulletin(null)} />}
+      {showNew && <EmployeeFormDialog emp={{ ...EMPTY_EMP }} onSave={handleSave} onClose={() => setShowNew(false)} existingMats={employees.map(e => e.matricule)} conventions={conventions} />}
+      {showForm && <EmployeeFormDialog emp={showForm} onSave={handleSave} onClose={() => setShowForm(null)} existingMats={employees.filter(e => e.id !== showForm.id).map(e => e.matricule)} conventions={conventions} />}
+      {showBulletin && <BulletinModal emp={showBulletin} params={params} entreprise={entreprise} onClose={() => setShowBulletin(null)} />}
     </div>
   );
 }
