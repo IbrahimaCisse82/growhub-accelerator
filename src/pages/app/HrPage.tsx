@@ -284,6 +284,7 @@ function BulletinModal({ emp, params, entreprise, onClose }: { emp: HrEmployee; 
           <div className="text-[10px] font-bold text-destructive uppercase tracking-wide mb-1">Retenues salariales</div>
           <Row l="Impôt sur le Revenu (IR)" v={paie.ir} neg />
           <Row l="TRIMF" v={paie.trimf} neg />
+          {paie.brs > 0 && <Row l="BRS (5%)" v={paie.brs} neg />}
           <Row l="IPRES R.G. salarié (5,6%)" v={paie.ipresRG_s} neg />
           {paie.ipresRC_s > 0 && <Row l="IPRES R.C.C. salarié (2,4%)" v={paie.ipresRC_s} neg />}
           {paie.ipm_s > 0 && <Row l="IPM salarié" v={paie.ipm_s} neg />}
