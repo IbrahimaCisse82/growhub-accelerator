@@ -772,7 +772,7 @@ function ConventionsTab({ conventions, setConventions }: { conventions: Conventi
             </div>
           )}
           <div className="flex justify-end mb-2">
-            <GhButton size="sm" variant="outline" onClick={openNewCat}><Plus className="w-3 h-3 mr-1" />Ajouter catégorie</GhButton>
+            <GhButton size="sm" variant="secondary" onClick={openNewCat}><Plus className="w-3 h-3 mr-1" />Ajouter catégorie</GhButton>
           </div>
           <table className="w-full text-[12px]">
             <thead>
@@ -812,7 +812,7 @@ function ConventionsTab({ conventions, setConventions }: { conventions: Conventi
             <div><Label>Date de signature</Label><Input type="date" value={ccForm.dateSignature} onChange={e => setCcForm({ ...ccForm, dateSignature: e.target.value })} /></div>
             <div><Label>Description</Label><Input value={ccForm.description} onChange={e => setCcForm({ ...ccForm, description: e.target.value })} /></div>
             <div className="flex justify-end gap-2 pt-2">
-              <GhButton variant="outline" onClick={() => setShowCCForm(null)}>Annuler</GhButton>
+              <GhButton variant="secondary" onClick={() => setShowCCForm(null)}>Annuler</GhButton>
               <GhButton onClick={saveCC}>Enregistrer</GhButton>
             </div>
           </div>
@@ -839,7 +839,7 @@ function ConventionsTab({ conventions, setConventions }: { conventions: Conventi
             </div>
             <div><Label>Salaire Minima (FCFA)</Label><Input type="number" value={catForm.salaireMinima} onChange={e => setCatForm({ ...catForm, salaireMinima: +e.target.value })} /></div>
             <div className="flex justify-end gap-2 pt-2">
-              <GhButton variant="outline" onClick={() => setShowCatForm(null)}>Annuler</GhButton>
+              <GhButton variant="secondary" onClick={() => setShowCatForm(null)}>Annuler</GhButton>
               <GhButton onClick={saveCat}>Enregistrer</GhButton>
             </div>
           </div>
