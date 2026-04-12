@@ -350,7 +350,7 @@ function BulletinModal({ emp, params, entreprise, onClose }: { emp: HrEmployee; 
 
 function EmployeeFormDialog({ emp, onSave, onClose, existingMats, conventions }: {
   emp: Partial<HrEmployee> | null; onSave: (e: Partial<HrEmployee>) => void; onClose: () => void; existingMats: string[];
-  conventions: typeof DEFAULT_CONVENTIONS;
+  conventions: Convention[];
 }) {
   const [form, setForm] = useState<Partial<HrEmployee>>(emp || { ...EMPTY_EMP });
   const isEdit = !!emp?.id;
