@@ -37,72 +37,20 @@ const DEFAULT_CONVENTIONS = [
     id: "CC001", nom: "Commerce", secteur: "Commerce général", dateSignature: "1982-01-01",
     description: "Convention collective nationale du commerce applicable au Sénégal.",
     categories: [
-      { id: "c1", code: "1_er A", libelle: "1ère catégorie A", statut: "employés", salaireMinima: 70706 },
-      { id: "c1b", code: "1_er B", libelle: "1ère catégorie B", statut: "employés", salaireMinima: 74870 },
-      { id: "c2", code: "2_ème", libelle: "2ème catégorie", statut: "employés", salaireMinima: 75361 },
-      { id: "c3", code: "3_ème", libelle: "3ème catégorie", statut: "employés", salaireMinima: 77840 },
-      { id: "c4", code: "4_ème", libelle: "4ème catégorie", statut: "employés", salaireMinima: 82272 },
-      { id: "c5", code: "5_ème", libelle: "5ème catégorie", statut: "employés", salaireMinima: 89244 },
-      { id: "c6", code: "6_ème", libelle: "6ème catégorie", statut: "employés", salaireMinima: 93790 },
-      { id: "c7a", code: "7_ème A", libelle: "7ème catégorie A", statut: "agents de maîtrise", salaireMinima: 105342 },
-      { id: "c7b", code: "7_ème B", libelle: "7ème catégorie B", statut: "agents de maîtrise", salaireMinima: 113984 },
-      { id: "c8a", code: "8_ème A", libelle: "8ème catégorie A", statut: "agents de maîtrise", salaireMinima: 115718 },
-      { id: "c8b", code: "8_ème B", libelle: "8ème catégorie B", statut: "agents de maîtrise", salaireMinima: 123484 },
-      { id: "c8c", code: "8_ème C", libelle: "8ème catégorie C", statut: "cadres", salaireMinima: 124254 },
-      { id: "c9a", code: "9_ème A", libelle: "9ème catégorie A", statut: "cadres", salaireMinima: 125543 },
-      { id: "c9b", code: "9_ème B", libelle: "9ème catégorie B", statut: "cadres", salaireMinima: 132498 },
-      { id: "c10a", code: "10_ème A", libelle: "10ème catégorie A", statut: "cadres", salaireMinima: 141024 },
-      { id: "c10b", code: "10_ème B", libelle: "10ème catégorie B", statut: "cadres", salaireMinima: 157097 },
-      { id: "c10c", code: "10_ème C", libelle: "10ème catégorie C", statut: "cadres", salaireMinima: 174049 },
-      { id: "c11", code: "11_ème", libelle: "11ème catégorie", statut: "cadres", salaireMinima: 195119 },
+      { id: "c1", code: "1_ère", libelle: "1ère catégorie", statut: "employés", salaireMinima: 58900 },
+      { id: "c2", code: "2_ème", libelle: "2ème catégorie", statut: "employés", salaireMinima: 63200 },
+      { id: "c3", code: "3_ème", libelle: "3ème catégorie", statut: "agents de maîtrise", salaireMinima: 73400 },
+      { id: "c4", code: "4_ème", libelle: "4ème catégorie", statut: "agents de maîtrise", salaireMinima: 85600 },
+      { id: "c5", code: "5_ème", libelle: "5ème catégorie", statut: "agents de maîtrise", salaireMinima: 102000 },
+      { id: "c6", code: "6_ème", libelle: "6ème catégorie", statut: "agents de maîtrise", salaireMinima: 124000 },
+      { id: "c7", code: "7_ème A", libelle: "7ème catégorie A", statut: "agents de maîtrise", salaireMinima: 152000 },
+      { id: "c8", code: "7_ème B", libelle: "7ème catégorie B", statut: "cadres", salaireMinima: 185000 },
+      { id: "c9", code: "8_ème", libelle: "8ème catégorie", statut: "cadres", salaireMinima: 230000 },
+      { id: "c10", code: "9_ème", libelle: "9ème catégorie", statut: "cadres", salaireMinima: 295000 },
     ]
   },
   {
-    id: "CC002", nom: "Industries Alimentaires", secteur: "Industries alimentaires", dateSignature: "1985-01-01",
-    description: "Convention collective nationale des industries alimentaires.",
-    categories: [
-      { id: "ia_o1", code: "1ère Ouv", libelle: "1ère Ouvriers", statut: "employés", salaireMinima: 64281 },
-      { id: "ia_o2", code: "2ème Ouv", libelle: "2ème Ouvriers", statut: "employés", salaireMinima: 65841 },
-      { id: "ia_o3", code: "3ème Ouv", libelle: "3ème Ouvriers", statut: "employés", salaireMinima: 69009 },
-      { id: "ia_o4", code: "4ème Ouv", libelle: "4ème Ouvriers", statut: "employés", salaireMinima: 72862 },
-      { id: "ia_o5", code: "5ème Ouv", libelle: "5ème Ouvriers", statut: "employés", salaireMinima: 74162 },
-      { id: "ia_o6", code: "6ème Ouv", libelle: "6ème Ouvriers", statut: "employés", salaireMinima: 79870 },
-      { id: "ia_o7", code: "7ème Ouv", libelle: "7ème Ouvriers", statut: "employés", salaireMinima: 85119 },
-      { id: "ia_e1", code: "1ère Emp", libelle: "1ère Employés", statut: "employés", salaireMinima: 64258 },
-      { id: "ia_e2", code: "2ème Emp", libelle: "2ème Employés", statut: "employés", salaireMinima: 67272 },
-      { id: "ia_e3", code: "3ème Emp", libelle: "3ème Employés", statut: "employés", salaireMinima: 70426 },
-      { id: "ia_e4", code: "4ème Emp", libelle: "4ème Employés", statut: "employés", salaireMinima: 76721 },
-      { id: "ia_e5", code: "5ème Emp", libelle: "5ème Employés", statut: "employés", salaireMinima: 81936 },
-      { id: "ia_e6", code: "6ème Emp", libelle: "6ème Employés", statut: "employés", salaireMinima: 86436 },
-      { id: "ia_e7", code: "7ème Emp", libelle: "7ème Employés", statut: "employés", salaireMinima: 95679 },
-      { id: "ia_am0", code: "AM0", libelle: "Agent de Maîtrise 0", statut: "agents de maîtrise", salaireMinima: 98981 },
-      { id: "ia_am1", code: "AM1", libelle: "Agent de Maîtrise 1", statut: "agents de maîtrise", salaireMinima: 102283 },
-      { id: "ia_am2", code: "AM2", libelle: "Agent de Maîtrise 2", statut: "agents de maîtrise", salaireMinima: 105585 },
-      { id: "ia_am3", code: "AM3", libelle: "Agent de Maîtrise 3", statut: "agents de maîtrise", salaireMinima: 119307 },
-      { id: "ia_am4", code: "AM4", libelle: "Agent de Maîtrise 4", statut: "agents de maîtrise", salaireMinima: 131999 },
-      { id: "ia_am5", code: "AM5", libelle: "Agent de Maîtrise 5", statut: "agents de maîtrise", salaireMinima: 133096 },
-    ]
-  },
-  {
-    id: "CC003", nom: "Mécanique Générale", secteur: "Mécanique générale", dateSignature: "1986-01-01",
-    description: "Convention collective de la mécanique générale.",
-    categories: [
-      { id: "mg_o1", code: "1ère MO", libelle: "1ère M.O", statut: "employés", salaireMinima: 64282 },
-      { id: "mg_o2", code: "2ème MS", libelle: "2ème M.S", statut: "employés", salaireMinima: 65829 },
-      { id: "mg_o3", code: "3ème OS1", libelle: "3ème O.S.1", statut: "employés", salaireMinima: 69011 },
-      { id: "mg_o4", code: "4ème OS2", libelle: "4ème O.S.2", statut: "employés", salaireMinima: 72868 },
-      { id: "mg_o5", code: "5ème OP1", libelle: "5ème O.P.1", statut: "employés", salaireMinima: 74201 },
-      { id: "mg_o6", code: "6ème OP2", libelle: "6ème O.P.2", statut: "employés", salaireMinima: 80043 },
-      { id: "mg_o7", code: "7ème OP3", libelle: "7ème O.P.3", statut: "employés", salaireMinima: 85120 },
-      { id: "mg_e1", code: "1ère Emp", libelle: "1ère Employés", statut: "employés", salaireMinima: 64262 },
-      { id: "mg_e2", code: "2ème Emp", libelle: "2ème Employés", statut: "employés", salaireMinima: 67274 },
-      { id: "mg_e3", code: "3ème Emp", libelle: "3ème Employés", statut: "employés", salaireMinima: 70426 },
-      { id: "mg_e4", code: "4ème Emp", libelle: "4ème Employés", statut: "employés", salaireMinima: 76668 },
-      { id: "mg_e5", code: "5ème Emp", libelle: "5ème Employés", statut: "employés", salaireMinima: 81956 },
-    ]
-  },
-  {
-    id: "CC004", nom: "BTP", secteur: "Bâtiment & Travaux Publics", dateSignature: "1985-03-15",
+    id: "CC002", nom: "BTP", secteur: "Bâtiment & Travaux Publics", dateSignature: "1985-03-15",
     description: "Convention collective du secteur BTP au Sénégal.",
     categories: [
       { id: "b1", code: "OS1", libelle: "Ouvrier Spécialisé 1", statut: "employés", salaireMinima: 60000 },
@@ -117,7 +65,7 @@ const DEFAULT_CONVENTIONS = [
     ]
   },
   {
-    id: "CC005", nom: "Banques & Assurances", secteur: "Finances", dateSignature: "1990-06-01",
+    id: "CC003", nom: "Banques & Assurances", secteur: "Finances", dateSignature: "1990-06-01",
     description: "Convention collective des établissements bancaires et des assurances.",
     categories: [
       { id: "ba1", code: "E1", libelle: "Employé classe 1", statut: "employés", salaireMinima: 95000 },
@@ -402,7 +350,7 @@ function BulletinModal({ emp, params, entreprise, onClose }: { emp: HrEmployee; 
 
 function EmployeeFormDialog({ emp, onSave, onClose, existingMats, conventions }: {
   emp: Partial<HrEmployee> | null; onSave: (e: Partial<HrEmployee>) => void; onClose: () => void; existingMats: string[];
-  conventions: typeof DEFAULT_CONVENTIONS;
+  conventions: Convention[];
 }) {
   const [form, setForm] = useState<Partial<HrEmployee>>(emp || { ...EMPTY_EMP });
   const isEdit = !!emp?.id;
@@ -722,24 +670,85 @@ function EntrepriseTab({ entreprise, onSave }: { entreprise: Entreprise; onSave:
 // Conventions Tab
 // ═══════════════════════════════════════════════════════════════════════════
 
-function ConventionsTab({ conventions, setConventions }: { conventions: typeof DEFAULT_CONVENTIONS; setConventions: (c: typeof DEFAULT_CONVENTIONS) => void }) {
+type ConvCategory = { id: string; code: string; libelle: string; statut: string; salaireMinima: number };
+type Convention = { id: string; nom: string; secteur: string; dateSignature: string; description: string; categories: ConvCategory[] };
+
+function ConventionsTab({ conventions, setConventions }: { conventions: Convention[]; setConventions: (c: Convention[]) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const selectedCC = conventions.find(c => c.id === selected);
 
+  // Convention form
+  const [showCCForm, setShowCCForm] = useState<Convention | "new" | null>(null);
+  const [ccForm, setCcForm] = useState({ nom: "", secteur: "", dateSignature: "", description: "" });
+
+  // Category form
+  const [showCatForm, setShowCatForm] = useState<ConvCategory | "new" | null>(null);
+  const [catForm, setCatForm] = useState<Omit<ConvCategory, "id">>({ code: "", libelle: "", statut: "employés", salaireMinima: 0 });
+
+  const openNewCC = () => { setCcForm({ nom: "", secteur: "", dateSignature: "", description: "" }); setShowCCForm("new"); };
+  const openEditCC = (cc: Convention) => { setCcForm({ nom: cc.nom, secteur: cc.secteur, dateSignature: cc.dateSignature, description: cc.description }); setShowCCForm(cc); };
+  const saveCC = () => {
+    if (!ccForm.nom.trim()) { toast.error("Le nom est requis"); return; }
+    if (showCCForm === "new") {
+      setConventions([...conventions, { id: "CC" + Date.now(), ...ccForm, categories: [] }]);
+      toast.success("Convention créée");
+    } else if (showCCForm) {
+      setConventions(conventions.map(c => c.id === (showCCForm as Convention).id ? { ...c, ...ccForm } : c));
+      toast.success("Convention modifiée");
+    }
+    setShowCCForm(null);
+  };
+  const deleteCC = (id: string) => {
+    if (!confirm("Supprimer cette convention et toutes ses catégories ?")) return;
+    setConventions(conventions.filter(c => c.id !== id));
+    if (selected === id) setSelected(null);
+    toast.success("Convention supprimée");
+  };
+
+  const openNewCat = () => { setCatForm({ code: "", libelle: "", statut: "employés", salaireMinima: 0 }); setShowCatForm("new"); };
+  const openEditCat = (cat: ConvCategory) => { setCatForm({ code: cat.code, libelle: cat.libelle, statut: cat.statut, salaireMinima: cat.salaireMinima }); setShowCatForm(cat); };
+  const saveCat = () => {
+    if (!selectedCC || !catForm.code.trim()) { toast.error("Le code est requis"); return; }
+    setConventions(conventions.map(c => {
+      if (c.id !== selectedCC.id) return c;
+      if (showCatForm === "new") {
+        return { ...c, categories: [...c.categories, { id: "cat" + Date.now(), ...catForm, salaireMinima: +catForm.salaireMinima }] };
+      }
+      return { ...c, categories: c.categories.map(cat => cat.id === (showCatForm as ConvCategory).id ? { ...cat, ...catForm, salaireMinima: +catForm.salaireMinima } : cat) };
+    }));
+    toast.success(showCatForm === "new" ? "Catégorie ajoutée" : "Catégorie modifiée");
+    setShowCatForm(null);
+  };
+  const deleteCat = (catId: string) => {
+    if (!selectedCC) return;
+    setConventions(conventions.map(c => c.id !== selectedCC.id ? c : { ...c, categories: c.categories.filter(cat => cat.id !== catId) }));
+    toast.success("Catégorie supprimée");
+  };
+
   return (
     <div className="space-y-4">
-      <h3 className="text-base font-bold">Conventions Collectives</h3>
-      <p className="text-xs text-muted-foreground">{conventions.length} convention{conventions.length > 1 ? "s" : ""} enregistrée{conventions.length > 1 ? "s" : ""}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-bold">Conventions Collectives</h3>
+          <p className="text-xs text-muted-foreground">{conventions.length} convention{conventions.length > 1 ? "s" : ""} enregistrée{conventions.length > 1 ? "s" : ""}</p>
+        </div>
+        <GhButton size="sm" onClick={openNewCC}><Plus className="w-3 h-3 mr-1" />Nouvelle convention</GhButton>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {conventions.map(cc => (
-          <div key={cc.id} onClick={() => setSelected(cc.id === selected ? null : cc.id)}
-            className={`cursor-pointer rounded-lg border p-3 transition-colors ${selected === cc.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"}`}>
-            <div className="font-bold text-sm">{cc.nom}</div>
-            <div className="text-xs text-muted-foreground mt-1">{cc.secteur}</div>
-            <div className="flex gap-2 mt-2">
-              <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-semibold">{cc.categories.length} cat.</span>
-              {cc.dateSignature && <span className="bg-muted text-muted-foreground text-[10px] px-2 py-0.5 rounded-full">{cc.dateSignature.slice(0, 4)}</span>}
+          <div key={cc.id} className={`rounded-lg border p-3 transition-colors ${selected === cc.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"}`}>
+            <div className="cursor-pointer" onClick={() => setSelected(cc.id === selected ? null : cc.id)}>
+              <div className="font-bold text-sm">{cc.nom}</div>
+              <div className="text-xs text-muted-foreground mt-1">{cc.secteur}</div>
+              <div className="flex gap-2 mt-2">
+                <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-semibold">{cc.categories.length} cat.</span>
+                {cc.dateSignature && <span className="bg-muted text-muted-foreground text-[10px] px-2 py-0.5 rounded-full">{cc.dateSignature.slice(0, 4)}</span>}
+              </div>
+            </div>
+            <div className="flex gap-1 mt-2 border-t border-border/50 pt-2">
+              <button onClick={() => openEditCC(cc)} className="text-[10px] text-primary hover:underline flex items-center gap-0.5"><Pencil className="w-3 h-3" /> Modifier</button>
+              <button onClick={() => deleteCC(cc.id)} className="text-[10px] text-destructive hover:underline flex items-center gap-0.5 ml-auto"><Trash2 className="w-3 h-3" /> Supprimer</button>
             </div>
           </div>
         ))}
@@ -762,6 +771,9 @@ function ConventionsTab({ conventions, setConventions }: { conventions: typeof D
               ))}
             </div>
           )}
+          <div className="flex justify-end mb-2">
+            <GhButton size="sm" variant="secondary" onClick={openNewCat}><Plus className="w-3 h-3 mr-1" />Ajouter catégorie</GhButton>
+          </div>
           <table className="w-full text-[12px]">
             <thead>
               <tr className="border-b border-border text-muted-foreground">
@@ -769,25 +781,73 @@ function ConventionsTab({ conventions, setConventions }: { conventions: typeof D
                 <th className="py-2 px-3 text-left">Libellé</th>
                 <th className="py-2 px-3 text-left">Statut</th>
                 <th className="py-2 px-3 text-right">Salaire Minima</th>
+                <th className="py-2 px-1 text-right w-20">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {selectedCC.categories.map((cat, i) => (
+              {selectedCC.categories.map(cat => (
                 <tr key={cat.id} className="border-b border-border/50 hover:bg-muted/20">
                   <td className="py-2 px-3"><span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-bold">{cat.code}</span></td>
                   <td className="py-2 px-3 font-medium">{cat.libelle}</td>
                   <td className="py-2 px-3"><span className="text-[10px] px-2 py-0.5 rounded capitalize" style={{ background: `${STATUT_COLORS[cat.statut] || "gray"}20`, color: STATUT_COLORS[cat.statut] || "gray" }}>{cat.statut}</span></td>
                   <td className="py-2 px-3 text-right font-bold text-amber-600">{fmtXOF(cat.salaireMinima)} FCFA</td>
+                  <td className="py-2 px-1 text-right">
+                    <button onClick={() => openEditCat(cat)} className="p-1 hover:bg-muted rounded"><Pencil className="w-3 h-3 text-primary" /></button>
+                    <button onClick={() => deleteCat(cat.id)} className="p-1 hover:bg-muted rounded"><Trash2 className="w-3 h-3 text-destructive" /></button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </GhCard>
       )}
+
+      {/* Convention Form Dialog */}
+      <Dialog open={!!showCCForm} onOpenChange={() => setShowCCForm(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>{showCCForm === "new" ? "Nouvelle convention" : "Modifier la convention"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Nom *</Label><Input value={ccForm.nom} onChange={e => setCcForm({ ...ccForm, nom: e.target.value })} placeholder="Ex: Commerce" /></div>
+            <div><Label>Secteur</Label><Input value={ccForm.secteur} onChange={e => setCcForm({ ...ccForm, secteur: e.target.value })} placeholder="Ex: Commerce général" /></div>
+            <div><Label>Date de signature</Label><Input type="date" value={ccForm.dateSignature} onChange={e => setCcForm({ ...ccForm, dateSignature: e.target.value })} /></div>
+            <div><Label>Description</Label><Input value={ccForm.description} onChange={e => setCcForm({ ...ccForm, description: e.target.value })} /></div>
+            <div className="flex justify-end gap-2 pt-2">
+              <GhButton variant="secondary" onClick={() => setShowCCForm(null)}>Annuler</GhButton>
+              <GhButton onClick={saveCC}>Enregistrer</GhButton>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Category Form Dialog */}
+      <Dialog open={!!showCatForm} onOpenChange={() => setShowCatForm(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>{showCatForm === "new" ? "Nouvelle catégorie" : "Modifier la catégorie"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Code *</Label><Input value={catForm.code} onChange={e => setCatForm({ ...catForm, code: e.target.value })} placeholder="Ex: 3_ème" /></div>
+            <div><Label>Libellé</Label><Input value={catForm.libelle} onChange={e => setCatForm({ ...catForm, libelle: e.target.value })} placeholder="Ex: 3ème catégorie" /></div>
+            <div>
+              <Label>Statut</Label>
+              <Select value={catForm.statut} onValueChange={v => setCatForm({ ...catForm, statut: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="employés">Employés</SelectItem>
+                  <SelectItem value="agents de maîtrise">Agents de maîtrise</SelectItem>
+                  <SelectItem value="cadres">Cadres</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Salaire Minima (FCFA)</Label><Input type="number" value={catForm.salaireMinima} onChange={e => setCatForm({ ...catForm, salaireMinima: +e.target.value })} /></div>
+            <div className="flex justify-end gap-2 pt-2">
+              <GhButton variant="secondary" onClick={() => setShowCatForm(null)}>Annuler</GhButton>
+              <GhButton onClick={saveCat}>Enregistrer</GhButton>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
 // ═══════════════════════════════════════════════════════════════════════════
 // Main HrPage
 // ═══════════════════════════════════════════════════════════════════════════
