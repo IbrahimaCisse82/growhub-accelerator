@@ -208,6 +208,9 @@ export function calculerPaie(emp: HrEmployee, p: PayrollParams, refDate?: Date):
   const ipm_s = brut * p.IPM.taux * p.IPM.tauxSalarial;
   const ipm_p = brut * p.IPM.taux * p.IPM.tauxPatronal;
 
+  // BRS (Bordereau de Retenue à la Source) – 5% salarial
+  const brs = brut * p.BRS.taux * p.BRS.tauxSalarial;
+
   const avanceTabaski = emp.avance_tabaski || 0;
   const avanceCaisse = emp.avance_caisse || 0;
   const avanceFinanciere = emp.avance_financiere || 0;
@@ -215,7 +218,7 @@ export function calculerPaie(emp: HrEmployee, p: PayrollParams, refDate?: Date):
   const fraisMedicaux = emp.frais_medicaux || 0;
   const totalAvances = avanceTabaski + avanceCaisse + avanceFinanciere + retCooperative + fraisMedicaux;
 
-  const totalRet = ir + trimf + ipresRG_s + ipresRC_s + ipm_s;
+  const totalRet = ir + trimf + brs + ipresRG_s + ipresRC_s + ipm_s;
   const chargesPat = cfce + ipresRG_p + ipresRC_p + css_af + css_at + ipm_p;
   const transport = p.transport.valeur || 0;
   const net = brut - totalRet + transport + primePanier + indKilometrique - totalAvances;
@@ -223,7 +226,7 @@ export function calculerPaie(emp: HrEmployee, p: PayrollParams, refDate?: Date):
 
   return {
     salaireBase: emp.salaire_base, sursalaire: emp.sursalaire,
-    primeAnc, brut, ir, trimf, ipresRG_s, ipresRC_s, ipm_s, totalRet,
+    primeAnc, brut, ir, trimf, brs, ipresRG_s, ipresRC_s, ipm_s, totalRet,
     cfce, ipresRG_p, ipresRC_p, css_af, css_at, ipm_p, chargesPat,
     transport, net, masse, anc, ancRate, baseCSS, partsIR, partsTRIMFCap,
     tauxHoraire, retAbsence, indMaladie, mtHS115, mtHS140, mtHS160, mtHS200, totalHS,
