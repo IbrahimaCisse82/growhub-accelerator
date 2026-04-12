@@ -68,6 +68,7 @@ export interface PayrollResult {
   brut: number;
   ir: number;
   trimf: number;
+  brs: number;
   ipresRG_s: number;
   ipresRC_s: number;
   ipm_s: number;
@@ -111,7 +112,7 @@ export interface PayrollResult {
 
 export const DEFAULT_PAYROLL_PARAMS: PayrollParams = {
   CFCE: { label: "CFCE", taux: 0.03, tauxSalarial: 0, tauxPatronal: 1, plafond: null },
-  BRS: { label: "BRS", taux: 0.05, tauxSalarial: 1, tauxPatronal: 0, plafond: null },
+  BRS: { label: "BRS", taux: 0, tauxSalarial: 1, tauxPatronal: 0, plafond: null },
   IPRES_RG: { label: "IPRES R.G.", taux: 0.14, tauxSalarial: 0.4, tauxPatronal: 0.6, plafond: 432000 },
   IPRES_RCC: { label: "IPRES R.C.C.", taux: 0.06, tauxSalarial: 0.4, tauxPatronal: 0.6, plafond: 1296000 },
   CSS_AF: { label: "CSS Alloc. Fam.", taux: 0.07, tauxSalarial: 0, tauxPatronal: 1, plafond: 63000 },
@@ -207,6 +208,9 @@ export function calculerPaie(emp: HrEmployee, p: PayrollParams, refDate?: Date):
   const ipm_s = brut * p.IPM.taux * p.IPM.tauxSalarial;
   const ipm_p = brut * p.IPM.taux * p.IPM.tauxPatronal;
 
+  // BRS (Bordereau de Retenue à la Source) – 5% salarial
+  const brs = brut * p.BRS.taux * p.BRS.tauxSalarial;
+
   const avanceTabaski = emp.avance_tabaski || 0;
   const avanceCaisse = emp.avance_caisse || 0;
   const avanceFinanciere = emp.avance_financiere || 0;
@@ -214,7 +218,7 @@ export function calculerPaie(emp: HrEmployee, p: PayrollParams, refDate?: Date):
   const fraisMedicaux = emp.frais_medicaux || 0;
   const totalAvances = avanceTabaski + avanceCaisse + avanceFinanciere + retCooperative + fraisMedicaux;
 
-  const totalRet = ir + trimf + ipresRG_s + ipresRC_s + ipm_s;
+  const totalRet = ir + trimf + brs + ipresRG_s + ipresRC_s + ipm_s;
   const chargesPat = cfce + ipresRG_p + ipresRC_p + css_af + css_at + ipm_p;
   const transport = p.transport.valeur || 0;
   const net = brut - totalRet + transport + primePanier + indKilometrique - totalAvances;
@@ -222,7 +226,7 @@ export function calculerPaie(emp: HrEmployee, p: PayrollParams, refDate?: Date):
 
   return {
     salaireBase: emp.salaire_base, sursalaire: emp.sursalaire,
-    primeAnc, brut, ir, trimf, ipresRG_s, ipresRC_s, ipm_s, totalRet,
+    primeAnc, brut, ir, trimf, brs, ipresRG_s, ipresRC_s, ipm_s, totalRet,
     cfce, ipresRG_p, ipresRC_p, css_af, css_at, ipm_p, chargesPat,
     transport, net, masse, anc, ancRate, baseCSS, partsIR, partsTRIMFCap,
     tauxHoraire, retAbsence, indMaladie, mtHS115, mtHS140, mtHS160, mtHS200, totalHS,
