@@ -68,6 +68,7 @@ export interface PayrollResult {
   brut: number;
   ir: number;
   trimf: number;
+  brs: number;
   ipresRG_s: number;
   ipresRC_s: number;
   ipm_s: number;
