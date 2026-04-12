@@ -168,7 +168,8 @@ function genererBulletinHTML(emp: HrEmployee, p: PayrollResult, mois: number, an
   ${section("Retenues Salariales", "#dc2626",
     row("Impôt sur le Revenu (IR)", p.ir, { neg: true, indent: true, color: "#dc2626", bg: "#f9fafb" }) +
     row("TRIMF", p.trimf, { neg: true, indent: true, color: "#dc2626" }) +
-    row("IPRES R.G. salarié (5,6%)", p.ipresRG_s, { neg: true, indent: true, color: "#dc2626", bg: "#f9fafb" }) +
+    (p.brs > 0 ? row("BRS (5%)", p.brs, { neg: true, indent: true, color: "#dc2626", bg: "#f9fafb" }) : "") +
+    row("IPRES R.G. salarié (5,6%)", p.ipresRG_s, { neg: true, indent: true, color: "#dc2626", bg: p.brs > 0 ? "transparent" : "#f9fafb" }) +
     (p.ipresRC_s > 0 ? row("IPRES R.C.C. salarié (2,4%)", p.ipresRC_s, { neg: true, indent: true, color: "#dc2626" }) : "") +
     (p.ipm_s > 0 ? row("IPM salarié", p.ipm_s, { neg: true, indent: true, color: "#dc2626", bg: "#f9fafb" }) : "") +
     row("TOTAL RETENUES", p.totalRet, { neg: true, bold: true, color: "#dc2626" })
