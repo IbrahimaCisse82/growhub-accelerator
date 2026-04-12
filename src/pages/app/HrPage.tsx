@@ -670,24 +670,85 @@ function EntrepriseTab({ entreprise, onSave }: { entreprise: Entreprise; onSave:
 // Conventions Tab
 // ═══════════════════════════════════════════════════════════════════════════
 
-function ConventionsTab({ conventions, setConventions }: { conventions: typeof DEFAULT_CONVENTIONS; setConventions: (c: typeof DEFAULT_CONVENTIONS) => void }) {
+type ConvCategory = { id: string; code: string; libelle: string; statut: string; salaireMinima: number };
+type Convention = { id: string; nom: string; secteur: string; dateSignature: string; description: string; categories: ConvCategory[] };
+
+function ConventionsTab({ conventions, setConventions }: { conventions: Convention[]; setConventions: (c: Convention[]) => void }) {
   const [selected, setSelected] = useState<string | null>(null);
   const selectedCC = conventions.find(c => c.id === selected);
 
+  // Convention form
+  const [showCCForm, setShowCCForm] = useState<Convention | "new" | null>(null);
+  const [ccForm, setCcForm] = useState({ nom: "", secteur: "", dateSignature: "", description: "" });
+
+  // Category form
+  const [showCatForm, setShowCatForm] = useState<ConvCategory | "new" | null>(null);
+  const [catForm, setCatForm] = useState<Omit<ConvCategory, "id">>({ code: "", libelle: "", statut: "employés", salaireMinima: 0 });
+
+  const openNewCC = () => { setCcForm({ nom: "", secteur: "", dateSignature: "", description: "" }); setShowCCForm("new"); };
+  const openEditCC = (cc: Convention) => { setCcForm({ nom: cc.nom, secteur: cc.secteur, dateSignature: cc.dateSignature, description: cc.description }); setShowCCForm(cc); };
+  const saveCC = () => {
+    if (!ccForm.nom.trim()) { toast.error("Le nom est requis"); return; }
+    if (showCCForm === "new") {
+      setConventions([...conventions, { id: "CC" + Date.now(), ...ccForm, categories: [] }]);
+      toast.success("Convention créée");
+    } else if (showCCForm) {
+      setConventions(conventions.map(c => c.id === (showCCForm as Convention).id ? { ...c, ...ccForm } : c));
+      toast.success("Convention modifiée");
+    }
+    setShowCCForm(null);
+  };
+  const deleteCC = (id: string) => {
+    if (!confirm("Supprimer cette convention et toutes ses catégories ?")) return;
+    setConventions(conventions.filter(c => c.id !== id));
+    if (selected === id) setSelected(null);
+    toast.success("Convention supprimée");
+  };
+
+  const openNewCat = () => { setCatForm({ code: "", libelle: "", statut: "employés", salaireMinima: 0 }); setShowCatForm("new"); };
+  const openEditCat = (cat: ConvCategory) => { setCatForm({ code: cat.code, libelle: cat.libelle, statut: cat.statut, salaireMinima: cat.salaireMinima }); setShowCatForm(cat); };
+  const saveCat = () => {
+    if (!selectedCC || !catForm.code.trim()) { toast.error("Le code est requis"); return; }
+    setConventions(conventions.map(c => {
+      if (c.id !== selectedCC.id) return c;
+      if (showCatForm === "new") {
+        return { ...c, categories: [...c.categories, { id: "cat" + Date.now(), ...catForm, salaireMinima: +catForm.salaireMinima }] };
+      }
+      return { ...c, categories: c.categories.map(cat => cat.id === (showCatForm as ConvCategory).id ? { ...cat, ...catForm, salaireMinima: +catForm.salaireMinima } : cat) };
+    }));
+    toast.success(showCatForm === "new" ? "Catégorie ajoutée" : "Catégorie modifiée");
+    setShowCatForm(null);
+  };
+  const deleteCat = (catId: string) => {
+    if (!selectedCC) return;
+    setConventions(conventions.map(c => c.id !== selectedCC.id ? c : { ...c, categories: c.categories.filter(cat => cat.id !== catId) }));
+    toast.success("Catégorie supprimée");
+  };
+
   return (
     <div className="space-y-4">
-      <h3 className="text-base font-bold">Conventions Collectives</h3>
-      <p className="text-xs text-muted-foreground">{conventions.length} convention{conventions.length > 1 ? "s" : ""} enregistrée{conventions.length > 1 ? "s" : ""}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base font-bold">Conventions Collectives</h3>
+          <p className="text-xs text-muted-foreground">{conventions.length} convention{conventions.length > 1 ? "s" : ""} enregistrée{conventions.length > 1 ? "s" : ""}</p>
+        </div>
+        <GhButton size="sm" onClick={openNewCC}><Plus className="w-3 h-3 mr-1" />Nouvelle convention</GhButton>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {conventions.map(cc => (
-          <div key={cc.id} onClick={() => setSelected(cc.id === selected ? null : cc.id)}
-            className={`cursor-pointer rounded-lg border p-3 transition-colors ${selected === cc.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"}`}>
-            <div className="font-bold text-sm">{cc.nom}</div>
-            <div className="text-xs text-muted-foreground mt-1">{cc.secteur}</div>
-            <div className="flex gap-2 mt-2">
-              <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-semibold">{cc.categories.length} cat.</span>
-              {cc.dateSignature && <span className="bg-muted text-muted-foreground text-[10px] px-2 py-0.5 rounded-full">{cc.dateSignature.slice(0, 4)}</span>}
+          <div key={cc.id} className={`rounded-lg border p-3 transition-colors ${selected === cc.id ? "border-primary bg-primary/5" : "border-border hover:bg-muted/30"}`}>
+            <div className="cursor-pointer" onClick={() => setSelected(cc.id === selected ? null : cc.id)}>
+              <div className="font-bold text-sm">{cc.nom}</div>
+              <div className="text-xs text-muted-foreground mt-1">{cc.secteur}</div>
+              <div className="flex gap-2 mt-2">
+                <span className="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-semibold">{cc.categories.length} cat.</span>
+                {cc.dateSignature && <span className="bg-muted text-muted-foreground text-[10px] px-2 py-0.5 rounded-full">{cc.dateSignature.slice(0, 4)}</span>}
+              </div>
+            </div>
+            <div className="flex gap-1 mt-2 border-t border-border/50 pt-2">
+              <button onClick={() => openEditCC(cc)} className="text-[10px] text-primary hover:underline flex items-center gap-0.5"><Pencil className="w-3 h-3" /> Modifier</button>
+              <button onClick={() => deleteCC(cc.id)} className="text-[10px] text-destructive hover:underline flex items-center gap-0.5 ml-auto"><Trash2 className="w-3 h-3" /> Supprimer</button>
             </div>
           </div>
         ))}
@@ -710,6 +771,9 @@ function ConventionsTab({ conventions, setConventions }: { conventions: typeof D
               ))}
             </div>
           )}
+          <div className="flex justify-end mb-2">
+            <GhButton size="sm" variant="outline" onClick={openNewCat}><Plus className="w-3 h-3 mr-1" />Ajouter catégorie</GhButton>
+          </div>
           <table className="w-full text-[12px]">
             <thead>
               <tr className="border-b border-border text-muted-foreground">
@@ -717,25 +781,73 @@ function ConventionsTab({ conventions, setConventions }: { conventions: typeof D
                 <th className="py-2 px-3 text-left">Libellé</th>
                 <th className="py-2 px-3 text-left">Statut</th>
                 <th className="py-2 px-3 text-right">Salaire Minima</th>
+                <th className="py-2 px-1 text-right w-20">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {selectedCC.categories.map((cat, i) => (
+              {selectedCC.categories.map(cat => (
                 <tr key={cat.id} className="border-b border-border/50 hover:bg-muted/20">
                   <td className="py-2 px-3"><span className="bg-primary/10 text-primary px-2 py-0.5 rounded text-[10px] font-bold">{cat.code}</span></td>
                   <td className="py-2 px-3 font-medium">{cat.libelle}</td>
                   <td className="py-2 px-3"><span className="text-[10px] px-2 py-0.5 rounded capitalize" style={{ background: `${STATUT_COLORS[cat.statut] || "gray"}20`, color: STATUT_COLORS[cat.statut] || "gray" }}>{cat.statut}</span></td>
                   <td className="py-2 px-3 text-right font-bold text-amber-600">{fmtXOF(cat.salaireMinima)} FCFA</td>
+                  <td className="py-2 px-1 text-right">
+                    <button onClick={() => openEditCat(cat)} className="p-1 hover:bg-muted rounded"><Pencil className="w-3 h-3 text-primary" /></button>
+                    <button onClick={() => deleteCat(cat.id)} className="p-1 hover:bg-muted rounded"><Trash2 className="w-3 h-3 text-destructive" /></button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </GhCard>
       )}
+
+      {/* Convention Form Dialog */}
+      <Dialog open={!!showCCForm} onOpenChange={() => setShowCCForm(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>{showCCForm === "new" ? "Nouvelle convention" : "Modifier la convention"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Nom *</Label><Input value={ccForm.nom} onChange={e => setCcForm({ ...ccForm, nom: e.target.value })} placeholder="Ex: Commerce" /></div>
+            <div><Label>Secteur</Label><Input value={ccForm.secteur} onChange={e => setCcForm({ ...ccForm, secteur: e.target.value })} placeholder="Ex: Commerce général" /></div>
+            <div><Label>Date de signature</Label><Input type="date" value={ccForm.dateSignature} onChange={e => setCcForm({ ...ccForm, dateSignature: e.target.value })} /></div>
+            <div><Label>Description</Label><Input value={ccForm.description} onChange={e => setCcForm({ ...ccForm, description: e.target.value })} /></div>
+            <div className="flex justify-end gap-2 pt-2">
+              <GhButton variant="outline" onClick={() => setShowCCForm(null)}>Annuler</GhButton>
+              <GhButton onClick={saveCC}>Enregistrer</GhButton>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Category Form Dialog */}
+      <Dialog open={!!showCatForm} onOpenChange={() => setShowCatForm(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader><DialogTitle>{showCatForm === "new" ? "Nouvelle catégorie" : "Modifier la catégorie"}</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Code *</Label><Input value={catForm.code} onChange={e => setCatForm({ ...catForm, code: e.target.value })} placeholder="Ex: 3_ème" /></div>
+            <div><Label>Libellé</Label><Input value={catForm.libelle} onChange={e => setCatForm({ ...catForm, libelle: e.target.value })} placeholder="Ex: 3ème catégorie" /></div>
+            <div>
+              <Label>Statut</Label>
+              <Select value={catForm.statut} onValueChange={v => setCatForm({ ...catForm, statut: v })}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="employés">Employés</SelectItem>
+                  <SelectItem value="agents de maîtrise">Agents de maîtrise</SelectItem>
+                  <SelectItem value="cadres">Cadres</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div><Label>Salaire Minima (FCFA)</Label><Input type="number" value={catForm.salaireMinima} onChange={e => setCatForm({ ...catForm, salaireMinima: +e.target.value })} /></div>
+            <div className="flex justify-end gap-2 pt-2">
+              <GhButton variant="outline" onClick={() => setShowCatForm(null)}>Annuler</GhButton>
+              <GhButton onClick={saveCat}>Enregistrer</GhButton>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
-
 // ═══════════════════════════════════════════════════════════════════════════
 // Main HrPage
 // ═══════════════════════════════════════════════════════════════════════════
