@@ -281,23 +281,52 @@ export default function GrantDetailPage() {
           )}
         </TabsContent>
 
-        {/* Info Tab */}
+        {/* Info Tab — GTS-style */}
         <TabsContent value="info">
-          <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-            {[
-              { label: "Nom", val: grant.name },
-              { label: "Code", val: grant.code },
-              { label: "Organisation", val: grant.organization ?? "—" },
-              { label: "Description", val: grant.description ?? "—" },
-              { label: "Programme", val: grant.programs?.name ?? "—" },
-              { label: "Devise", val: grant.currency ?? "EUR" },
-              { label: "Date début", val: grant.start_date ?? "—" },
-              { label: "Date fin", val: grant.end_date ?? "—" },
-            ].map(row => (
-              <div key={row.label} className="flex items-start gap-4 text-sm border-b border-border pb-3 last:border-b-0 last:pb-0">
-                <span className="text-muted-foreground w-32 shrink-0 font-mono text-[11px] uppercase tracking-wider">{row.label}</span>
-                <span className="text-foreground">{row.val}</span>
+          <div className="space-y-4">
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="text-sm font-bold text-foreground mb-4">Informations générales</h3>
+              <div className="text-[10px] text-muted-foreground mb-3">{grant.organization ?? "—"} · {(grant as any).convention ?? grant.code}</div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {[
+                  { label: "N° Convention", val: (grant as any).convention ?? "—" },
+                  { label: "Version", val: (grant as any).version ?? "—" },
+                  { label: "Date soumission", val: (grant as any).submit_date ?? "—" },
+                  { label: "Préparé par", val: (grant as any).prepared_by ?? "—" },
+                  { label: "Organisation", val: grant.organization ?? "—" },
+                  { label: "Type d'organisation", val: (grant as any).org_type ?? "—" },
+                  { label: "Titre du projet", val: grant.name },
+                  { label: "Pays", val: (grant as any).pays ?? "—" },
+                  { label: "Devise", val: grant.currency ?? "EUR" },
+                  { label: "Taux de change (→ EUR)", val: `1 EUR = ${fmtFCFA(EUR_TO_FCFA)} FCFA` },
+                  { label: "Date début", val: grant.start_date ?? "—" },
+                  { label: "Date fin", val: grant.end_date ?? "—" },
+                  { label: "Durée", val: calcDuree() },
+                  { label: "Périodicité", val: (grant as any).periodicite ?? "Trimestrielle" },
+                  { label: "Programme", val: grant.programs?.name ?? "—" },
+                  { label: "Description", val: grant.description ?? "—" },
+                ].map(row => (
+                  <div key={row.label} className="space-y-0.5">
+                    <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">{row.label}</div>
+                    <div className="text-sm text-foreground font-medium">{row.val}</div>
+                  </div>
+                ))}
               </div>
+            </div>
+            {riskLevel && (
+              <div className="bg-card border border-border rounded-xl p-5">
+                <h3 className="text-sm font-bold text-foreground mb-3">Niveau de risque</h3>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-lg font-bold text-foreground">{(grant as any).risk_score}/100</span>
+                  <Pill color={riskColor as any}>{riskLevel}</Pill>
+                </div>
+                <div className="mt-2 h-2 bg-secondary rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${(grant as any).risk_score > 75 ? "bg-destructive" : (grant as any).risk_score > 50 ? "bg-amber-500" : (grant as any).risk_score > 25 ? "bg-blue-500" : "bg-primary"}`} style={{ width: `${(grant as any).risk_score}%` }} />
+                </div>
+              </div>
+            )}
+          </div>
+        </TabsContent>
             ))}
           </div>
         </TabsContent>
