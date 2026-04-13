@@ -37,48 +37,27 @@ const DEFAULT_CONVENTIONS = [
     id: "CC001", nom: "Commerce", secteur: "Commerce général", dateSignature: "1982-01-01",
     description: "Convention collective nationale du commerce applicable au Sénégal.",
     categories: [
-      { id: "c1", code: "1_ère", libelle: "1ère catégorie", statut: "employés", salaireMinima: 58900 },
-      { id: "c2", code: "2_ème", libelle: "2ème catégorie", statut: "employés", salaireMinima: 63200 },
-      { id: "c3", code: "3_ème", libelle: "3ème catégorie", statut: "agents de maîtrise", salaireMinima: 73400 },
-      { id: "c4", code: "4_ème", libelle: "4ème catégorie", statut: "agents de maîtrise", salaireMinima: 85600 },
-      { id: "c5", code: "5_ème", libelle: "5ème catégorie", statut: "agents de maîtrise", salaireMinima: 102000 },
-      { id: "c6", code: "6_ème", libelle: "6ème catégorie", statut: "agents de maîtrise", salaireMinima: 124000 },
-      { id: "c7", code: "7_ème A", libelle: "7ème catégorie A", statut: "agents de maîtrise", salaireMinima: 152000 },
-      { id: "c8", code: "7_ème B", libelle: "7ème catégorie B", statut: "cadres", salaireMinima: 185000 },
-      { id: "c9", code: "8_ème", libelle: "8ème catégorie", statut: "cadres", salaireMinima: 230000 },
-      { id: "c10", code: "9_ème", libelle: "9ème catégorie", statut: "cadres", salaireMinima: 295000 },
-    ]
-  },
-  {
-    id: "CC002", nom: "BTP", secteur: "Bâtiment & Travaux Publics", dateSignature: "1985-03-15",
-    description: "Convention collective du secteur BTP au Sénégal.",
-    categories: [
-      { id: "b1", code: "OS1", libelle: "Ouvrier Spécialisé 1", statut: "employés", salaireMinima: 60000 },
-      { id: "b2", code: "OS2", libelle: "Ouvrier Spécialisé 2", statut: "employés", salaireMinima: 68000 },
-      { id: "b3", code: "OQ1", libelle: "Ouvrier Qualifié 1", statut: "employés", salaireMinima: 78000 },
-      { id: "b4", code: "OQ2", libelle: "Ouvrier Qualifié 2", statut: "agents de maîtrise", salaireMinima: 92000 },
-      { id: "b5", code: "OP", libelle: "Ouvrier Principal", statut: "agents de maîtrise", salaireMinima: 115000 },
-      { id: "b6", code: "AM1", libelle: "Agent de Maîtrise 1", statut: "agents de maîtrise", salaireMinima: 145000 },
-      { id: "b7", code: "AM2", libelle: "Agent de Maîtrise 2", statut: "cadres", salaireMinima: 190000 },
-      { id: "b8", code: "C1", libelle: "Cadre 1", statut: "cadres", salaireMinima: 250000 },
-      { id: "b9", code: "C2", libelle: "Cadre 2", statut: "cadres", salaireMinima: 340000 },
-    ]
-  },
-  {
-    id: "CC003", nom: "Banques & Assurances", secteur: "Finances", dateSignature: "1990-06-01",
-    description: "Convention collective des établissements bancaires et des assurances.",
-    categories: [
-      { id: "ba1", code: "E1", libelle: "Employé classe 1", statut: "employés", salaireMinima: 95000 },
-      { id: "ba2", code: "E2", libelle: "Employé classe 2", statut: "employés", salaireMinima: 115000 },
-      { id: "ba3", code: "E3", libelle: "Employé classe 3", statut: "agents de maîtrise", salaireMinima: 145000 },
-      { id: "ba4", code: "AM", libelle: "Agent de Maîtrise", statut: "agents de maîtrise", salaireMinima: 195000 },
-      { id: "ba5", code: "C1", libelle: "Cadre 1", statut: "cadres", salaireMinima: 280000 },
-      { id: "ba6", code: "C2", libelle: "Cadre 2", statut: "cadres", salaireMinima: 380000 },
-      { id: "ba7", code: "C3", libelle: "Cadre supérieur", statut: "cadres", salaireMinima: 520000 },
+      { id: "c1", code: "1_er A", libelle: "1ère catégorie A", statut: "employés", salaireMinima: 70706 },
+      { id: "c2", code: "1_er B", libelle: "1ère catégorie B", statut: "employés", salaireMinima: 74870 },
+      { id: "c3", code: "2_ème", libelle: "2ème catégorie", statut: "employés", salaireMinima: 75361 },
+      { id: "c4", code: "3_ème", libelle: "3ème catégorie", statut: "employés", salaireMinima: 77840 },
+      { id: "c5", code: "4_ème", libelle: "4ème catégorie", statut: "employés", salaireMinima: 82272 },
+      { id: "c6", code: "5_ème", libelle: "5ème catégorie", statut: "employés", salaireMinima: 89244 },
+      { id: "c7", code: "6_ème", libelle: "6ème catégorie", statut: "employés", salaireMinima: 93790 },
+      { id: "c8", code: "7_ème A", libelle: "7ème catégorie A", statut: "agents de maîtrise", salaireMinima: 105342 },
+      { id: "c9", code: "7_ème B", libelle: "7ème catégorie B", statut: "agents de maîtrise", salaireMinima: 113984 },
+      { id: "c10", code: "8_ème A", libelle: "8ème catégorie A", statut: "agents de maîtrise", salaireMinima: 115718 },
+      { id: "c11", code: "8_ème B", libelle: "8ème catégorie B", statut: "agents de maîtrise", salaireMinima: 123484 },
+      { id: "c12", code: "8_ème C", libelle: "8ème catégorie C", statut: "cadres", salaireMinima: 124254 },
+      { id: "c13", code: "9_ème A", libelle: "9ème catégorie A", statut: "cadres", salaireMinima: 125543 },
+      { id: "c14", code: "9_ème B", libelle: "9ème catégorie B", statut: "cadres", salaireMinima: 132498 },
+      { id: "c15", code: "10_ème A", libelle: "10ème catégorie A", statut: "cadres", salaireMinima: 141024 },
+      { id: "c16", code: "10_ème B", libelle: "10ème catégorie B", statut: "cadres", salaireMinima: 157097 },
+      { id: "c17", code: "10_ème C", libelle: "10ème catégorie C", statut: "cadres", salaireMinima: 174049 },
+      { id: "c18", code: "11_ème", libelle: "11ème catégorie", statut: "cadres", salaireMinima: 195119 },
     ]
   },
 ];
-
 interface Entreprise {
   nom: string; adresse: string; telephone: string; email: string; ninea: string; rccm: string;
 }
