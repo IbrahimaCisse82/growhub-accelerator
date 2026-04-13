@@ -86,12 +86,30 @@ export default function GrantDetailPage() {
   const totalSpent = budgetLines?.reduce((s, b) => s + (b.amount_spent ?? 0), 0) ?? 0;
   const utilization = totalPlanned > 0 ? Math.round((totalSpent / totalPlanned) * 100) : 0;
 
+  const EUR_TO_FCFA = (grant as any).taux_change ?? 655.957;
+  const fmtFCFA = (n: number) => Math.round(n).toLocaleString("fr-FR");
+  const calcRisqueLevel = (score: number): string => {
+    if (score <= 25) return "Faible risque";
+    if (score <= 50) return "Risque modéré";
+    if (score <= 75) return "Risque important";
+    return "Risque élevé";
+  };
+  const riskLevel = (grant as any).risk_score ? calcRisqueLevel((grant as any).risk_score) : null;
+  const riskColor = riskLevel === "Faible risque" ? "green" : riskLevel === "Risque modéré" ? "blue" : riskLevel === "Risque important" ? "amber" : riskLevel === "Risque élevé" ? "gray" : "gray";
+
   const linesA = projectBudgetLines?.filter((l: any) => l.section === "A") ?? [];
   const linesB = projectBudgetLines?.filter((l: any) => l.section === "B") ?? [];
   const lineTotal = (l: any) => (l.quantity || 0) * (l.unit_cost || 0) * ((l.allocation_pct || 100) / 100);
   const totalA = linesA.reduce((s: number, l: any) => s + lineTotal(l), 0);
   const totalB = linesB.reduce((s: number, l: any) => s + lineTotal(l), 0);
   const grandTotal = totalA + totalB;
+
+  const calcDuree = (): string => {
+    if (!grant.start_date || !grant.end_date) return "—";
+    const d1 = new Date(grant.start_date), d2 = new Date(grant.end_date);
+    const months = (d2.getFullYear() - d1.getFullYear()) * 12 + d2.getMonth() - d1.getMonth();
+    return `${months} mois`;
+  };
 
   const budgetExportCols = [
     { key: "label", label: "Libellé" }, { key: "category", label: "Catégorie" },
@@ -175,9 +193,13 @@ export default function GrantDetailPage() {
 
         {/* Budget Tab with Chart */}
         <TabsContent value="budget" className="space-y-4">
+          <div className="bg-card border border-border rounded-xl p-3 flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Taux de conversion : <span className="font-mono font-semibold text-foreground">1 € = {fmtFCFA(EUR_TO_FCFA)} FCFA</span></span>
+            <span className="text-muted-foreground font-mono text-[11px]">{(grant as any).currency ?? "EUR"} · {(grant as any).periodicite ?? "Trimestrielle"}</span>
+          </div>
           <GrantBudgetChart budgetLines={budgetLines ?? []} transactions={transactions ?? []} />
           {projectBudgetLines && projectBudgetLines.length > 0 ? (
-            <BudgetAnnexeTable linesA={linesA} linesB={linesB} totalA={totalA} totalB={totalB} grandTotal={grandTotal} lineTotal={lineTotal} />
+            <BudgetAnnexeTable linesA={linesA} linesB={linesB} totalA={totalA} totalB={totalB} grandTotal={grandTotal} lineTotal={lineTotal} eurToFcfa={EUR_TO_FCFA} />
           ) : (
             <EmptyBudgetState />
           )}
@@ -259,24 +281,50 @@ export default function GrantDetailPage() {
           )}
         </TabsContent>
 
-        {/* Info Tab */}
+        {/* Info Tab — GTS-style */}
         <TabsContent value="info">
-          <div className="bg-card border border-border rounded-xl p-5 space-y-4">
-            {[
-              { label: "Nom", val: grant.name },
-              { label: "Code", val: grant.code },
-              { label: "Organisation", val: grant.organization ?? "—" },
-              { label: "Description", val: grant.description ?? "—" },
-              { label: "Programme", val: grant.programs?.name ?? "—" },
-              { label: "Devise", val: grant.currency ?? "EUR" },
-              { label: "Date début", val: grant.start_date ?? "—" },
-              { label: "Date fin", val: grant.end_date ?? "—" },
-            ].map(row => (
-              <div key={row.label} className="flex items-start gap-4 text-sm border-b border-border pb-3 last:border-b-0 last:pb-0">
-                <span className="text-muted-foreground w-32 shrink-0 font-mono text-[11px] uppercase tracking-wider">{row.label}</span>
-                <span className="text-foreground">{row.val}</span>
+          <div className="space-y-4">
+            <div className="bg-card border border-border rounded-xl p-5">
+              <h3 className="text-sm font-bold text-foreground mb-4">Informations générales</h3>
+              <div className="text-[10px] text-muted-foreground mb-3">{grant.organization ?? "—"} · {(grant as any).convention ?? grant.code}</div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {[
+                  { label: "N° Convention", val: (grant as any).convention ?? "—" },
+                  { label: "Version", val: (grant as any).version ?? "—" },
+                  { label: "Date soumission", val: (grant as any).submit_date ?? "—" },
+                  { label: "Préparé par", val: (grant as any).prepared_by ?? "—" },
+                  { label: "Organisation", val: grant.organization ?? "—" },
+                  { label: "Type d'organisation", val: (grant as any).org_type ?? "—" },
+                  { label: "Titre du projet", val: grant.name },
+                  { label: "Pays", val: (grant as any).pays ?? "—" },
+                  { label: "Devise", val: grant.currency ?? "EUR" },
+                  { label: "Taux de change (→ EUR)", val: `1 EUR = ${fmtFCFA(EUR_TO_FCFA)} FCFA` },
+                  { label: "Date début", val: grant.start_date ?? "—" },
+                  { label: "Date fin", val: grant.end_date ?? "—" },
+                  { label: "Durée", val: calcDuree() },
+                  { label: "Périodicité", val: (grant as any).periodicite ?? "Trimestrielle" },
+                  { label: "Programme", val: grant.programs?.name ?? "—" },
+                  { label: "Description", val: grant.description ?? "—" },
+                ].map(row => (
+                  <div key={row.label} className="space-y-0.5">
+                    <div className="text-[10px] text-muted-foreground font-mono uppercase tracking-wider">{row.label}</div>
+                    <div className="text-sm text-foreground font-medium">{row.val}</div>
+                  </div>
+                ))}
               </div>
-            ))}
+            </div>
+            {riskLevel && (
+              <div className="bg-card border border-border rounded-xl p-5">
+                <h3 className="text-sm font-bold text-foreground mb-3">Niveau de risque</h3>
+                <div className="flex items-center gap-3">
+                  <span className="font-mono text-lg font-bold text-foreground">{(grant as any).risk_score}/100</span>
+                  <Pill color={riskColor as any}>{riskLevel}</Pill>
+                </div>
+                <div className="mt-2 h-2 bg-secondary rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${(grant as any).risk_score > 75 ? "bg-destructive" : (grant as any).risk_score > 50 ? "bg-amber-500" : (grant as any).risk_score > 25 ? "bg-blue-500" : "bg-primary"}`} style={{ width: `${(grant as any).risk_score}%` }} />
+                </div>
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -330,46 +378,51 @@ function EmptyBudgetState() {
   );
 }
 
-function BudgetAnnexeTable({ linesA, linesB, totalA, totalB, grandTotal, lineTotal }: {
-  linesA: any[]; linesB: any[]; totalA: number; totalB: number; grandTotal: number; lineTotal: (l: any) => number;
+function BudgetAnnexeTable({ linesA, linesB, totalA, totalB, grandTotal, lineTotal, eurToFcfa }: {
+  linesA: any[]; linesB: any[]; totalA: number; totalB: number; grandTotal: number; lineTotal: (l: any) => number; eurToFcfa: number;
 }) {
+  const fmtF = (n: number) => Math.round(n).toLocaleString("fr-FR");
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <span className="text-xs font-bold text-foreground">Lignes budgétaires — Format Annexe 1b</span>
+        <span className="text-xs font-bold text-foreground">Budget — Annexe 1b</span>
         <span className="font-mono text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{linesA.length + linesB.length} lignes</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-[12.5px]">
           <thead>
             <tr className="bg-secondary">
-              <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[80px]">Code</th>
-              <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground">Description</th>
-              <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground">Projet</th>
-              <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[70px]">Unité</th>
-              <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[50px]">Qté</th>
-              <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[90px]">Mont. unit.</th>
-              <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[50px]">Alloc.%</th>
-              <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[100px]">Total EUR</th>
+              {["Code", "Poste budgétaire", "Unité", "Qté", "Mont. unit. (FCFA)", "Alloc.%", "Total FCFA", "Total EUR"].map(h => (
+                <th key={h} className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground tracking-wider border-b border-border whitespace-nowrap">{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {linesA.length > 0 && (
               <>
                 <tr><td colSpan={8} className="px-3 py-2 bg-primary/10 text-primary font-mono text-[10px] font-bold uppercase tracking-wider">A — Coûts opérationnels</td></tr>
-                {linesA.map((l: any) => <BudgetRow key={l.id} l={l} lineTotal={lineTotal} section="A" />)}
-                <tr className="bg-secondary/50"><td colSpan={7} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">Sous-total A</td><td className="px-3 py-1.5 text-right font-mono font-bold text-foreground">{fmt(totalA)} €</td></tr>
+                {linesA.map((l: any) => <BudgetRow key={l.id} l={l} lineTotal={lineTotal} section="A" eurToFcfa={eurToFcfa} />)}
+                <tr className="bg-secondary/50">
+                  <td colSpan={6} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">SOUS-TOTAL A</td>
+                  <td className="px-3 py-1.5 text-right font-mono font-bold text-foreground">{fmtF(totalA * eurToFcfa)} F</td>
+                  <td className="px-3 py-1.5 text-right font-mono font-bold text-primary">{fmt(totalA)} €</td>
+                </tr>
               </>
             )}
             {linesB.length > 0 && (
               <>
                 <tr><td colSpan={8} className="px-3 py-2 bg-accent/10 text-accent-foreground font-mono text-[10px] font-bold uppercase tracking-wider">B — Frais de gestion</td></tr>
-                {linesB.map((l: any) => <BudgetRow key={l.id} l={l} lineTotal={lineTotal} section="B" />)}
-                <tr className="bg-secondary/50"><td colSpan={7} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">Sous-total B</td><td className="px-3 py-1.5 text-right font-mono font-bold text-foreground">{fmt(totalB)} €</td></tr>
+                {linesB.map((l: any) => <BudgetRow key={l.id} l={l} lineTotal={lineTotal} section="B" eurToFcfa={eurToFcfa} />)}
+                <tr className="bg-secondary/50">
+                  <td colSpan={6} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">SOUS-TOTAL B</td>
+                  <td className="px-3 py-1.5 text-right font-mono font-bold text-foreground">{fmtF(totalB * eurToFcfa)} F</td>
+                  <td className="px-3 py-1.5 text-right font-mono font-bold text-primary">{fmt(totalB)} €</td>
+                </tr>
               </>
             )}
             <tr className="bg-foreground/5">
-              <td colSpan={7} className="px-3 py-2.5 text-right text-xs font-bold text-foreground uppercase">Total général</td>
+              <td colSpan={6} className="px-3 py-2.5 text-right text-xs font-bold text-foreground uppercase">TOTAL GÉNÉRAL</td>
+              <td className="px-3 py-2.5 text-right font-mono text-sm font-bold text-foreground">{fmtF(grandTotal * eurToFcfa)} F</td>
               <td className="px-3 py-2.5 text-right font-mono text-sm font-bold text-primary">{fmt(grandTotal)} €</td>
             </tr>
           </tbody>
@@ -379,18 +432,22 @@ function BudgetAnnexeTable({ linesA, linesB, totalA, totalB, grandTotal, lineTot
   );
 }
 
-function BudgetRow({ l, lineTotal, section }: { l: any; lineTotal: (l: any) => number; section: string }) {
+function BudgetRow({ l, lineTotal, section, eurToFcfa }: { l: any; lineTotal: (l: any) => number; section: string; eurToFcfa: number }) {
   const colorCls = section === "A" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent-foreground";
+  const totalEur = lineTotal(l);
+  const totalFcfa = totalEur * eurToFcfa;
+  const montantFcfa = (l.unit_cost ?? 0) * eurToFcfa;
+  const fmtF = (n: number) => Math.round(n).toLocaleString("fr-FR");
   return (
     <tr className="border-b border-border hover:bg-secondary/50 transition-colors">
       <td className="px-3 py-2"><span className={`font-mono text-[11px] ${colorCls} px-1.5 py-0.5 rounded font-semibold`}>{l.code || "—"}</span></td>
       <td className="px-3 py-2 text-foreground">{l.label}</td>
-      <td className="px-3 py-2 text-muted-foreground text-[11px]">{l.projects?.name ?? "—"}</td>
-      <td className="px-3 py-2 text-muted-foreground">{l.unit || "—"}</td>
+      <td className="px-3 py-2 text-muted-foreground">{l.unit || "Forfait"}</td>
       <td className="px-3 py-2 text-right font-mono text-foreground">{l.quantity ?? 0}</td>
-      <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(l.unit_cost ?? 0)}</td>
+      <td className="px-3 py-2 text-right font-mono text-foreground">{fmtF(montantFcfa)}</td>
       <td className="px-3 py-2 text-right font-mono text-muted-foreground">{l.allocation_pct ?? 100}%</td>
-      <td className="px-3 py-2 text-right"><span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded font-semibold">{fmt(lineTotal(l))}</span></td>
+      <td className="px-3 py-2 text-right font-mono text-foreground">{fmtF(totalFcfa)} F</td>
+      <td className="px-3 py-2 text-right"><span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded font-semibold">{fmt(totalEur)} €</span></td>
     </tr>
   );
 }

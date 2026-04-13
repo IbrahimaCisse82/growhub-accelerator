@@ -1633,52 +1633,79 @@ export type Database = {
           amount_disbursed: number | null
           amount_total: number
           code: string
+          convention: string | null
           created_at: string
           currency: string | null
           description: string | null
           end_date: string | null
           id: string
           name: string
+          org_type: string | null
           organization: string | null
+          pays: string | null
+          periodicite: string | null
+          prepared_by: string | null
           program_id: string | null
           project_id: string | null
+          risk_score: number | null
           start_date: string | null
           status: Database["public"]["Enums"]["grant_status"]
+          submit_date: string | null
+          taux_change: number | null
           updated_at: string
+          version: string | null
         }
         Insert: {
           amount_disbursed?: number | null
           amount_total?: number
           code: string
+          convention?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
           name: string
+          org_type?: string | null
           organization?: string | null
+          pays?: string | null
+          periodicite?: string | null
+          prepared_by?: string | null
           program_id?: string | null
           project_id?: string | null
+          risk_score?: number | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["grant_status"]
+          submit_date?: string | null
+          taux_change?: number | null
           updated_at?: string
+          version?: string | null
         }
         Update: {
           amount_disbursed?: number | null
           amount_total?: number
           code?: string
+          convention?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
           end_date?: string | null
           id?: string
           name?: string
+          org_type?: string | null
           organization?: string | null
+          pays?: string | null
+          periodicite?: string | null
+          prepared_by?: string | null
           program_id?: string | null
           project_id?: string | null
+          risk_score?: number | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["grant_status"]
+          submit_date?: string | null
+          taux_change?: number | null
           updated_at?: string
+          version?: string | null
         }
         Relationships: [
           {
