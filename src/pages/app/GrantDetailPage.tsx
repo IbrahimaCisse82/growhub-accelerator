@@ -86,12 +86,30 @@ export default function GrantDetailPage() {
   const totalSpent = budgetLines?.reduce((s, b) => s + (b.amount_spent ?? 0), 0) ?? 0;
   const utilization = totalPlanned > 0 ? Math.round((totalSpent / totalPlanned) * 100) : 0;
 
+  const EUR_TO_FCFA = (grant as any).taux_change ?? 655.957;
+  const fmtFCFA = (n: number) => Math.round(n).toLocaleString("fr-FR");
+  const calcRisqueLevel = (score: number): string => {
+    if (score <= 25) return "Faible risque";
+    if (score <= 50) return "Risque modéré";
+    if (score <= 75) return "Risque important";
+    return "Risque élevé";
+  };
+  const riskLevel = (grant as any).risk_score ? calcRisqueLevel((grant as any).risk_score) : null;
+  const riskColor = riskLevel === "Faible risque" ? "green" : riskLevel === "Risque modéré" ? "blue" : riskLevel === "Risque important" ? "amber" : riskLevel === "Risque élevé" ? "gray" : "gray";
+
   const linesA = projectBudgetLines?.filter((l: any) => l.section === "A") ?? [];
   const linesB = projectBudgetLines?.filter((l: any) => l.section === "B") ?? [];
   const lineTotal = (l: any) => (l.quantity || 0) * (l.unit_cost || 0) * ((l.allocation_pct || 100) / 100);
   const totalA = linesA.reduce((s: number, l: any) => s + lineTotal(l), 0);
   const totalB = linesB.reduce((s: number, l: any) => s + lineTotal(l), 0);
   const grandTotal = totalA + totalB;
+
+  const calcDuree = (): string => {
+    if (!grant.start_date || !grant.end_date) return "—";
+    const d1 = new Date(grant.start_date), d2 = new Date(grant.end_date);
+    const months = (d2.getFullYear() - d1.getFullYear()) * 12 + d2.getMonth() - d1.getMonth();
+    return `${months} mois`;
+  };
 
   const budgetExportCols = [
     { key: "label", label: "Libellé" }, { key: "category", label: "Catégorie" },
