@@ -327,9 +327,6 @@ export default function GrantDetailPage() {
             )}
           </div>
         </TabsContent>
-            ))}
-          </div>
-        </TabsContent>
 
         {/* History Tab */}
         <TabsContent value="history">
