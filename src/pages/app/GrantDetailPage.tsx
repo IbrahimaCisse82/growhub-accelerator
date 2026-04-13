@@ -378,46 +378,51 @@ function EmptyBudgetState() {
   );
 }
 
-function BudgetAnnexeTable({ linesA, linesB, totalA, totalB, grandTotal, lineTotal }: {
-  linesA: any[]; linesB: any[]; totalA: number; totalB: number; grandTotal: number; lineTotal: (l: any) => number;
+function BudgetAnnexeTable({ linesA, linesB, totalA, totalB, grandTotal, lineTotal, eurToFcfa }: {
+  linesA: any[]; linesB: any[]; totalA: number; totalB: number; grandTotal: number; lineTotal: (l: any) => number; eurToFcfa: number;
 }) {
+  const fmtF = (n: number) => Math.round(n).toLocaleString("fr-FR");
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden">
       <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-        <span className="text-xs font-bold text-foreground">Lignes budgétaires — Format Annexe 1b</span>
+        <span className="text-xs font-bold text-foreground">Budget — Annexe 1b</span>
         <span className="font-mono text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{linesA.length + linesB.length} lignes</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-[12.5px]">
           <thead>
             <tr className="bg-secondary">
-              <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[80px]">Code</th>
-              <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground">Description</th>
-              <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground">Projet</th>
-              <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[70px]">Unité</th>
-              <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[50px]">Qté</th>
-              <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[90px]">Mont. unit.</th>
-              <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[50px]">Alloc.%</th>
-              <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[100px]">Total EUR</th>
+              {["Code", "Poste budgétaire", "Unité", "Qté", "Mont. unit. (FCFA)", "Alloc.%", "Total FCFA", "Total EUR"].map(h => (
+                <th key={h} className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground tracking-wider border-b border-border whitespace-nowrap">{h}</th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {linesA.length > 0 && (
               <>
                 <tr><td colSpan={8} className="px-3 py-2 bg-primary/10 text-primary font-mono text-[10px] font-bold uppercase tracking-wider">A — Coûts opérationnels</td></tr>
-                {linesA.map((l: any) => <BudgetRow key={l.id} l={l} lineTotal={lineTotal} section="A" />)}
-                <tr className="bg-secondary/50"><td colSpan={7} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">Sous-total A</td><td className="px-3 py-1.5 text-right font-mono font-bold text-foreground">{fmt(totalA)} €</td></tr>
+                {linesA.map((l: any) => <BudgetRow key={l.id} l={l} lineTotal={lineTotal} section="A" eurToFcfa={eurToFcfa} />)}
+                <tr className="bg-secondary/50">
+                  <td colSpan={6} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">SOUS-TOTAL A</td>
+                  <td className="px-3 py-1.5 text-right font-mono font-bold text-foreground">{fmtF(totalA * eurToFcfa)} F</td>
+                  <td className="px-3 py-1.5 text-right font-mono font-bold text-primary">{fmt(totalA)} €</td>
+                </tr>
               </>
             )}
             {linesB.length > 0 && (
               <>
                 <tr><td colSpan={8} className="px-3 py-2 bg-accent/10 text-accent-foreground font-mono text-[10px] font-bold uppercase tracking-wider">B — Frais de gestion</td></tr>
-                {linesB.map((l: any) => <BudgetRow key={l.id} l={l} lineTotal={lineTotal} section="B" />)}
-                <tr className="bg-secondary/50"><td colSpan={7} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">Sous-total B</td><td className="px-3 py-1.5 text-right font-mono font-bold text-foreground">{fmt(totalB)} €</td></tr>
+                {linesB.map((l: any) => <BudgetRow key={l.id} l={l} lineTotal={lineTotal} section="B" eurToFcfa={eurToFcfa} />)}
+                <tr className="bg-secondary/50">
+                  <td colSpan={6} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">SOUS-TOTAL B</td>
+                  <td className="px-3 py-1.5 text-right font-mono font-bold text-foreground">{fmtF(totalB * eurToFcfa)} F</td>
+                  <td className="px-3 py-1.5 text-right font-mono font-bold text-primary">{fmt(totalB)} €</td>
+                </tr>
               </>
             )}
             <tr className="bg-foreground/5">
-              <td colSpan={7} className="px-3 py-2.5 text-right text-xs font-bold text-foreground uppercase">Total général</td>
+              <td colSpan={6} className="px-3 py-2.5 text-right text-xs font-bold text-foreground uppercase">TOTAL GÉNÉRAL</td>
+              <td className="px-3 py-2.5 text-right font-mono text-sm font-bold text-foreground">{fmtF(grandTotal * eurToFcfa)} F</td>
               <td className="px-3 py-2.5 text-right font-mono text-sm font-bold text-primary">{fmt(grandTotal)} €</td>
             </tr>
           </tbody>
@@ -427,18 +432,22 @@ function BudgetAnnexeTable({ linesA, linesB, totalA, totalB, grandTotal, lineTot
   );
 }
 
-function BudgetRow({ l, lineTotal, section }: { l: any; lineTotal: (l: any) => number; section: string }) {
+function BudgetRow({ l, lineTotal, section, eurToFcfa }: { l: any; lineTotal: (l: any) => number; section: string; eurToFcfa: number }) {
   const colorCls = section === "A" ? "bg-primary/10 text-primary" : "bg-accent/10 text-accent-foreground";
+  const totalEur = lineTotal(l);
+  const totalFcfa = totalEur * eurToFcfa;
+  const montantFcfa = (l.unit_cost ?? 0) * eurToFcfa;
+  const fmtF = (n: number) => Math.round(n).toLocaleString("fr-FR");
   return (
     <tr className="border-b border-border hover:bg-secondary/50 transition-colors">
       <td className="px-3 py-2"><span className={`font-mono text-[11px] ${colorCls} px-1.5 py-0.5 rounded font-semibold`}>{l.code || "—"}</span></td>
       <td className="px-3 py-2 text-foreground">{l.label}</td>
-      <td className="px-3 py-2 text-muted-foreground text-[11px]">{l.projects?.name ?? "—"}</td>
-      <td className="px-3 py-2 text-muted-foreground">{l.unit || "—"}</td>
+      <td className="px-3 py-2 text-muted-foreground">{l.unit || "Forfait"}</td>
       <td className="px-3 py-2 text-right font-mono text-foreground">{l.quantity ?? 0}</td>
-      <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(l.unit_cost ?? 0)}</td>
+      <td className="px-3 py-2 text-right font-mono text-foreground">{fmtF(montantFcfa)}</td>
       <td className="px-3 py-2 text-right font-mono text-muted-foreground">{l.allocation_pct ?? 100}%</td>
-      <td className="px-3 py-2 text-right"><span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded font-semibold">{fmt(lineTotal(l))}</span></td>
+      <td className="px-3 py-2 text-right font-mono text-foreground">{fmtF(totalFcfa)} F</td>
+      <td className="px-3 py-2 text-right"><span className="font-mono bg-primary/10 text-primary px-2 py-0.5 rounded font-semibold">{fmt(totalEur)} €</span></td>
     </tr>
   );
 }
