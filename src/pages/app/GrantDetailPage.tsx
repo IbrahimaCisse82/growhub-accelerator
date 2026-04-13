@@ -193,9 +193,13 @@ export default function GrantDetailPage() {
 
         {/* Budget Tab with Chart */}
         <TabsContent value="budget" className="space-y-4">
+          <div className="bg-card border border-border rounded-xl p-3 flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Taux de conversion : <span className="font-mono font-semibold text-foreground">1 € = {fmtFCFA(EUR_TO_FCFA)} FCFA</span></span>
+            <span className="text-muted-foreground font-mono text-[11px]">{(grant as any).currency ?? "EUR"} · {(grant as any).periodicite ?? "Trimestrielle"}</span>
+          </div>
           <GrantBudgetChart budgetLines={budgetLines ?? []} transactions={transactions ?? []} />
           {projectBudgetLines && projectBudgetLines.length > 0 ? (
-            <BudgetAnnexeTable linesA={linesA} linesB={linesB} totalA={totalA} totalB={totalB} grandTotal={grandTotal} lineTotal={lineTotal} />
+            <BudgetAnnexeTable linesA={linesA} linesB={linesB} totalA={totalA} totalB={totalB} grandTotal={grandTotal} lineTotal={lineTotal} eurToFcfa={EUR_TO_FCFA} />
           ) : (
             <EmptyBudgetState />
           )}
