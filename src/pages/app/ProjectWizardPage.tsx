@@ -8,7 +8,7 @@ import { usePrograms } from "@/hooks/usePrograms";
 import { useGrants } from "@/hooks/useGrants";
 import { toast } from "sonner";
 import GhButton from "@/components/shared/GhButton";
-import { ChevronDown, ChevronRight, Plus, Trash2, FileText, Target, Layers, Lightbulb, Users, RefreshCw, BarChart3, Activity, DollarSign, CheckCircle2 } from "lucide-react";
+import { ChevronDown, ChevronRight, Plus, Trash2, FileText, Target, Layers, Lightbulb, Users, RefreshCw, BarChart3, Activity, DollarSign, CheckCircle2, AlertTriangle, BookOpen } from "lucide-react";
 
 const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-colors";
 const textareaCls = inputCls + " h-24 resize-none";
@@ -18,26 +18,21 @@ const helpCls = "text-[11px] text-muted-foreground mt-1";
 const sectionTitleCls = "text-sm font-bold text-foreground uppercase tracking-wider border-b border-border pb-2 mb-3";
 
 const STEPS = [
-  { key: "identification", label: "Identification", icon: FileText },
-  { key: "contexte", label: "Contexte & Justification", icon: FileText },
-  { key: "logframe", label: "Objectifs & Cadre logique", icon: Target },
-  { key: "strategie", label: "Stratégie & Méthodologie", icon: Lightbulb },
-  { key: "beneficiaires", label: "Bénéficiaires & Parties prenantes", icon: Users },
-  { key: "toc", label: "Théorie du changement", icon: RefreshCw },
-  { key: "kpi-milestones", label: "Indicateurs & Jalons", icon: BarChart3 },
-  { key: "suivi", label: "Suivi-Évaluation & Durabilité", icon: Activity },
-  { key: "budget", label: "Budget", icon: DollarSign },
-  { key: "validate", label: "Validation", icon: CheckCircle2 },
+  { key: "identification", label: "1. Identification", icon: FileText },
+  { key: "contexte", label: "2. Contexte & Justification", icon: FileText },
+  { key: "toc", label: "3. Théorie du changement", icon: RefreshCw },
+  { key: "logframe", label: "4. Objectifs & Work Packages", icon: Target },
+  { key: "resultats", label: "5. Résultats attendus & KPIs", icon: BarChart3 },
+  { key: "strategie", label: "6. Stratégie & Méthodologie", icon: Lightbulb },
+  { key: "beneficiaires", label: "7. Bénéficiaires & Partenaires", icon: Users },
+  { key: "suivi", label: "8. Suivi-Évaluation & Durabilité", icon: Activity },
+  { key: "risques", label: "9. Risques", icon: AlertTriangle },
+  { key: "budget", label: "10. Budget prévisionnel", icon: DollarSign },
+  { key: "validate", label: "11. Validation", icon: CheckCircle2 },
 ];
 
 // --- Work Package Draft ---
-interface WpDraft {
-  title: string;
-  objective: string;
-  activities: string[];
-  results: string[];
-}
-
+interface WpDraft { title: string; objective: string; activities: string[]; results: string[] }
 const emptyWp = (): WpDraft => ({ title: "", objective: "", activities: [""], results: [""] });
 
 // --- KPI per WP ---
@@ -48,42 +43,45 @@ const emptyKpi = (wpIndex: number): KpiRow => ({ name: "", category: "output", u
 interface MilestoneDraft { title: string; dueDate: string; wpIndex: number }
 const emptyMilestone = (wpIndex: number): MilestoneDraft => ({ title: "", dueDate: "", wpIndex });
 
-// --- Budget Line (GTS Format) ---
-interface BudgetLine { code: string; desc: string; unit: string; qty: number; montant: number; alloc: number; section: "A" | "B" }
-const DEFAULT_BUDGET_LINES: BudgetLine[] = [
-  { code: "A1.1.1", desc: "Experts (personnel employé par le bénéficiaire)", unit: "homme/mois", qty: 0, montant: 0, alloc: 100, section: "A" },
-  { code: "A1.1.2", desc: "Déplacements et indemnités journalières", unit: "voyages", qty: 0, montant: 0, alloc: 100, section: "A" },
-  { code: "A1.1.3", desc: "Consultants (externes)", unit: "jours", qty: 0, montant: 150, alloc: 100, section: "A" },
-  { code: "A1.1.4", desc: "Formations, ateliers, conférences, séminaires", unit: "sessions", qty: 0, montant: 0, alloc: 100, section: "A" },
-  { code: "A1.1.5", desc: "Sous-bénéficiaires", unit: "contrats", qty: 0, montant: 0, alloc: 100, section: "A" },
-  { code: "A1.1.6", desc: "Achats de matériel et d'équipements", unit: "unités", qty: 0, montant: 0, alloc: 100, section: "A" },
-  { code: "A1.1.7", desc: "Sous-Subventions", unit: "—", qty: 0, montant: 0, alloc: 100, section: "A" },
-  { code: "A1.1.8", desc: "Autres coûts opérationnels", unit: "—", qty: 0, montant: 0, alloc: 100, section: "A" },
-  { code: "B.1", desc: "Frais de gestion / coûts de structure", unit: "forfait", qty: 1, montant: 0, alloc: 100, section: "B" },
-];
-const lineTotal = (l: BudgetLine) => (l.qty || 0) * (l.montant || 0) * ((l.alloc || 100) / 100);
+// --- Risk ---
+interface RiskDraft { category: string; description: string; probability: string; impact: string; mitigation: string }
+const emptyRisk = (): RiskDraft => ({ category: "", description: "", probability: "moyen", impact: "moyen", mitigation: "" });
+
+// --- Budget Activity (PAERID format) ---
+interface BudgetActivity {
+  code: string; description: string; category: string; unit: string;
+  qty: number; unitCost: number;
+  year1: number; year2: number; year3: number; year4: number; year5: number;
+  markerGender: string; markerClimate: string; notes: string;
+  wpCode: string; // WP1, WP2, ..., GC, SE
+}
+
+const emptyBudgetActivity = (wpCode: string, idx: number): BudgetActivity => ({
+  code: wpCode === "GC" ? `GC.${idx}` : wpCode === "SE" ? `SE.${idx}` : `A${wpCode.replace("WP","")}.${idx}`,
+  description: "", category: "", unit: "", qty: 0, unitCost: 0,
+  year1: 0, year2: 0, year3: 0, year4: 0, year5: 0,
+  markerGender: "○", markerClimate: "○", notes: "", wpCode,
+});
+
+const activityTotal = (a: BudgetActivity) => a.year1 + a.year2 + a.year3 + a.year4 + a.year5;
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
-// --- Metadata interface for new sections ---
+// --- Metadata interface ---
 interface ProjectMetadata {
-  introduction?: string;
-  contexte_justification?: string;
-  contexte_territorial?: string;
-  contraintes?: string;
-  alignement_strategique?: string;
-  justification?: string;
-  strategie_objectif?: string;
-  strategie_axes?: string[];
-  strategie_modalites?: string;
-  methodologie?: string;
-  population_cible?: string;
-  estimation_beneficiaires?: string;
+  introduction?: string; resume_executif?: string;
+  contexte_justification?: string; contexte_territorial?: string;
+  contraintes?: string; alignement_strategique?: string; justification?: string;
+  strategie_objectif?: string; strategie_axes?: string[];
+  strategie_modalites?: string; methodologie?: string;
+  population_cible?: string; estimation_beneficiaires?: string;
   personnel_cle?: { role: string; profil: string }[];
   partenaires?: { categorie: string; description: string }[];
-  suivi_outils?: string;
-  suivi_evaluation?: string;
-  suivi_rapports?: string;
+  suivi_outils?: string; suivi_evaluation?: string; suivi_rapports?: string;
   plan_sortie?: string;
+  secteurs_prioritaires?: string; porteur?: string; alignement_odd?: string;
+  version_document?: string; budget_total_label?: string;
+  risques?: RiskDraft[];
+  contingency_pct?: number; currency?: string;
 }
 
 // --- Array Editor ---
@@ -123,21 +121,10 @@ function parseWpsFromLogframe(logframe: { specific_objectives?: unknown; activit
     let title = "";
     let objective = obj;
     const colonIdx = obj.indexOf(":");
-    if (colonIdx > 0 && colonIdx < 80) {
-      title = obj.substring(0, colonIdx).trim();
-      objective = obj.substring(colonIdx + 1).trim();
-    }
-    const activities = toArr(logframe.activities)
-      .filter(a => new RegExp(`^A${wpNum}\\.\\d`, "i").test(a.trim()))
-      .map(a => a.replace(/^A\d+\.\d+\s*/i, "").trim());
-    const results = toArr(logframe.expected_results)
-      .filter(r => new RegExp(`^R${wpNum}\\.\\d`, "i").test(r.trim()))
-      .map(r => r.replace(/^R\d+\.\d+\s*/i, "").trim());
-    return {
-      title, objective,
-      activities: activities.length > 0 ? activities : [""],
-      results: results.length > 0 ? results : [""],
-    };
+    if (colonIdx > 0 && colonIdx < 80) { title = obj.substring(0, colonIdx).trim(); objective = obj.substring(colonIdx + 1).trim(); }
+    const activities = toArr(logframe.activities).filter(a => new RegExp(`^A${wpNum}\\.\\d`, "i").test(a.trim())).map(a => a.replace(/^A\d+\.\d+\s*/i, "").trim());
+    const results = toArr(logframe.expected_results).filter(r => new RegExp(`^R${wpNum}\\.\\d`, "i").test(r.trim())).map(r => r.replace(/^R\d+\.\d+\s*/i, "").trim());
+    return { title, objective, activities: activities.length > 0 ? activities : [""], results: results.length > 0 ? results : [""] };
   });
 }
 
@@ -147,6 +134,37 @@ function toArr(val: unknown): string[] {
 }
 
 const wpColors = ["from-primary/80 to-primary", "from-accent/80 to-accent", "from-emerald-500/80 to-emerald-600", "from-amber-500/80 to-amber-600", "from-violet-500/80 to-violet-600", "from-rose-500/80 to-rose-600"];
+
+// --- Budget default template lines (PAERID structure) ---
+function buildDefaultBudgetFromWps(wps: WpDraft[]): BudgetActivity[] {
+  const lines: BudgetActivity[] = [];
+  wps.forEach((_wp, i) => {
+    const wpCode = `WP${i + 1}`;
+    lines.push({ ...emptyBudgetActivity(wpCode, 1), description: `Personnel ${wpCode}`, category: "Ressources Humaines", unit: "ETP/an" });
+    lines.push({ ...emptyBudgetActivity(wpCode, 2), description: `Activités opérationnelles ${wpCode}`, category: "Formation/Animation", unit: "session" });
+  });
+  // GC
+  lines.push({ ...emptyBudgetActivity("GC", 1), description: "Chef de projet & équipe de coordination", category: "Ressources Humaines", unit: "ETP/an" });
+  lines.push({ ...emptyBudgetActivity("GC", 2), description: "Frais de fonctionnement & logistique", category: "Fonctionnement", unit: "forfait/an" });
+  lines.push({ ...emptyBudgetActivity("GC", 3), description: "Déplacements & transport terrain", category: "Transport/Logistique", unit: "véhicule/an" });
+  lines.push({ ...emptyBudgetActivity("GC", 4), description: "Communication & visibilité projet", category: "Communication", unit: "forfait/an" });
+  lines.push({ ...emptyBudgetActivity("GC", 5), description: "Audits financiers annuels", category: "Audit/Contrôle", unit: "audit/an" });
+  // SE
+  lines.push({ ...emptyBudgetActivity("SE", 1), description: "Système de suivi-évaluation", category: "Consultants/Études", unit: "forfait" });
+  lines.push({ ...emptyBudgetActivity("SE", 2), description: "Évaluation à mi-parcours", category: "Évaluation Externe", unit: "mission" });
+  lines.push({ ...emptyBudgetActivity("SE", 3), description: "Évaluation finale", category: "Évaluation Externe", unit: "mission" });
+  lines.push({ ...emptyBudgetActivity("SE", 4), description: "Études de base & enquêtes endline", category: "Consultants/Études", unit: "étude" });
+  lines.push({ ...emptyBudgetActivity("SE", 5), description: "Rapports & publications résultats", category: "Communication", unit: "rapport/an" });
+  return lines;
+}
+
+const BUDGET_CATEGORIES = [
+  "Ressources Humaines", "Formation/Animation", "Consultants/Études", "Prestations-Experts",
+  "Subventions/Fonds", "Équipements/TIC", "Infrastructures", "Événementiel",
+  "Transport/Logistique", "Fonctionnement", "Communication", "Audit/Contrôle",
+  "Évaluation Externe", "R&D Appliquée", "Actions Genre", "Appui Juridique",
+  "Certification/Normes", "Appui Technique", "Animation/Réseaux", "Infrastructure TIC",
+];
 
 export default function ProjectWizardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -159,7 +177,7 @@ export default function ProjectWizardPage() {
   const { data: grants } = useGrants();
   const qc = useQueryClient();
 
-  // Step 0: Identification
+  // Step 0: Identification (PAERID fiche)
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [description, setDescription] = useState("");
@@ -170,8 +188,13 @@ export default function ProjectWizardPage() {
   const [country, setCountry] = useState("");
   const [locations, setLocations] = useState<string[]>([""]);
   const [durationMonths, setDurationMonths] = useState("");
+  const [secteurs, setSecteurs] = useState("");
+  const [porteur, setPorteur] = useState("");
+  const [alignementOdd, setAlignementOdd] = useState("");
+  const [versionDoc, setVersionDoc] = useState("");
+  const [currency, setCurrency] = useState("USD");
 
-  // Step 1: Contexte & Justification (metadata)
+  // Step 1: Contexte & Justification
   const [introduction, setIntroduction] = useState("");
   const [contexteJustification, setContexteJustification] = useState("");
   const [contexteT, setContexteT] = useState("");
@@ -179,25 +202,7 @@ export default function ProjectWizardPage() {
   const [alignement, setAlignement] = useState("");
   const [justification, setJustification] = useState("");
 
-  // Step 2: Cadre logique + WPs
-  const [overallObjective, setOverallObjective] = useState("");
-  const [wps, setWps] = useState<WpDraft[]>([emptyWp()]);
-  const [assumptions, setAssumptions] = useState("");
-  const [preConditions, setPreConditions] = useState("");
-
-  // Step 3: Stratégie & Méthodologie (metadata)
-  const [strategieObjectif, setStrategieObjectif] = useState("");
-  const [strategieAxes, setStrategieAxes] = useState<string[]>([""]);
-  const [strategieModalites, setStrategieModalites] = useState("");
-  const [methodologie, setMethodologie] = useState("");
-
-  // Step 4: Bénéficiaires & Parties prenantes (metadata)
-  const [populationCible, setPopulationCible] = useState("");
-  const [estimationBeneficiaires, setEstimationBeneficiaires] = useState("");
-  const [personnelCle, setPersonnelCle] = useState<{ role: string; profil: string }[]>([{ role: "", profil: "" }]);
-  const [partenaires, setPartenaires] = useState<{ categorie: string; description: string }[]>([{ categorie: "", description: "" }]);
-
-  // Step 5: Théorie du changement
+  // Step 2: Théorie du changement
   const [tocInputs, setTocInputs] = useState<string[]>([""]);
   const [tocActivities, setTocActivities] = useState<string[]>([""]);
   const [tocOutputs, setTocOutputs] = useState<string[]>([""]);
@@ -206,24 +211,53 @@ export default function ProjectWizardPage() {
   const [tocAssumptions, setTocAssumptions] = useState<string[]>([""]);
   const [tocRisks, setTocRisks] = useState<string[]>([""]);
 
-  // Step 6: KPIs & Milestones per WP
+  // Step 3: Objectifs & WPs
+  const [overallObjective, setOverallObjective] = useState("");
+  const [wps, setWps] = useState<WpDraft[]>([emptyWp()]);
+  const [assumptions, setAssumptions] = useState("");
+  const [preConditions, setPreConditions] = useState("");
+
+  // Step 4: Résultats & KPIs
   const [kpis, setKpis] = useState<KpiRow[]>([emptyKpi(0)]);
   const [milestones, setMilestones] = useState<MilestoneDraft[]>([emptyMilestone(0)]);
 
-  // Step 7: Suivi-Évaluation & Durabilité (metadata)
+  // Step 5: Stratégie & Méthodologie
+  const [strategieObjectif, setStrategieObjectif] = useState("");
+  const [strategieAxes, setStrategieAxes] = useState<string[]>([""]);
+  const [strategieModalites, setStrategieModalites] = useState("");
+  const [methodologie, setMethodologie] = useState("");
+
+  // Step 6: Bénéficiaires & Partenaires
+  const [populationCible, setPopulationCible] = useState("");
+  const [estimationBeneficiaires, setEstimationBeneficiaires] = useState("");
+  const [personnelCle, setPersonnelCle] = useState<{ role: string; profil: string }[]>([{ role: "", profil: "" }]);
+  const [partenaires, setPartenaires] = useState<{ categorie: string; description: string }[]>([{ categorie: "", description: "" }]);
+
+  // Step 7: Suivi-Évaluation & Durabilité
   const [suiviOutils, setSuiviOutils] = useState("");
   const [suiviEvaluation, setSuiviEvaluation] = useState("");
   const [suiviRapports, setSuiviRapports] = useState("");
   const [planSortie, setPlanSortie] = useState("");
 
-  // Step 8: Budget
-  const [budgetLines, setBudgetLines] = useState<BudgetLine[]>([...DEFAULT_BUDGET_LINES]);
+  // Step 8: Risques
+  const [risks, setRisks] = useState<RiskDraft[]>([emptyRisk()]);
 
-  const linesA = budgetLines.filter(l => l.section === "A");
-  const linesB = budgetLines.filter(l => l.section === "B");
-  const totalA = linesA.reduce((s, l) => s + lineTotal(l), 0);
-  const totalB = linesB.reduce((s, l) => s + lineTotal(l), 0);
-  const totalBudget = totalA + totalB;
+  // Step 9: Budget (PAERID format)
+  const [budgetActivities, setBudgetActivities] = useState<BudgetActivity[]>([]);
+  const [contingencyPct, setContingencyPct] = useState(7);
+
+  // Computed budget
+  const getWpCodes = () => {
+    const wpCodes = wps.map((_, i) => `WP${i + 1}`);
+    return [...wpCodes, "GC", "SE"];
+  };
+  const wpSubtotal = (wpCode: string) => budgetActivities.filter(a => a.wpCode === wpCode).reduce((s, a) => s + activityTotal(a), 0);
+  const totalDirectCosts = getWpCodes().reduce((s, wc) => s + wpSubtotal(wc), 0);
+  const contingencyAmount = Math.round(totalDirectCosts * (contingencyPct / 100));
+  const totalBudget = totalDirectCosts + contingencyAmount;
+
+  // Year totals
+  const yearTotal = (year: 1|2|3|4|5) => budgetActivities.reduce((s, a) => s + a[`year${year}`], 0);
 
   // --- Load existing draft ---
   const { data: existingProject } = useQuery({
@@ -296,12 +330,10 @@ export default function ProjectWizardPage() {
       setProgramId(existingProject.program_id || "");
       setStartDate(existingProject.start_date || "");
       setEndDate(existingProject.end_date || "");
-      // New fields
       const p = existingProject as any;
       setCountry(p.country || "");
       setLocations(p.locations?.length > 0 ? p.locations : [""]);
       setDurationMonths(p.duration_months ? String(p.duration_months) : "");
-      // Metadata
       const meta: ProjectMetadata = (p.metadata as ProjectMetadata) || {};
       setIntroduction(meta.introduction || "");
       setContexteJustification(meta.contexte_justification || "");
@@ -321,6 +353,13 @@ export default function ProjectWizardPage() {
       setSuiviEvaluation(meta.suivi_evaluation || "");
       setSuiviRapports(meta.suivi_rapports || "");
       setPlanSortie(meta.plan_sortie || "");
+      setSecteurs(meta.secteurs_prioritaires || "");
+      setPorteur(meta.porteur || "");
+      setAlignementOdd(meta.alignement_odd || "");
+      setVersionDoc(meta.version_document || "");
+      setCurrency(meta.currency || "USD");
+      setContingencyPct(meta.contingency_pct ?? 7);
+      if (meta.risques?.length) setRisks(meta.risques);
     }
   }, [existingProject]);
 
@@ -329,26 +368,19 @@ export default function ProjectWizardPage() {
       setOverallObjective(existingLogframe.overall_objective || "");
       setAssumptions(existingLogframe.assumptions || "");
       setPreConditions(existingLogframe.pre_conditions || "");
-      const parsed = parseWpsFromLogframe(existingLogframe);
-      setWps(parsed);
+      setWps(parseWpsFromLogframe(existingLogframe));
     }
   }, [existingLogframe]);
 
   useEffect(() => {
     if (existingToc) {
-      const inp = existingToc.inputs as string[] | null;
-      setTocInputs(inp && inp.length > 0 ? inp : [""]);
-      const act = existingToc.activities as string[] | null;
-      setTocActivities(act && act.length > 0 ? act : [""]);
-      const out = existingToc.outputs as string[] | null;
-      setTocOutputs(out && out.length > 0 ? out : [""]);
-      const oc = existingToc.outcomes as string[] | null;
-      setTocOutcomes(oc && oc.length > 0 ? oc : [""]);
+      setTocInputs((existingToc.inputs as string[] | null)?.length ? (existingToc.inputs as string[]) : [""]);
+      setTocActivities((existingToc.activities as string[] | null)?.length ? (existingToc.activities as string[]) : [""]);
+      setTocOutputs((existingToc.outputs as string[] | null)?.length ? (existingToc.outputs as string[]) : [""]);
+      setTocOutcomes((existingToc.outcomes as string[] | null)?.length ? (existingToc.outcomes as string[]) : [""]);
       setTocImpact(existingToc.impact || "");
-      const as_ = existingToc.assumptions as string[] | null;
-      setTocAssumptions(as_ && as_.length > 0 ? as_ : [""]);
-      const ri = existingToc.risks as string[] | null;
-      setTocRisks(ri && ri.length > 0 ? ri : [""]);
+      setTocAssumptions((existingToc.assumptions as string[] | null)?.length ? (existingToc.assumptions as string[]) : [""]);
+      setTocRisks((existingToc.risks as string[] | null)?.length ? (existingToc.risks as string[]) : [""]);
     }
   }, [existingToc]);
 
@@ -357,13 +389,7 @@ export default function ProjectWizardPage() {
       setKpis(existingKpis.map(k => {
         const match = k.name.match(/^I(\d+)\.\d+\s*/i);
         const wpIdx = match ? parseInt(match[1]) - 1 : 0;
-        return {
-          name: k.name.replace(/^I\d+\.\d+\s*/i, "").trim(),
-          category: k.category || "output", unit: k.unit || "",
-          baseline: Number(k.baseline_value) || 0, target: Number(k.target_value) || 0,
-          frequency: k.frequency || "quarterly", source: k.data_source || "",
-          responsible: k.responsible || "", wpIndex: wpIdx,
-        };
+        return { name: k.name.replace(/^I\d+\.\d+\s*/i, "").trim(), category: k.category || "output", unit: k.unit || "", baseline: Number(k.baseline_value) || 0, target: Number(k.target_value) || 0, frequency: k.frequency || "quarterly", source: k.data_source || "", responsible: k.responsible || "", wpIndex: wpIdx };
       }));
     }
   }, [existingKpis]);
@@ -373,24 +399,30 @@ export default function ProjectWizardPage() {
       setMilestones(existingMilestones.map(m => {
         const match = m.title.match(/^M(\d+)\.\d+\s*/i);
         const wpIdx = match ? parseInt(match[1]) - 1 : 0;
-        return {
-          title: m.title.replace(/^M\d+\.\d+\s*/i, "").trim(),
-          dueDate: m.due_date || "",
-          wpIndex: wpIdx,
-        };
+        return { title: m.title.replace(/^M\d+\.\d+\s*/i, "").trim(), dueDate: m.due_date || "", wpIndex: wpIdx };
       }));
     }
   }, [existingMilestones]);
 
   useEffect(() => {
     if (existingBudgetLines && existingBudgetLines.length > 0) {
-      setBudgetLines(existingBudgetLines.map(b => ({
-        code: b.code || "", desc: b.label, unit: b.unit || "—",
-        qty: Number(b.quantity) || 0, montant: Number(b.unit_cost) || 0,
-        alloc: Number(b.allocation_pct) || 100, section: (b.section === "B" ? "B" : "A") as "A" | "B",
+      setBudgetActivities(existingBudgetLines.map(b => ({
+        code: b.code || "", description: b.label, category: (b as any).budget_category || "",
+        unit: b.unit || "", qty: Number(b.quantity) || 0, unitCost: Number(b.unit_cost) || 0,
+        year1: (b as any).year1 || 0, year2: (b as any).year2 || 0, year3: (b as any).year3 || 0,
+        year4: (b as any).year4 || 0, year5: (b as any).year5 || 0,
+        markerGender: (b as any).marker_gender || "○", markerClimate: (b as any).marker_climate || "○",
+        notes: (b as any).notes || "", wpCode: b.section || "WP1",
       })));
     }
   }, [existingBudgetLines]);
+
+  // Initialize budget when reaching budget step if empty
+  useEffect(() => {
+    if (step === 9 && budgetActivities.length === 0) {
+      setBudgetActivities(buildDefaultBudgetFromWps(wps));
+    }
+  }, [step]);
 
   // Resume step
   useEffect(() => {
@@ -399,33 +431,28 @@ export default function ProjectWizardPage() {
     const p = existingProject as any;
     const meta: ProjectMetadata = (p.metadata as ProjectMetadata) || {};
     if (meta.introduction || meta.justification) resumeStep = 2;
-    if (existingLogframe) resumeStep = 3;
-    if (meta.strategie_objectif || meta.methodologie) resumeStep = 4;
-    if (meta.population_cible) resumeStep = 5;
-    if (existingToc) resumeStep = 6;
-    if (existingKpis && existingKpis.length > 0) resumeStep = 7;
+    if (existingToc) resumeStep = 3;
+    if (existingLogframe) resumeStep = 4;
+    if (existingKpis && existingKpis.length > 0) resumeStep = 5;
+    if (meta.strategie_objectif || meta.methodologie) resumeStep = 6;
+    if (meta.population_cible) resumeStep = 7;
     if (meta.suivi_outils || meta.plan_sortie) resumeStep = 8;
-    if (existingBudgetLines && existingBudgetLines.length > 0) resumeStep = 9;
+    if (meta.risques?.length) resumeStep = 9;
+    if (existingBudgetLines && existingBudgetLines.length > 0) resumeStep = 10;
     setStep(resumeStep);
   }, [projectId, existingProject, existingLogframe, existingToc, existingKpis, existingBudgetLines]);
 
   const canNext = () => {
     if (step === 0) return name && programId;
-    if (step === 1) return true; // optional context
-    if (step === 2) return overallObjective && wps.some(wp => wp.objective);
-    if (step === 3) return true; // optional strategy
-    if (step === 4) return true; // optional beneficiaries
-    if (step === 5) return tocImpact;
-    if (step === 6) return kpis.some(k => k.name);
-    if (step === 7) return true; // optional M&E
-    if (step === 8) return budgetLines.some(b => b.desc && (b.qty > 0 || b.montant > 0));
+    if (step === 2) return tocImpact;
+    if (step === 3) return overallObjective && wps.some(wp => wp.objective);
+    if (step === 4) return kpis.some(k => k.name);
+    if (step === 9) return budgetActivities.some(b => b.description && activityTotal(b) > 0);
     return true;
   };
 
   // WP helpers
-  const updateWp = (idx: number, partial: Partial<WpDraft>) => {
-    const n = [...wps]; n[idx] = { ...n[idx], ...partial }; setWps(n);
-  };
+  const updateWp = (idx: number, partial: Partial<WpDraft>) => { const n = [...wps]; n[idx] = { ...n[idx], ...partial }; setWps(n); };
   const addWp = () => setWps([...wps, emptyWp()]);
   const removeWp = (idx: number) => {
     if (wps.length <= 1) return;
@@ -441,6 +468,8 @@ export default function ProjectWizardPage() {
     methodologie, population_cible: populationCible, estimation_beneficiaires: estimationBeneficiaires,
     personnel_cle: personnelCle.filter(p => p.role), partenaires: partenaires.filter(p => p.categorie),
     suivi_outils: suiviOutils, suivi_evaluation: suiviEvaluation, suivi_rapports: suiviRapports, plan_sortie: planSortie,
+    secteurs_prioritaires: secteurs, porteur, alignement_odd: alignementOdd, version_document: versionDoc,
+    risques: risks.filter(r => r.description), contingency_pct: contingencyPct, currency,
   });
 
   // --- Save functions ---
@@ -473,26 +502,19 @@ export default function ProjectWizardPage() {
   };
 
   const saveLogframe = async (pid: string) => {
-    const payload = {
-      project_id: pid,
-      overall_objective: overallObjective,
-      specific_objectives: flattenWpObjectives(wps),
-      expected_results: flattenWpResults(wps),
-      activities: flattenWpActivities(wps),
-      assumptions: assumptions || null,
-      pre_conditions: preConditions || null,
-    };
-    await supabase.from("logical_frameworks").upsert(payload, { onConflict: "project_id" }).throwOnError();
+    await supabase.from("logical_frameworks").upsert({
+      project_id: pid, overall_objective: overallObjective,
+      specific_objectives: flattenWpObjectives(wps), expected_results: flattenWpResults(wps),
+      activities: flattenWpActivities(wps), assumptions: assumptions || null, pre_conditions: preConditions || null,
+    }, { onConflict: "project_id" }).throwOnError();
   };
 
   const saveToc = async (pid: string) => {
-    const payload = {
-      project_id: pid,
-      inputs: tocInputs.filter(Boolean), activities: tocActivities.filter(Boolean),
+    await supabase.from("theory_of_change").upsert({
+      project_id: pid, inputs: tocInputs.filter(Boolean), activities: tocActivities.filter(Boolean),
       outputs: tocOutputs.filter(Boolean), outcomes: tocOutcomes.filter(Boolean),
       impact: tocImpact, assumptions: tocAssumptions.filter(Boolean), risks: tocRisks.filter(Boolean),
-    };
-    await supabase.from("theory_of_change").upsert(payload, { onConflict: "project_id" }).throwOnError();
+    }, { onConflict: "project_id" }).throwOnError();
   };
 
   const saveKpisMilestones = async (pid: string) => {
@@ -503,14 +525,7 @@ export default function ProjectWizardPage() {
       await supabase.from("project_indicators").insert(
         validKpis.map(k => {
           kpiCounters[k.wpIndex] = (kpiCounters[k.wpIndex] || 0) + 1;
-          return {
-            project_id: pid,
-            name: `I${k.wpIndex + 1}.${kpiCounters[k.wpIndex]} ${k.name}`,
-            category: k.category, unit: k.unit || null,
-            baseline_value: k.baseline, target_value: k.target,
-            frequency: k.frequency, data_source: k.source || null,
-            responsible: k.responsible || null,
-          };
+          return { project_id: pid, name: `I${k.wpIndex + 1}.${kpiCounters[k.wpIndex]} ${k.name}`, category: k.category, unit: k.unit || null, baseline_value: k.baseline, target_value: k.target, frequency: k.frequency, data_source: k.source || null, responsible: k.responsible || null };
         })
       ).throwOnError();
     }
@@ -521,10 +536,7 @@ export default function ProjectWizardPage() {
       await supabase.from("milestones").insert(
         validMilestones.map(m => {
           mCounters[m.wpIndex] = (mCounters[m.wpIndex] || 0) + 1;
-          return {
-            project_id: pid, title: `M${m.wpIndex + 1}.${mCounters[m.wpIndex]} ${m.title}`,
-            due_date: m.dueDate || null, status: "pending",
-          };
+          return { project_id: pid, title: `M${m.wpIndex + 1}.${mCounters[m.wpIndex]} ${m.title}`, due_date: m.dueDate || null, status: "pending" };
         })
       ).throwOnError();
     }
@@ -532,13 +544,13 @@ export default function ProjectWizardPage() {
 
   const saveBudget = async (pid: string) => {
     await supabase.from("project_budget_lines").delete().eq("project_id", pid);
-    const validBudget = budgetLines.filter(b => b.desc);
+    const validBudget = budgetActivities.filter(b => b.description);
     if (validBudget.length > 0) {
       await supabase.from("project_budget_lines").insert(
         validBudget.map(b => ({
-          project_id: pid, category: b.section === "A" ? "operational" : "management",
-          label: b.desc, code: b.code, section: b.section,
-          unit: b.unit || null, quantity: b.qty, unit_cost: b.montant, allocation_pct: b.alloc, funding_source: null,
+          project_id: pid, category: b.wpCode.startsWith("WP") ? "operational" : b.wpCode === "GC" ? "management" : "monitoring",
+          label: b.description, code: b.code, section: b.wpCode,
+          unit: b.unit || null, quantity: b.qty, unit_cost: b.unitCost, allocation_pct: 100, funding_source: null,
         }))
       ).throwOnError();
     }
@@ -561,28 +573,15 @@ export default function ProjectWizardPage() {
         pid = await saveStep0();
         setProjectId(pid); setSearchParams({ id: pid });
         qc.invalidateQueries({ queryKey: ["project-draft", pid] });
-      } else if (step === 1 && pid) {
-        await saveMetadata(pid);
-      } else if (step === 2 && pid) {
-        await saveLogframe(pid);
-        qc.invalidateQueries({ queryKey: ["project-logframe", pid] });
-      } else if (step === 3 && pid) {
-        await saveMetadata(pid);
-      } else if (step === 4 && pid) {
-        await saveMetadata(pid);
-      } else if (step === 5 && pid) {
-        await saveToc(pid);
-        qc.invalidateQueries({ queryKey: ["project-toc", pid] });
-      } else if (step === 6 && pid) {
-        await saveKpisMilestones(pid);
-        qc.invalidateQueries({ queryKey: ["project-kpis", pid] });
-        qc.invalidateQueries({ queryKey: ["project-milestones-draft", pid] });
-      } else if (step === 7 && pid) {
-        await saveMetadata(pid);
-      } else if (step === 8 && pid) {
-        await saveBudget(pid);
-        qc.invalidateQueries({ queryKey: ["project-budget-lines", pid] });
-      }
+      } else if (step === 1 && pid) { await saveMetadata(pid); }
+      else if (step === 2 && pid) { await saveToc(pid); qc.invalidateQueries({ queryKey: ["project-toc", pid] }); }
+      else if (step === 3 && pid) { await saveLogframe(pid); qc.invalidateQueries({ queryKey: ["project-logframe", pid] }); }
+      else if (step === 4 && pid) { await saveKpisMilestones(pid); qc.invalidateQueries({ queryKey: ["project-kpis", pid] }); qc.invalidateQueries({ queryKey: ["project-milestones-draft", pid] }); }
+      else if (step === 5 && pid) { await saveMetadata(pid); }
+      else if (step === 6 && pid) { await saveMetadata(pid); }
+      else if (step === 7 && pid) { await saveMetadata(pid); }
+      else if (step === 8 && pid) { await saveMetadata(pid); }
+      else if (step === 9 && pid) { await saveBudget(pid); qc.invalidateQueries({ queryKey: ["project-budget-lines", pid] }); }
       toast.success("Données enregistrées ✓");
       setStep(step + 1);
     } catch (e) { toast.error((e as Error).message); }
@@ -598,18 +597,21 @@ export default function ProjectWizardPage() {
     onError: (e) => toast.error((e as Error).message),
   });
 
+  // Compute start year from startDate
+  const startYear = startDate ? parseInt(startDate.split("-")[0]) : new Date().getFullYear();
+
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="max-w-4xl mx-auto">
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-xl font-display font-bold text-foreground">Créer un projet</h1>
+        <h1 className="text-xl font-display font-bold text-foreground">Document de projet</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Parcours structuré selon les standards des bailleurs de fonds
+          Parcours structuré — Standard bailleurs de fonds (AFD, UE, Enabel, BAD)
           {projectId && <span className="ml-2 text-primary font-mono text-[10px]">Brouillon enregistré</span>}
         </p>
       </div>
 
-      {/* Stepper - scrollable */}
+      {/* Stepper */}
       <div className="flex items-center gap-1 mb-8 bg-card border border-border rounded-xl p-2 overflow-x-auto">
         {STEPS.map((s, i) => {
           const Icon = s.icon;
@@ -621,8 +623,8 @@ export default function ProjectWizardPage() {
                 "text-muted-foreground cursor-default"
               }`}>
               <Icon className="w-3.5 h-3.5 shrink-0" />
-              <span className="hidden xl:inline whitespace-nowrap">{s.label}</span>
-              <span className="xl:hidden">{i + 1}</span>
+              <span className="hidden 2xl:inline whitespace-nowrap">{s.label}</span>
+              <span className="2xl:hidden">{i + 1}</span>
             </button>
           );
         })}
@@ -632,22 +634,29 @@ export default function ProjectWizardPage() {
       <AnimatePresence mode="wait">
         <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="bg-card border border-border rounded-xl p-6">
 
-          {/* STEP 0: Identification du projet */}
+          {/* ── STEP 0: Identification (Fiche PAERID) ── */}
           {step === 0 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Identification du projet</h2>
-                <p className={helpCls}>Informations générales d'identification : intitulé, rattachement programmatique, pays, lieux d'implémentation et durée prévisionnelle.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">1. Identification du projet</h2>
+                <p className={helpCls}>Fiche signalétique du projet : intitulé, rattachement, zone d'intervention, durée, budget et alignement stratégique.</p>
+              </div>
+              <div className="space-y-2 col-span-2"><label className={labelCls}>Intitulé du projet *</label><input value={name} onChange={e => setName(e.target.value)} required className={inputCls} placeholder="Ex: Projet d'Appui à l'Entrepreneuriat Rural Innovant et Durable (PAERID)" /></div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2"><label className={labelCls}>Code</label><input value={code} onChange={e => setCode(e.target.value)} className={inputCls} placeholder="PRJ-2026-001" /></div>
+                <div className="space-y-2"><label className={labelCls}>Version du document</label><input value={versionDoc} onChange={e => setVersionDoc(e.target.value)} className={inputCls} placeholder="Version finale — 2025" /></div>
               </div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2 col-span-2"><label className={labelCls}>Intitulé du projet *</label><input value={name} onChange={e => setName(e.target.value)} required className={inputCls} placeholder="Ex: Projet d'Appui à l'Entrepreneuriat Rural Innovant et Durable (PAERID)" /></div>
-                <div className="space-y-2"><label className={labelCls}>Code</label><input value={code} onChange={e => setCode(e.target.value)} className={inputCls} placeholder="PRJ-2026-001" /></div>
-                <div className="space-y-2"><label className={labelCls}>Pays</label><input value={country} onChange={e => setCountry(e.target.value)} className={inputCls} placeholder="Ex: Sénégal" /></div>
+                <div className="space-y-2"><label className={labelCls}>Pays *</label><input value={country} onChange={e => setCountry(e.target.value)} className={inputCls} placeholder="République du Sénégal" /></div>
+                <div className="space-y-2"><label className={labelCls}>Porteur du projet</label><input value={porteur} onChange={e => setPorteur(e.target.value)} className={inputCls} placeholder="Ex: GROW HUB SARL" /></div>
               </div>
               <div className="space-y-2">
-                <label className={labelCls}>Lieu(x) d'implémentation</label>
+                <label className={labelCls}>Zones d'intervention</label>
                 <ArrayEditor items={locations} onChange={setLocations} placeholder="Région / Ville" />
-                <p className={helpCls}>Indiquez les régions ou villes où le projet sera mis en œuvre.</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2"><label className={labelCls}>Secteurs prioritaires</label><input value={secteurs} onChange={e => setSecteurs(e.target.value)} className={inputCls} placeholder="Élevage, agro-industrie, chaînes de valeur rurales" /></div>
+                <div className="space-y-2"><label className={labelCls}>Alignement ODD</label><input value={alignementOdd} onChange={e => setAlignementOdd(e.target.value)} className={inputCls} placeholder="ODD 1, 2, 5, 8, 9, 13" /></div>
               </div>
               <div className="space-y-2"><label className={labelCls}>Programme de rattachement *</label>
                 <select value={programId} onChange={e => setProgramId(e.target.value)} required className={inputCls}>
@@ -660,173 +669,43 @@ export default function ProjectWizardPage() {
                   <option value="">Aucune (optionnel)</option>
                   {grants?.map(g => <option key={g.id} value={g.id}>{g.name} — {g.code}</option>)}
                 </select>
-                <p className={helpCls}>Lier à une subvention pour le suivi budgétaire automatique.</p>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-4 gap-4">
                 <div className="space-y-2"><label className={labelCls}>Date de début</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputCls} /></div>
                 <div className="space-y-2"><label className={labelCls}>Date de fin</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={inputCls} /></div>
-                <div className="space-y-2"><label className={labelCls}>Durée (mois)</label><input type="number" value={durationMonths} onChange={e => setDurationMonths(e.target.value)} className={inputCls} placeholder="Ex: 36" /></div>
+                <div className="space-y-2"><label className={labelCls}>Durée (mois)</label><input type="number" value={durationMonths} onChange={e => setDurationMonths(e.target.value)} className={inputCls} placeholder="60" /></div>
+                <div className="space-y-2"><label className={labelCls}>Devise</label>
+                  <select value={currency} onChange={e => setCurrency(e.target.value)} className={inputCls}>
+                    <option value="USD">USD</option><option value="EUR">EUR</option><option value="XOF">XOF (FCFA)</option>
+                  </select>
+                </div>
               </div>
-              <div className="space-y-2"><label className={labelCls}>Résumé du projet</label><textarea value={description} onChange={e => setDescription(e.target.value)} className={textareaLgCls} placeholder="Résumé exécutif du projet…" /></div>
+              <div className="space-y-2"><label className={labelCls}>Résumé exécutif</label><textarea value={description} onChange={e => setDescription(e.target.value)} className={textareaLgCls} placeholder="Le Projet … est un projet de développement économique intégré d'une durée de…" /></div>
             </div>
           )}
 
-          {/* STEP 1: Contexte et justification */}
+          {/* ── STEP 1: Contexte et justification ── */}
           {step === 1 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Contexte et justification</h2>
-                <p className={helpCls}>Décrivez le contexte dans lequel s'inscrit le projet, les contraintes identifiées et la justification de l'intervention.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">2. Contexte et justification</h2>
+                <p className={helpCls}>Sections 2 et 3 du document de projet — Introduction, contexte territorial, contraintes, alignement et justification.</p>
               </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Introduction</label>
-                <textarea value={introduction} onChange={e => setIntroduction(e.target.value)} className={textareaLgCls} placeholder="Présentation générale du contexte et de la problématique adressée par le projet…" />
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Contexte et justification du projet</label>
-                <textarea value={contexteJustification} onChange={e => setContexteJustification(e.target.value)} className={textareaLgCls} placeholder="Décrivez le contexte global et la justification du projet : pourquoi ce projet est pertinent dans le contexte actuel…" />
-              </div>
-              <div className="space-y-2">
-                <textarea value={contexteT} onChange={e => setContexteT(e.target.value)} className={textareaLgCls} placeholder="Description du contexte géographique, socio-économique et institutionnel des zones d'intervention…" />
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Contraintes structurelles et vulnérabilités</label>
-                <textarea value={contraintes} onChange={e => setContraintes(e.target.value)} className={textareaLgCls} placeholder="Contraintes identifiées : accès limité aux financements, faible productivité, vulnérabilité climatique…" />
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Alignement avec les orientations stratégiques</label>
-                <textarea value={alignement} onChange={e => setAlignement(e.target.value)} className={textareaCls} placeholder="Cohérence avec les politiques nationales, stratégies des bailleurs et ODD…" />
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Justification de l'intervention</label>
-                <textarea value={justification} onChange={e => setJustification(e.target.value)} className={textareaLgCls} placeholder="Pourquoi ce projet est nécessaire et comment il répond aux problèmes identifiés…" />
-              </div>
+              <div className="space-y-2"><label className={labelCls}>2. Introduction</label><textarea value={introduction} onChange={e => setIntroduction(e.target.value)} className={textareaLgCls} placeholder="Présentation générale du contexte et de la problématique…" /></div>
+              <div className="space-y-2"><label className={labelCls}>3. Contexte et justification du projet</label><textarea value={contexteJustification} onChange={e => setContexteJustification(e.target.value)} className={textareaLgCls} placeholder="Contexte global et justification du projet…" /></div>
+              <div className="space-y-2"><label className={labelCls}>3.1 Contexte territorial</label><textarea value={contexteT} onChange={e => setContexteT(e.target.value)} className={textareaLgCls} placeholder="Description du contexte géographique, socio-économique et institutionnel…" /></div>
+              <div className="space-y-2"><label className={labelCls}>3.2 Contraintes structurelles et vulnérabilités</label><textarea value={contraintes} onChange={e => setContraintes(e.target.value)} className={textareaLgCls} placeholder="Contraintes identifiées : accès limité aux financements, faible productivité…" /></div>
+              <div className="space-y-2"><label className={labelCls}>3.3 Alignement avec les orientations stratégiques</label><textarea value={alignement} onChange={e => setAlignement(e.target.value)} className={textareaCls} placeholder="Cohérence avec les politiques nationales, ODD, NDC…" /></div>
+              <div className="space-y-2"><label className={labelCls}>3.4 Justification de l'intervention</label><textarea value={justification} onChange={e => setJustification(e.target.value)} className={textareaLgCls} placeholder="Pourquoi ce projet est nécessaire et comment il répond aux problèmes…" /></div>
             </div>
           )}
 
-          {/* STEP 2: Objectifs & Cadre logique + Work Packages */}
+          {/* ── STEP 2: Théorie du changement ── */}
           {step === 2 && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Objectifs & Cadre logique</h2>
-                <p className={helpCls}>Définissez l'objectif général, les objectifs spécifiques par Work Packages, les activités et les résultats attendus.</p>
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Objectif général (impact) *</label>
-                <textarea value={overallObjective} onChange={e => setOverallObjective(e.target.value)} required className={textareaCls} placeholder="Ex: Contribuer à la transformation structurelle et durable des économies rurales…" />
-              </div>
-
-              {/* Work Packages */}
-              <div className="space-y-4">
-                {wps.map((wp, idx) => (
-                  <WpEditor key={idx} wp={wp} index={idx} total={wps.length}
-                    onChange={(partial) => updateWp(idx, partial)}
-                    onRemove={() => removeWp(idx)} />
-                ))}
-                <button type="button" onClick={addWp} className="w-full border-2 border-dashed border-border rounded-xl py-3 text-sm text-primary font-semibold hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
-                  <Plus className="w-4 h-4" /> Ajouter un Work Package
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><label className={labelCls}>Hypothèses</label><textarea value={assumptions} onChange={e => setAssumptions(e.target.value)} className={textareaCls} placeholder="Conditions externes nécessaires…" /></div>
-                <div className="space-y-2"><label className={labelCls}>Pré-conditions</label><textarea value={preConditions} onChange={e => setPreConditions(e.target.value)} className={textareaCls} placeholder="Conditions préalables au démarrage…" /></div>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 3: Stratégie & Méthodologie */}
-          {step === 3 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Stratégie d'implémentation & Méthodologie</h2>
-                <p className={helpCls}>Décrivez la stratégie globale de mise en œuvre, les principaux axes d'action et la méthodologie retenue.</p>
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Objectif de la stratégie</label>
-                <textarea value={strategieObjectif} onChange={e => setStrategieObjectif(e.target.value)} className={textareaCls} placeholder="Quel est l'objectif de votre stratégie d'implémentation…" />
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Principaux axes d'action</label>
-                <ArrayEditor items={strategieAxes} onChange={setStrategieAxes} placeholder="Axe d'action" />
-                <p className={helpCls}>Ex: Amélioration de l'accès au marché, Renforcement de la résilience, Autonomisation et emplois…</p>
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Modalités de mise en œuvre</label>
-                <textarea value={strategieModalites} onChange={e => setStrategieModalites(e.target.value)} className={textareaLgCls} placeholder="Approche intégrée, capitalisation sur l'expertise locale, mécanismes de suivi et ajustement…" />
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Méthodologie</label>
-                <textarea value={methodologie} onChange={e => setMethodologie(e.target.value)} className={textareaLgCls} placeholder="Méthodes de mise en œuvre : approche participative, accompagnement structuré, formation par les pairs…" />
-              </div>
-            </div>
-          )}
-
-          {/* STEP 4: Bénéficiaires & Parties prenantes */}
-          {step === 4 && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Bénéficiaires & Parties prenantes</h2>
-                <p className={helpCls}>Identifiez la population cible, estimez le nombre de bénéficiaires, décrivez le personnel clé et les partenaires du projet.</p>
-              </div>
-
-              <div className="space-y-2">
-                <label className={labelCls}>Population cible / Bénéficiaires</label>
-                <textarea value={populationCible} onChange={e => setPopulationCible(e.target.value)} className={textareaLgCls} placeholder="TPE et PME rurales, GIE, coopératives, femmes entrepreneures, jeunes entrepreneurs…" />
-              </div>
-
-              <div className="space-y-2">
-                <label className={labelCls}>Estimation des bénéficiaires</label>
-                <textarea value={estimationBeneficiaires} onChange={e => setEstimationBeneficiaires(e.target.value)} className={textareaCls} placeholder="Nombre estimé de bénéficiaires directs et indirects, ventilation par région…" />
-              </div>
-
-              {/* Personnel clé */}
-              <div className="space-y-3">
-                <div className={sectionTitleCls}>Personnel clé impliqué</div>
-                {personnelCle.map((p, i) => (
-                  <div key={i} className="border border-border rounded-lg p-3 bg-surface-2 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-mono text-muted-foreground">Poste {i + 1}</span>
-                      {personnelCle.length > 1 && <button type="button" onClick={() => setPersonnelCle(personnelCle.filter((_, j) => j !== i))} className="text-destructive text-xs hover:underline">Supprimer</button>}
-                    </div>
-                    <input value={p.role} onChange={e => { const n = [...personnelCle]; n[i] = { ...n[i], role: e.target.value }; setPersonnelCle(n); }} className={inputCls} placeholder="Rôle / Fonction (ex: Chef de projet)" />
-                    <textarea value={p.profil} onChange={e => { const n = [...personnelCle]; n[i] = { ...n[i], profil: e.target.value }; setPersonnelCle(n); }} className={textareaCls} placeholder="Profil requis et responsabilités…" />
-                  </div>
-                ))}
-                <button type="button" onClick={() => setPersonnelCle([...personnelCle, { role: "", profil: "" }])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un poste</button>
-              </div>
-
-              {/* Partenaires */}
-              <div className="space-y-3">
-                <div className={sectionTitleCls}>Partenaires cibles du programme</div>
-                {partenaires.map((p, i) => (
-                  <div key={i} className="border border-border rounded-lg p-3 bg-surface-2 space-y-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-mono text-muted-foreground">Partenaire {i + 1}</span>
-                      {partenaires.length > 1 && <button type="button" onClick={() => setPartenaires(partenaires.filter((_, j) => j !== i))} className="text-destructive text-xs hover:underline">Supprimer</button>}
-                    </div>
-                    <select value={p.categorie} onChange={e => { const n = [...partenaires]; n[i] = { ...n[i], categorie: e.target.value }; setPartenaires(n); }} className={inputCls}>
-                      <option value="">Catégorie…</option>
-                      <option value="institutionnel">Institutionnel & Gouvernemental</option>
-                      <option value="financier">Financier</option>
-                      <option value="technique">Technique & Recherche</option>
-                      <option value="prive">Secteur Privé</option>
-                      <option value="autre">Autre</option>
-                    </select>
-                    <textarea value={p.description} onChange={e => { const n = [...partenaires]; n[i] = { ...n[i], description: e.target.value }; setPartenaires(n); }} className={textareaCls} placeholder="Description du partenaire, rôle et justification…" />
-                  </div>
-                ))}
-                <button type="button" onClick={() => setPartenaires([...partenaires, { categorie: "", description: "" }])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un partenaire</button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 5: Théorie du changement */}
-          {step === 5 && (
-            <div className="space-y-5">
-              <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Théorie du changement</h2>
-                <p className={helpCls}>La chaîne de résultats décrit comment les ressources se transforment en impact.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">4. Théorie du changement</h2>
+                <p className={helpCls}>Section 4 — Cheminement du changement, hypothèses clés et mécanismes d'adaptation.</p>
               </div>
               <div className="flex items-center gap-2 py-3 overflow-x-auto">
                 {["Intrants", "Activités", "Extrants", "Effets", "Impact"].map((label, i) => (
@@ -842,33 +721,52 @@ export default function ProjectWizardPage() {
               <div className="space-y-2"><label className={labelCls}>Effets (Outcomes)</label><ArrayEditor items={tocOutcomes} onChange={setTocOutcomes} placeholder="Effet" /></div>
               <div className="space-y-2"><label className={labelCls}>Impact *</label><textarea value={tocImpact} onChange={e => setTocImpact(e.target.value)} required className={textareaCls} placeholder="Le changement transformationnel à long terme…" /></div>
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2"><label className={labelCls}>Hypothèses</label><ArrayEditor items={tocAssumptions} onChange={setTocAssumptions} placeholder="Hypothèse" /></div>
+                <div className="space-y-2"><label className={labelCls}>Hypothèses clés</label><ArrayEditor items={tocAssumptions} onChange={setTocAssumptions} placeholder="Hypothèse" /></div>
                 <div className="space-y-2"><label className={labelCls}>Risques</label><ArrayEditor items={tocRisks} onChange={setTocRisks} placeholder="Risque" /></div>
               </div>
             </div>
           )}
 
-          {/* STEP 6: KPIs & Milestones per WP */}
-          {step === 6 && (
+          {/* ── STEP 3: Objectifs & Work Packages ── */}
+          {step === 3 && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Indicateurs & Jalons par Work Package</h2>
-                <p className={helpCls}>Définissez des indicateurs SMART et des jalons pour chaque WP.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">5. Objectifs & Work Packages</h2>
+                <p className={helpCls}>Section 5 & 7 — Objectif général, objectifs spécifiques et architecture opérationnelle par Work Packages.</p>
               </div>
+              <div className="space-y-2">
+                <label className={labelCls}>Objectif général du projet *</label>
+                <textarea value={overallObjective} onChange={e => setOverallObjective(e.target.value)} required className={textareaCls} placeholder="Contribuer à la transformation durable des économies rurales…" />
+              </div>
+              <div className="space-y-4">
+                {wps.map((wp, i) => (
+                  <WpEditor key={i} wp={wp} index={i} total={wps.length} onChange={partial => updateWp(i, partial)} onRemove={() => removeWp(i)} />
+                ))}
+                <button type="button" onClick={addWp} className="w-full py-3 border-2 border-dashed border-primary/30 rounded-xl text-sm font-semibold text-primary hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+                  <Plus className="w-4 h-4" /> Ajouter un Work Package
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2"><label className={labelCls}>Hypothèses / Assumptions</label><textarea value={assumptions} onChange={e => setAssumptions(e.target.value)} className={textareaCls} placeholder="Hypothèses sous-jacentes au cadre logique…" /></div>
+                <div className="space-y-2"><label className={labelCls}>Pré-conditions</label><textarea value={preConditions} onChange={e => setPreConditions(e.target.value)} className={textareaCls} placeholder="Conditions préalables à la mise en œuvre…" /></div>
+              </div>
+            </div>
+          )}
 
+          {/* ── STEP 4: Résultats attendus & KPIs ── */}
+          {step === 4 && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-lg font-display font-bold text-foreground">6. Résultats attendus & Indicateurs KPIs</h2>
+                <p className={helpCls}>Section 6 — Définissez les indicateurs SMART et jalons pour chaque Work Package.</p>
+              </div>
               {wps.map((wp, wpIdx) => (
                 <div key={wpIdx} className="border border-border rounded-xl overflow-hidden">
                   <div className="flex items-center gap-3 px-4 py-3 bg-secondary/50">
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${wpColors[wpIdx % wpColors.length]} flex items-center justify-center text-white font-bold text-xs shrink-0`}>
-                      WP{wpIdx + 1}
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-sm font-bold text-foreground truncate">{wp.title || `Work Package ${wpIdx + 1}`}</div>
-                    </div>
+                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${wpColors[wpIdx % wpColors.length]} flex items-center justify-center text-white font-bold text-xs shrink-0`}>WP{wpIdx + 1}</div>
+                    <div className="text-sm font-bold text-foreground truncate">{wp.title || `Work Package ${wpIdx + 1}`}</div>
                   </div>
-
                   <div className="p-4 space-y-4">
-                    {/* KPIs for this WP */}
                     <div>
                       <label className="text-xs font-bold text-foreground uppercase tracking-wider">Indicateurs</label>
                       <div className="space-y-3 mt-2">
@@ -899,8 +797,6 @@ export default function ProjectWizardPage() {
                         <button type="button" onClick={() => setKpis([...kpis, emptyKpi(wpIdx)])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un indicateur</button>
                       </div>
                     </div>
-
-                    {/* Milestones for this WP */}
                     <div>
                       <label className="text-xs font-bold text-foreground uppercase tracking-wider">Jalons</label>
                       <div className="space-y-2 mt-2">
@@ -924,159 +820,287 @@ export default function ProjectWizardPage() {
             </div>
           )}
 
-          {/* STEP 7: Suivi-Évaluation & Durabilité */}
+          {/* ── STEP 5: Stratégie & Méthodologie ── */}
+          {step === 5 && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-lg font-display font-bold text-foreground">7. Stratégie d'implémentation & Méthodologie</h2>
+                <p className={helpCls}>Sections 7 & 8 — Objectif de la stratégie, axes d'action, modalités de mise en œuvre et méthodologie.</p>
+              </div>
+              <div className="space-y-2"><label className={labelCls}>7.1 Objectif de la stratégie</label><textarea value={strategieObjectif} onChange={e => setStrategieObjectif(e.target.value)} className={textareaCls} placeholder="Objectif global de la stratégie d'implémentation…" /></div>
+              <div className="space-y-2"><label className={labelCls}>7.2 Principaux axes d'action</label><ArrayEditor items={strategieAxes} onChange={setStrategieAxes} placeholder="Axe stratégique" /></div>
+              <div className="space-y-2"><label className={labelCls}>7.3 Modalités de mise en œuvre</label><textarea value={strategieModalites} onChange={e => setStrategieModalites(e.target.value)} className={textareaLgCls} placeholder="Dispositif organisationnel, approche participative, mécanismes de gouvernance…" /></div>
+              <div className={sectionTitleCls + " mt-4"}>8. Méthodologie</div>
+              <div className="space-y-2"><label className={labelCls}>Approches méthodologiques</label><textarea value={methodologie} onChange={e => setMethodologie(e.target.value)} className={textareaLgCls} placeholder="Approche participative, coaching, intégration du numérique, promotion de l'innovation…" /></div>
+            </div>
+          )}
+
+          {/* ── STEP 6: Bénéficiaires & Partenaires ── */}
+          {step === 6 && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-lg font-display font-bold text-foreground">9–13. Bénéficiaires, Personnel & Partenaires</h2>
+                <p className={helpCls}>Sections 9-13 — Durée, lieux, population cible, personnel clé et partenaires.</p>
+              </div>
+              <div className={sectionTitleCls}>11. Population cible / Bénéficiaires</div>
+              <div className="space-y-2"><label className={labelCls}>Population cible</label><textarea value={populationCible} onChange={e => setPopulationCible(e.target.value)} className={textareaCls} placeholder="TPE/PME rurales, femmes entrepreneures, jeunes 18-35 ans…" /></div>
+              <div className="space-y-2"><label className={labelCls}>Estimation des bénéficiaires</label><textarea value={estimationBeneficiaires} onChange={e => setEstimationBeneficiaires(e.target.value)} className={textareaCls} placeholder="500+ TPE/PME directement accompagnées, 5000 emplois créés…" /></div>
+
+              <div className={sectionTitleCls}>12. Personnel clé</div>
+              {personnelCle.map((p, i) => (
+                <div key={i} className="border border-border rounded-lg p-3 bg-surface-2 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-mono text-muted-foreground">Poste {i + 1}</span>
+                    {personnelCle.length > 1 && <button type="button" onClick={() => setPersonnelCle(personnelCle.filter((_, j) => j !== i))} className="text-destructive text-xs hover:underline">Supprimer</button>}
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input value={p.role} onChange={e => { const n = [...personnelCle]; n[i] = { ...n[i], role: e.target.value }; setPersonnelCle(n); }} className={inputCls} placeholder="Fonction / Rôle" />
+                    <input value={p.profil} onChange={e => { const n = [...personnelCle]; n[i] = { ...n[i], profil: e.target.value }; setPersonnelCle(n); }} className={inputCls} placeholder="Profil recherché" />
+                  </div>
+                </div>
+              ))}
+              <button type="button" onClick={() => setPersonnelCle([...personnelCle, { role: "", profil: "" }])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un poste</button>
+
+              <div className={sectionTitleCls}>13. Partenaires cibles</div>
+              {partenaires.map((p, i) => (
+                <div key={i} className="border border-border rounded-lg p-3 bg-surface-2 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[11px] font-mono text-muted-foreground">Partenaire {i + 1}</span>
+                    {partenaires.length > 1 && <button type="button" onClick={() => setPartenaires(partenaires.filter((_, j) => j !== i))} className="text-destructive text-xs hover:underline">Supprimer</button>}
+                  </div>
+                  <select value={p.categorie} onChange={e => { const n = [...partenaires]; n[i] = { ...n[i], categorie: e.target.value }; setPartenaires(n); }} className={inputCls}>
+                    <option value="">Catégorie…</option>
+                    <option value="institutionnel">Institutionnel & Gouvernemental</option>
+                    <option value="financier">Financier</option>
+                    <option value="technique">Technique & Recherche</option>
+                    <option value="prive">Secteur Privé</option>
+                  </select>
+                  <textarea value={p.description} onChange={e => { const n = [...partenaires]; n[i] = { ...n[i], description: e.target.value }; setPartenaires(n); }} className={textareaCls} placeholder="Description, rôle et justification…" />
+                </div>
+              ))}
+              <button type="button" onClick={() => setPartenaires([...partenaires, { categorie: "", description: "" }])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un partenaire</button>
+            </div>
+          )}
+
+          {/* ── STEP 7: Suivi-Évaluation & Durabilité ── */}
           {step === 7 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Suivi-Évaluation & Plan de durabilité</h2>
-                <p className={helpCls}>Décrivez le dispositif de suivi-évaluation, les outils utilisés et la stratégie de sortie / durabilité.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">14–15. Suivi-Évaluation & Durabilité</h2>
+                <p className={helpCls}>Sections 14 & 15 — Dispositif de S&E, rapports et stratégie de sortie.</p>
               </div>
+              <div className={sectionTitleCls}>14. Suivi et Évaluation</div>
+              <div className="space-y-2"><label className={labelCls}>14.1 Outils et méthodes de suivi</label><textarea value={suiviOutils} onChange={e => setSuiviOutils(e.target.value)} className={textareaLgCls} placeholder="Tableau de bord KPIs, base de données, rapports d'activités…" /></div>
+              <div className="space-y-2"><label className={labelCls}>14.2 Évaluation</label><textarea value={suiviEvaluation} onChange={e => setSuiviEvaluation(e.target.value)} className={textareaCls} placeholder="Évaluation à mi-parcours, évaluation finale…" /></div>
+              <div className="space-y-2"><label className={labelCls}>14.3 Rapports et communication des résultats</label><textarea value={suiviRapports} onChange={e => setSuiviRapports(e.target.value)} className={textareaCls} placeholder="Fréquence des rapports, ateliers de restitution…" /></div>
+              <div className={sectionTitleCls + " mt-4"}>15. Plan de sortie / Stratégie de durabilité</div>
+              <div className="space-y-2"><label className={labelCls}>Exit Strategy</label><textarea value={planSortie} onChange={e => setPlanSortie(e.target.value)} className={textareaLgCls} placeholder="Institutionnalisation des services, diversification des ressources, autonomie des bénéficiaires…" /></div>
+            </div>
+          )}
 
-              <div className={sectionTitleCls}>Suivi et Évaluation</div>
-              <div className="space-y-2">
-                <label className={labelCls}>Outils et méthodes de suivi</label>
-                <textarea value={suiviOutils} onChange={e => setSuiviOutils(e.target.value)} className={textareaLgCls} placeholder="Tableau de bord KPIs, base de données bénéficiaires, rapports d'activités, visites de terrain, enquêtes de satisfaction, mécanisme d'alerte précoce…" />
+          {/* ── STEP 8: Analyse des risques ── */}
+          {step === 8 && (
+            <div className="space-y-5">
+              <div>
+                <h2 className="text-lg font-display font-bold text-foreground">16. Analyse des risques et mesures d'atténuation</h2>
+                <p className={helpCls}>Section 16 — Identification des risques, probabilité, impact et stratégies de mitigation.</p>
               </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Évaluation</label>
-                <textarea value={suiviEvaluation} onChange={e => setSuiviEvaluation(e.target.value)} className={textareaCls} placeholder="Évaluation à mi-parcours, évaluation finale, critères CAD/OCDE…" />
-              </div>
-              <div className="space-y-2">
-                <label className={labelCls}>Rapports et communication des résultats</label>
-                <textarea value={suiviRapports} onChange={e => setSuiviRapports(e.target.value)} className={textareaCls} placeholder="Fréquence des rapports narratifs et financiers, ateliers de restitution, plan de communication…" />
-              </div>
-
-              <div className={sectionTitleCls + " mt-6"}>Plan de sortie / Stratégie de durabilité</div>
-              <div className="space-y-2">
-                <label className={labelCls}>Exit Strategy</label>
-                <textarea value={planSortie} onChange={e => setPlanSortie(e.target.value)} className={textareaLgCls} placeholder="Institutionnalisation des services, mobilisation de nouvelles ressources, autonomie des bénéficiaires, influence sur les politiques publiques…" />
+              <div className="space-y-3">
+                {risks.map((risk, i) => (
+                  <div key={i} className="border border-border rounded-lg p-4 bg-surface-2 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[11px] font-mono text-muted-foreground">Risque {i + 1}</span>
+                      {risks.length > 1 && <button type="button" onClick={() => setRisks(risks.filter((_, j) => j !== i))} className="text-destructive text-xs hover:underline">Supprimer</button>}
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <select value={risk.category} onChange={e => { const n = [...risks]; n[i] = { ...n[i], category: e.target.value }; setRisks(n); }} className={inputCls}>
+                        <option value="">Catégorie…</option>
+                        <option value="politique">Politique / Institutionnel</option>
+                        <option value="operationnel">Opérationnel</option>
+                        <option value="financier">Financier</option>
+                        <option value="climatique">Climatique / Environnemental</option>
+                        <option value="social">Social / Genre</option>
+                        <option value="securite">Sécurité</option>
+                        <option value="technique">Technique</option>
+                      </select>
+                      <select value={risk.probability} onChange={e => { const n = [...risks]; n[i] = { ...n[i], probability: e.target.value }; setRisks(n); }} className={inputCls}>
+                        <option value="faible">Probabilité : Faible</option>
+                        <option value="moyen">Probabilité : Moyen</option>
+                        <option value="eleve">Probabilité : Élevé</option>
+                      </select>
+                      <select value={risk.impact} onChange={e => { const n = [...risks]; n[i] = { ...n[i], impact: e.target.value }; setRisks(n); }} className={inputCls}>
+                        <option value="faible">Impact : Faible</option>
+                        <option value="moyen">Impact : Moyen</option>
+                        <option value="eleve">Impact : Élevé</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <input value={risk.description} onChange={e => { const n = [...risks]; n[i] = { ...n[i], description: e.target.value }; setRisks(n); }} className={inputCls} placeholder="Description du risque" />
+                      <textarea value={risk.mitigation} onChange={e => { const n = [...risks]; n[i] = { ...n[i], mitigation: e.target.value }; setRisks(n); }} className={textareaCls} placeholder="Mesures d'atténuation prévues…" />
+                    </div>
+                  </div>
+                ))}
+                <button type="button" onClick={() => setRisks([...risks, emptyRisk()])} className="text-xs text-primary font-semibold hover:underline">+ Ajouter un risque</button>
               </div>
             </div>
           )}
 
-          {/* STEP 8: Budget */}
-          {step === 8 && (
+          {/* ── STEP 9: Budget prévisionnel (PAERID format) ── */}
+          {step === 9 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-display font-bold text-foreground">Budget prévisionnel — Annexe 1b</h2>
-                <p className={helpCls}>Répartition détaillée du budget. Formule : Qté × Montant unitaire × Allocation%.</p>
+                <h2 className="text-lg font-display font-bold text-foreground">17. Budget prévisionnel</h2>
+                <p className={helpCls}>Récapitulatif par composante (Work Package) et par année — Montants en {currency}.</p>
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-surface-2 border border-border rounded-lg p-3">
-                  <div className="text-[10px] font-mono uppercase text-muted-foreground">Coûts opérationnels (A)</div>
-                  <div className="text-base font-mono font-bold text-foreground mt-1">{fmt(totalA)} €</div>
-                </div>
-                <div className="bg-surface-2 border border-border rounded-lg p-3">
-                  <div className="text-[10px] font-mono uppercase text-muted-foreground">Frais de gestion (B)</div>
-                  <div className="text-base font-mono font-bold text-foreground mt-1">{fmt(totalB)} €</div>
-                </div>
-                <div className="bg-surface-2 border border-border rounded-lg p-3">
-                  <div className="text-[10px] font-mono uppercase text-primary">Budget TOTAL</div>
-                  <div className="text-base font-mono font-bold text-primary mt-1">{fmt(totalBudget)} €</div>
+
+              {/* Summary cards */}
+              <div className="grid grid-cols-4 gap-3">
+                {getWpCodes().filter(wc => wpSubtotal(wc) > 0 || wc === "GC" || wc === "SE").slice(0, 3).map(wc => (
+                  <div key={wc} className="bg-surface-2 border border-border rounded-lg p-3">
+                    <div className="text-[10px] font-mono uppercase text-muted-foreground">{wc}</div>
+                    <div className="text-sm font-mono font-bold text-foreground mt-1">{fmt(wpSubtotal(wc))} {currency}</div>
+                  </div>
+                ))}
+                <div className="bg-surface-2 border border-primary/30 rounded-lg p-3">
+                  <div className="text-[10px] font-mono uppercase text-primary">Total Général</div>
+                  <div className="text-sm font-mono font-bold text-primary mt-1">{fmt(totalBudget)} {currency}</div>
                 </div>
               </div>
+
+              {/* Budget table per WP */}
               <div className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-[12px]">
+                  <table className="w-full text-[11px]">
                     <thead>
                       <tr className="bg-secondary">
-                        <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[80px]">Code</th>
-                        <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground">Description</th>
-                        <th className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[80px]">Unité</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[60px]">Qté</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[90px]">Mont. unit.</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[60px]">Alloc.%</th>
-                        <th className="px-3 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[100px]">Total EUR</th>
-                        <th className="w-[30px]"></th>
+                        <th className="px-2 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[60px]">Code</th>
+                        <th className="px-2 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground">Activité / Description</th>
+                        <th className="px-2 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[100px]">Catégorie</th>
+                        <th className="px-2 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground w-[60px]">Unité</th>
+                        <th className="px-2 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[40px]">Qté</th>
+                        <th className="px-2 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[60px]">C.U.</th>
+                        <th className="px-2 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[70px]">An.{1}<br/>{startYear}</th>
+                        <th className="px-2 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[70px]">An.{2}<br/>{startYear+1}</th>
+                        <th className="px-2 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[70px]">An.{3}<br/>{startYear+2}</th>
+                        <th className="px-2 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[70px]">An.{4}<br/>{startYear+3}</th>
+                        <th className="px-2 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[70px]">An.{5}<br/>{startYear+4}</th>
+                        <th className="px-2 py-2 text-right text-[10px] font-mono uppercase text-muted-foreground w-[80px]">Total</th>
+                        <th className="w-[24px]"></th>
                       </tr>
                     </thead>
                     <tbody>
-                      <tr><td colSpan={8} className="px-3 py-2 bg-primary/10 text-primary font-mono text-[10px] font-bold uppercase tracking-wider">A — Coûts opérationnels</td></tr>
-                      {linesA.map((line, i) => <BudgetRow key={`a-${i}`} line={line} idx={budgetLines.indexOf(line)} budgetLines={budgetLines} setBudgetLines={setBudgetLines} />)}
-                      <tr><td colSpan={6} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">Sous-total A</td><td className="px-3 py-1.5 text-right font-mono text-[12px] font-bold text-foreground">{fmt(totalA)} €</td><td></td></tr>
-                      <tr><td colSpan={8} className="px-3 py-2 bg-accent/10 text-accent-foreground font-mono text-[10px] font-bold uppercase tracking-wider">B — Frais de gestion</td></tr>
-                      {linesB.map((line, i) => <BudgetRow key={`b-${i}`} line={line} idx={budgetLines.indexOf(line)} budgetLines={budgetLines} setBudgetLines={setBudgetLines} />)}
-                      <tr><td colSpan={6} className="px-3 py-1.5 text-right text-[11px] font-bold text-foreground">Sous-total B</td><td className="px-3 py-1.5 text-right font-mono text-[12px] font-bold text-foreground">{fmt(totalB)} €</td><td></td></tr>
+                      {getWpCodes().map(wpCode => {
+                        const wpActivities = budgetActivities.filter(a => a.wpCode === wpCode);
+                        const wpLabel = wpCode.startsWith("WP") ? `${wpCode} — ${wps[parseInt(wpCode.replace("WP","")) - 1]?.title || ""}` : wpCode === "GC" ? "Gouvernance, Coordination & Gestion" : "Suivi, Évaluation & Communication";
+                        const sub = wpSubtotal(wpCode);
+                        return (
+                          <React.Fragment key={wpCode}>
+                            <tr>
+                              <td colSpan={13} className={`px-2 py-2 font-mono text-[10px] font-bold uppercase tracking-wider ${
+                                wpCode === "GC" ? "bg-amber-500/10 text-amber-700 dark:text-amber-400" :
+                                wpCode === "SE" ? "bg-violet-500/10 text-violet-700 dark:text-violet-400" :
+                                "bg-primary/10 text-primary"
+                              }`}>{wpLabel}</td>
+                            </tr>
+                            {wpActivities.map((act, i) => {
+                              const globalIdx = budgetActivities.indexOf(act);
+                              return <BudgetActivityRow key={globalIdx} act={act} idx={globalIdx} activities={budgetActivities} setActivities={setBudgetActivities} currency={currency} />;
+                            })}
+                            <tr className="border-b border-border">
+                              <td colSpan={6} className="px-2 py-1.5 text-right text-[10px] font-bold text-foreground uppercase">Sous-total {wpCode}</td>
+                              {[1,2,3,4,5].map(y => {
+                                const yt = wpActivities.reduce((s, a) => s + a[`year${y as 1|2|3|4|5}`], 0);
+                                return <td key={y} className="px-2 py-1.5 text-right font-mono text-[10px] font-bold text-muted-foreground">{fmt(yt)}</td>;
+                              })}
+                              <td className="px-2 py-1.5 text-right font-mono text-[11px] font-bold text-foreground">{fmt(sub)}</td>
+                              <td></td>
+                            </tr>
+                            {/* Add activity button */}
+                            <tr><td colSpan={13} className="px-2 py-1">
+                              <button type="button" onClick={() => {
+                                const nextIdx = wpActivities.length + 1;
+                                setBudgetActivities([...budgetActivities, emptyBudgetActivity(wpCode, nextIdx)]);
+                              }} className="text-[10px] text-primary font-semibold hover:underline">+ Activité</button>
+                            </td></tr>
+                          </React.Fragment>
+                        );
+                      })}
+
+                      {/* Totals */}
+                      <tr className="bg-secondary/50 border-t-2 border-border">
+                        <td colSpan={6} className="px-2 py-2 text-right text-[10px] font-bold text-foreground uppercase">Sous-total coûts directs</td>
+                        {[1,2,3,4,5].map(y => <td key={y} className="px-2 py-2 text-right font-mono text-[10px] font-bold text-foreground">{fmt(yearTotal(y as 1|2|3|4|5))}</td>)}
+                        <td className="px-2 py-2 text-right font-mono text-[11px] font-bold text-foreground">{fmt(totalDirectCosts)}</td>
+                        <td></td>
+                      </tr>
+                      <tr className="border-b border-border">
+                        <td colSpan={5} className="px-2 py-2 text-right text-[10px] font-bold text-foreground uppercase">Imprévus & contingences</td>
+                        <td className="px-2 py-2"><input type="number" min={0} max={15} value={contingencyPct} onChange={e => setContingencyPct(Number(e.target.value))} className="w-12 bg-transparent border border-border rounded px-1 py-0.5 text-[10px] text-right font-mono" />%</td>
+                        {[1,2,3,4,5].map(y => <td key={y} className="px-2 py-2 text-right font-mono text-[10px] text-muted-foreground">{fmt(Math.round(yearTotal(y as 1|2|3|4|5) * contingencyPct / 100))}</td>)}
+                        <td className="px-2 py-2 text-right font-mono text-[11px] text-muted-foreground">{fmt(contingencyAmount)}</td>
+                        <td></td>
+                      </tr>
                       <tr className="bg-foreground/5">
-                        <td colSpan={6} className="px-3 py-2.5 text-right text-xs font-bold text-foreground uppercase">Total général</td>
-                        <td className="px-3 py-2.5 text-right font-mono text-sm font-bold text-primary">{fmt(totalBudget)} €</td><td></td>
+                        <td colSpan={6} className="px-2 py-2.5 text-right text-xs font-bold text-foreground uppercase">Total général projet</td>
+                        {[1,2,3,4,5].map(y => <td key={y} className="px-2 py-2.5 text-right font-mono text-[11px] font-bold text-primary">{fmt(Math.round(yearTotal(y as 1|2|3|4|5) * (1 + contingencyPct / 100)))}</td>)}
+                        <td className="px-2 py-2.5 text-right font-mono text-sm font-bold text-primary">{fmt(totalBudget)} {currency}</td>
+                        <td></td>
                       </tr>
                     </tbody>
                   </table>
                 </div>
-                <div className="border-t border-border border-dashed flex">
-                  <button onClick={() => setBudgetLines([...budgetLines, { code: `A1.X.${linesA.length + 1}`, desc: "Nouveau poste", unit: "—", qty: 0, montant: 0, alloc: 100, section: "A" }])} className="flex-1 py-2.5 text-xs text-primary font-semibold hover:bg-primary/5 transition-colors">+ Coût opérationnel (A)</button>
-                  <div className="w-px bg-border" />
-                  <button onClick={() => setBudgetLines([...budgetLines, { code: `B.${linesB.length + 1}`, desc: "Nouveau poste", unit: "forfait", qty: 1, montant: 0, alloc: 100, section: "B" }])} className="flex-1 py-2.5 text-xs text-accent-foreground font-semibold hover:bg-accent/5 transition-colors">+ Frais gestion (B)</button>
-                </div>
               </div>
-              {grantId && (
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-3">
-                  <p className="text-xs text-foreground">Ce budget sera automatiquement lié à la subvention <strong>{grants?.find(g => g.id === grantId)?.name}</strong>.</p>
-                </div>
-              )}
+
+              {/* Legend */}
+              <div className="bg-surface-2 border border-border rounded-lg p-3 text-[10px] text-muted-foreground space-y-1">
+                <p><strong>Source :</strong> Standard bailleurs (AFD, UE, Enabel) — imprévus fourchette 5-10%</p>
+                {grantId && <p className="text-primary">Ce budget est lié à la subvention <strong>{grants?.find(g => g.id === grantId)?.name}</strong>.</p>}
+              </div>
             </div>
           )}
 
-          {/* STEP 9: Validation */}
-          {step === 9 && (
+          {/* ── STEP 10: Validation ── */}
+          {step === 10 && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-display font-bold text-foreground">Récapitulatif et validation</h2>
-                <p className={helpCls}>Vérifiez les informations avant de soumettre le projet.</p>
+                <p className={helpCls}>Vérifiez les informations avant de soumettre le document de projet.</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2"><FileText className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Projet</span></div>
                   <div className="text-sm font-bold text-foreground">{name}</div>
-                  <div className="text-xs text-muted-foreground mt-1">{programs?.find(p => p.id === programId)?.name}</div>
+                  <div className="text-xs text-muted-foreground mt-1">{porteur || programs?.find(p => p.id === programId)?.name}</div>
                   {country && <div className="text-[10px] text-muted-foreground mt-1">{country}{locations.filter(Boolean).length > 0 ? ` — ${locations.filter(Boolean).join(", ")}` : ""}</div>}
                   {startDate && <div className="text-[10px] font-mono text-muted-foreground mt-1">{startDate} → {endDate || "…"}{durationMonths ? ` (${durationMonths} mois)` : ""}</div>}
+                  {secteurs && <div className="text-[10px] text-muted-foreground mt-1">Secteurs : {secteurs}</div>}
                 </div>
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2"><FileText className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Contexte</span></div>
-                  <div className="text-xs text-muted-foreground">
-                    {[introduction, contexteT, contraintes, justification].filter(Boolean).length} section(s) renseignées
-                  </div>
+                  <div className="flex items-center gap-2 mb-2"><FileText className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Contexte & TdC</span></div>
+                  <div className="text-xs text-muted-foreground">{[introduction, contexteT, contraintes, justification].filter(Boolean).length} section(s) contexte · TdC: {tocImpact ? "✓" : "—"}</div>
                 </div>
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2"><Layers className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Work Packages</span></div>
                   <div className="text-sm font-bold text-foreground">{wps.length} WP{wps.length > 1 ? "s" : ""}</div>
-                  <div className="text-[10px] text-muted-foreground mt-1">
-                    {wps.map((wp, i) => `WP${i + 1}: ${wp.title || "Sans titre"}`).join(" · ")}
-                  </div>
+                  <div className="text-[10px] text-muted-foreground mt-1">{wps.map((wp, i) => `WP${i + 1}: ${wp.title || "…"}`).join(" · ")}</div>
                 </div>
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2"><Lightbulb className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Stratégie</span></div>
-                  <div className="text-xs text-muted-foreground">
-                    {strategieAxes.filter(Boolean).length} axe(s) · {methodologie ? "Méthodologie ✓" : "—"}
-                  </div>
-                </div>
-                <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2"><Users className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Parties prenantes</span></div>
-                  <div className="text-xs text-muted-foreground">
-                    {personnelCle.filter(p => p.role).length} poste(s) · {partenaires.filter(p => p.categorie).length} partenaire(s)
-                  </div>
-                </div>
-                <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2"><BarChart3 className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Indicateurs & Jalons</span></div>
+                  <div className="flex items-center gap-2 mb-2"><BarChart3 className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">KPIs & Jalons</span></div>
                   <div className="text-sm font-bold text-foreground">{kpis.filter(k => k.name).length} KPIs · {milestones.filter(m => m.title).length} Jalons</div>
                 </div>
                 <div className="bg-surface-2 border border-border rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-2"><Activity className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Suivi & Durabilité</span></div>
-                  <div className="text-xs text-muted-foreground">
-                    {[suiviOutils, suiviEvaluation, planSortie].filter(Boolean).length} / 3 sections renseignées
-                  </div>
+                  <div className="flex items-center gap-2 mb-2"><AlertTriangle className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-[10px] font-mono uppercase text-muted-foreground">Risques</span></div>
+                  <div className="text-xs text-muted-foreground">{risks.filter(r => r.description).length} risque(s) identifié(s)</div>
                 </div>
-                <div className="bg-surface-2 border border-border rounded-lg p-4 sm:col-span-2">
+                <div className="bg-surface-2 border border-primary/30 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2"><DollarSign className="w-3.5 h-3.5 text-primary" /><span className="text-[10px] font-mono uppercase text-primary">Budget</span></div>
-                  <div className="text-lg font-display font-bold text-primary">{fmt(totalBudget)} €</div>
-                  <div className="text-[10px] text-muted-foreground">{budgetLines.filter(b => b.desc).length} lignes · A: {fmt(totalA)} € · B: {fmt(totalB)} €</div>
+                  <div className="text-lg font-display font-bold text-primary">{fmt(totalBudget)} {currency}</div>
+                  <div className="text-[10px] text-muted-foreground">{budgetActivities.filter(b => b.description).length} activités · Imprévus {contingencyPct}%</div>
                 </div>
               </div>
               <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
                 <p className="text-xs text-foreground font-semibold mb-1">Prochaines étapes</p>
-                <p className="text-xs text-muted-foreground">Le projet sera soumis en statut « En attente de validation ». Une fois validé, vous pourrez ouvrir les candidatures.</p>
+                <p className="text-xs text-muted-foreground">Le document de projet sera soumis en statut « En attente de validation ».</p>
               </div>
             </div>
           )}
@@ -1112,70 +1136,58 @@ function WpEditor({ wp, index, total, onChange, onRemove }: {
 }) {
   const [open, setOpen] = useState(true);
   const gradient = wpColors[index % wpColors.length];
-
   return (
     <div className="border border-border rounded-xl overflow-hidden">
       <button type="button" onClick={() => setOpen(!open)}
         className="w-full flex items-center gap-3 px-4 py-3 bg-secondary/30 hover:bg-secondary/50 transition-colors cursor-pointer">
-        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-xs shrink-0`}>
-          WP{index + 1}
-        </div>
-        <div className="flex-1 text-left min-w-0">
-          <span className="text-sm font-bold text-foreground truncate block">{wp.title || `Work Package ${index + 1}`}</span>
-        </div>
-        {total > 1 && (
-          <button type="button" onClick={e => { e.stopPropagation(); onRemove(); }} className="text-destructive hover:bg-destructive/10 rounded p-1">
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
-        )}
+        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${gradient} flex items-center justify-center text-white font-bold text-xs shrink-0`}>WP{index + 1}</div>
+        <div className="flex-1 text-left min-w-0"><span className="text-sm font-bold text-foreground truncate block">{wp.title || `Work Package ${index + 1}`}</span></div>
+        {total > 1 && <button type="button" onClick={e => { e.stopPropagation(); onRemove(); }} className="text-destructive hover:bg-destructive/10 rounded p-1"><Trash2 className="w-3.5 h-3.5" /></button>}
         {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
       </button>
-
       {open && (
         <div className="p-4 space-y-4 border-t border-border">
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <label className="text-[11px] text-muted-foreground font-medium">Titre du WP *</label>
-              <input value={wp.title} onChange={e => onChange({ title: e.target.value })} className={inputCls}
-                placeholder={`Ex: Renforcement des compétences`} />
-            </div>
-            <div className="space-y-1 col-span-2 sm:col-span-1">
-              <label className="text-[11px] text-muted-foreground font-medium">Objectif spécifique *</label>
-              <textarea value={wp.objective} onChange={e => onChange({ objective: e.target.value })}
-                className={inputCls + " h-20 resize-none"} placeholder="Objectif de ce Work Package…" />
-            </div>
+            <div className="space-y-1"><label className="text-[11px] text-muted-foreground font-medium">Titre du WP *</label><input value={wp.title} onChange={e => onChange({ title: e.target.value })} className={inputCls} placeholder="Ex: Renforcement des compétences" /></div>
+            <div className="space-y-1 col-span-2 sm:col-span-1"><label className="text-[11px] text-muted-foreground font-medium">Objectif spécifique *</label><textarea value={wp.objective} onChange={e => onChange({ objective: e.target.value })} className={inputCls + " h-20 resize-none"} placeholder="Objectif de ce Work Package…" /></div>
           </div>
-          <div className="space-y-2">
-            <label className="text-[11px] text-muted-foreground font-medium">Activités</label>
-            <ArrayEditor items={wp.activities} onChange={a => onChange({ activities: a })} placeholder={`A${index + 1}.X`} />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[11px] text-muted-foreground font-medium">Résultats attendus</label>
-            <ArrayEditor items={wp.results} onChange={r => onChange({ results: r })} placeholder={`R${index + 1}.X`} />
-          </div>
+          <div className="space-y-2"><label className="text-[11px] text-muted-foreground font-medium">Activités</label><ArrayEditor items={wp.activities} onChange={a => onChange({ activities: a })} placeholder={`A${index + 1}.X`} /></div>
+          <div className="space-y-2"><label className="text-[11px] text-muted-foreground font-medium">Résultats attendus</label><ArrayEditor items={wp.results} onChange={r => onChange({ results: r })} placeholder={`R${index + 1}.X`} /></div>
         </div>
       )}
     </div>
   );
 }
 
-function BudgetRow({ line, idx, budgetLines, setBudgetLines }: {
-  line: BudgetLine; idx: number; budgetLines: BudgetLine[]; setBudgetLines: (v: BudgetLine[]) => void;
+function BudgetActivityRow({ act, idx, activities, setActivities, currency }: {
+  act: BudgetActivity; idx: number; activities: BudgetActivity[]; setActivities: (v: BudgetActivity[]) => void; currency: string;
 }) {
-  const cellCls = "w-full bg-transparent border border-transparent hover:border-border focus:border-primary focus:ring-1 focus:ring-primary rounded px-2 py-1 text-[12px] text-foreground outline-none";
-  const update = (partial: Partial<BudgetLine>) => {
-    const n = [...budgetLines]; n[idx] = { ...n[idx], ...partial }; setBudgetLines(n);
-  };
+  const cellCls = "w-full bg-transparent border border-transparent hover:border-border focus:border-primary focus:ring-1 focus:ring-primary rounded px-1 py-0.5 text-[11px] text-foreground outline-none";
+  const update = (partial: Partial<BudgetActivity>) => { const n = [...activities]; n[idx] = { ...n[idx], ...partial }; setActivities(n); };
+  const total = activityTotal(act);
   return (
-    <tr className="border-b border-border hover:bg-secondary/50">
-      <td className="px-3 py-1"><span className="font-mono text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">{line.code}</span></td>
-      <td className="px-1 py-1"><input value={line.desc} onChange={e => update({ desc: e.target.value })} className={cellCls} /></td>
-      <td className="px-1 py-1"><input value={line.unit} onChange={e => update({ unit: e.target.value })} className={cellCls} /></td>
-      <td className="px-1 py-1"><input type="number" value={line.qty} onChange={e => update({ qty: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
-      <td className="px-1 py-1"><input type="number" value={line.montant} onChange={e => update({ montant: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
-      <td className="px-1 py-1"><input type="number" value={line.alloc} min={0} max={100} onChange={e => update({ alloc: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
-      <td className="px-3 py-1 text-right"><span className="font-mono text-[12px] bg-primary/10 text-primary px-2 py-0.5 rounded">{fmt(lineTotal(line))}</span></td>
-      <td className="px-1 py-1"><button onClick={() => setBudgetLines(budgetLines.filter((_, j) => j !== idx))} className="text-destructive hover:bg-destructive/10 rounded px-1 text-sm">×</button></td>
+    <tr className="border-b border-border/50 hover:bg-secondary/30">
+      <td className="px-2 py-1"><span className="font-mono text-[10px] bg-primary/10 text-primary px-1 py-0.5 rounded font-semibold">{act.code}</span></td>
+      <td className="px-1 py-1"><input value={act.description} onChange={e => update({ description: e.target.value })} className={cellCls} placeholder="Description…" /></td>
+      <td className="px-1 py-1">
+        <select value={act.category} onChange={e => update({ category: e.target.value })} className={cellCls + " text-[10px]"}>
+          <option value="">—</option>
+          {BUDGET_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+      </td>
+      <td className="px-1 py-1"><input value={act.unit} onChange={e => update({ unit: e.target.value })} className={cellCls} /></td>
+      <td className="px-1 py-1"><input type="number" value={act.qty || ""} onChange={e => update({ qty: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
+      <td className="px-1 py-1"><input type="number" value={act.unitCost || ""} onChange={e => update({ unitCost: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
+      <td className="px-1 py-1"><input type="number" value={act.year1 || ""} onChange={e => update({ year1: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
+      <td className="px-1 py-1"><input type="number" value={act.year2 || ""} onChange={e => update({ year2: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
+      <td className="px-1 py-1"><input type="number" value={act.year3 || ""} onChange={e => update({ year3: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
+      <td className="px-1 py-1"><input type="number" value={act.year4 || ""} onChange={e => update({ year4: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
+      <td className="px-1 py-1"><input type="number" value={act.year5 || ""} onChange={e => update({ year5: Number(e.target.value) })} className={cellCls + " text-right font-mono"} /></td>
+      <td className="px-2 py-1 text-right"><span className="font-mono text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">{fmt(total)}</span></td>
+      <td className="px-1 py-1"><button onClick={() => setActivities(activities.filter((_, j) => j !== idx))} className="text-destructive hover:bg-destructive/10 rounded px-1 text-sm">×</button></td>
     </tr>
   );
 }
+
+// Need React import for React.Fragment
+import React from "react";
