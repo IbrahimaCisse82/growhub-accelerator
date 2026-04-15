@@ -16,6 +16,7 @@ import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhButton from "@/components/shared/GhButton";
+import Pill from "@/components/shared/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTasks, useUpdateTaskStatus } from "@/hooks/useTasks";
 import CreateTaskDialog from "@/components/dialogs/CreateTaskDialog";
@@ -37,6 +38,14 @@ const priorityColor: Record<string, string> = {
   medium: "bg-gh-amber",
   high: "bg-destructive",
   critical: "bg-destructive",
+};
+
+const priorityLabel: Record<string, string> = {
+  low: "Basse", medium: "Moyenne", high: "Haute", critical: "Critique",
+};
+
+const statusLabel: Record<string, string> = {
+  todo: "À faire", in_progress: "En cours", in_review: "En revue", done: "Terminé",
 };
 
 function TaskCard({ card, isDragOverlay }: { card: any; isDragOverlay?: boolean }) {
@@ -65,8 +74,11 @@ function TaskCard({ card, isDragOverlay }: { card: any; isDragOverlay?: boolean 
       {card.milestone_title && (
         <div className="text-[10px] text-accent-foreground/70 mb-1 truncate">🏁 {card.milestone_title}</div>
       )}
-      <div className="flex items-center justify-end mt-2">
-        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${priorityColor[card.priority] ?? "bg-gh-amber"}`} />
+      <div className="flex items-center justify-between mt-2">
+        {card.due_date && (
+          <span className="text-[9px] font-mono text-muted-foreground">{new Date(card.due_date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>
+        )}
+        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ml-auto ${priorityColor[card.priority] ?? "bg-gh-amber"}`} />
       </div>
     </div>
   );
@@ -97,10 +109,59 @@ function KanbanColumn({ col, cards }: { col: (typeof columns)[number]; cards: an
   );
 }
 
+/* ── List View ── */
+function TaskListView({ tasks, onStatusChange }: { tasks: any[]; onStatusChange: (id: string, status: TaskStatus) => void }) {
+  return (
+    <div className="bg-card border border-border rounded-xl overflow-hidden">
+      <table className="w-full border-collapse text-[12.5px]">
+        <thead>
+          <tr className="bg-secondary">
+            {["Tâche", "Projet", "Jalon", "Priorité", "Statut", "Échéance"].map(h => (
+              <th key={h} className="px-3.5 py-2.5 font-mono text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-b border-border text-left whitespace-nowrap">{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {tasks.length === 0 ? (
+            <tr><td colSpan={6} className="px-3.5 py-8 text-center text-muted-foreground text-sm">Aucune tâche</td></tr>
+          ) : (
+            tasks.map(t => (
+              <tr key={t.id} className="hover:bg-secondary/50 transition-colors">
+                <td className="px-3.5 py-2.5 border-b border-border font-semibold text-foreground max-w-[250px] truncate">{t.title}</td>
+                <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground text-[11px]">{t.projects?.name ?? "—"}</td>
+                <td className="px-3.5 py-2.5 border-b border-border text-muted-foreground text-[11px]">{t.milestone_title ?? "—"}</td>
+                <td className="px-3.5 py-2.5 border-b border-border">
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-1.5 h-1.5 rounded-full ${priorityColor[t.priority] ?? "bg-gh-amber"}`} />
+                    <span className="text-[11px]">{priorityLabel[t.priority] ?? t.priority}</span>
+                  </div>
+                </td>
+                <td className="px-3.5 py-2.5 border-b border-border">
+                  <select
+                    value={t.status}
+                    onChange={e => onStatusChange(t.id, e.target.value as TaskStatus)}
+                    className="bg-surface-2 border border-border rounded-md px-1.5 py-0.5 text-[11px] text-foreground"
+                  >
+                    {columns.map(c => <option key={c.key} value={c.key}>{c.title}</option>)}
+                  </select>
+                </td>
+                <td className="px-3.5 py-2.5 border-b border-border font-mono text-[11px] text-muted-foreground">
+                  {t.due_date ? new Date(t.due_date).toLocaleDateString("fr-FR") : "—"}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function TachesPage() {
   const { data: tasks, isLoading } = useTasks();
   const updateStatus = useUpdateTaskStatus();
   const [activeTask, setActiveTask] = useState<any | null>(null);
+  const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -130,25 +191,40 @@ export default function TachesPage() {
     );
   };
 
+  const handleStatusChange = (id: string, status: TaskStatus) => {
+    updateStatus.mutate(
+      { id, status },
+      { onSuccess: () => toast.success("Statut mis à jour"), onError: () => toast.error("Erreur") }
+    );
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader
         title="Tâches"
-        subtitle="Kanban de suivi des tâches"
+        subtitle={viewMode === "kanban" ? "Kanban de suivi des tâches" : "Vue liste des tâches"}
         actions={
-          <>
+          <div className="flex items-center gap-2">
+            <div className="flex bg-surface-2 border border-border rounded-lg p-0.5">
+              <button onClick={() => setViewMode("kanban")} className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${viewMode === "kanban" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`}>
+                ▦ Kanban
+              </button>
+              <button onClick={() => setViewMode("list")} className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${viewMode === "list" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground"}`}>
+                ☰ Liste
+              </button>
+            </div>
             <GhButton variant="ghost" onClick={() => tasks && exportToCSV(tasks, "taches", [
               { key: "title", label: "Titre" }, { key: "status", label: "Statut" }, { key: "priority", label: "Priorité" }, { key: "due_date", label: "Échéance" },
             ])}>⤓ CSV</GhButton>
             <CreateTaskDialog><GhButton>+ Tâche</GhButton></CreateTaskDialog>
-          </>
+          </div>
         }
       />
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-[300px] rounded-xl" />)}
         </div>
-      ) : (
+      ) : viewMode === "kanban" ? (
         <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
             {grouped.map((col) => <KanbanColumn key={col.key} col={col} cards={col.cards} />)}
@@ -157,6 +233,8 @@ export default function TachesPage() {
             {activeTask ? <TaskCard card={activeTask} isDragOverlay /> : null}
           </DragOverlay>
         </DndContext>
+      ) : (
+        <TaskListView tasks={tasks ?? []} onStatusChange={handleStatusChange} />
       )}
     </motion.div>
   );

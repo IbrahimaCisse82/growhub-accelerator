@@ -1,7 +1,8 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import StatCard from "@/components/shared/StatCard";
-import { Triangle, DollarSign, FolderKanban, CircleDot, Headphones, Users, CheckSquare, BookOpen, Target, BarChart3, TrendingUp } from "lucide-react";
+import { Triangle, DollarSign, FolderKanban, CircleDot, Headphones, Users, CheckSquare, BookOpen, Target, TrendingUp, TrendingDown, ArrowRight } from "lucide-react";
 import { PipelineBarChart, StatusPieChart, TrendLineChart } from "@/components/dashboard/DashboardCharts";
 import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
@@ -29,6 +30,23 @@ const statusColor: Record<string, "green" | "blue" | "amber" | "gray"> = {
   active: "green", draft: "gray", paused: "amber", completed: "blue", cancelled: "gray",
 };
 
+/* ── Period comparison helper ── */
+function usePeriodComparison(items: any[] | undefined, dateField: string) {
+  return useMemo(() => {
+    if (!items) return { current: 0, previous: 0, pct: 0 };
+    const now = new Date();
+    const startCurrent = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startPrev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const current = items.filter(i => new Date(i[dateField]) >= startCurrent).length;
+    const previous = items.filter(i => {
+      const d = new Date(i[dateField]);
+      return d >= startPrev && d < startCurrent;
+    }).length;
+    const pct = previous > 0 ? Math.round(((current - previous) / previous) * 100) : current > 0 ? 100 : 0;
+    return { current, previous, pct };
+  }, [items, dateField]);
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { roles, isAdmin, profile } = useAuth();
@@ -54,6 +72,11 @@ export default function DashboardPage() {
   const activeCohorts = cohorts?.filter((c) => c.status === "active").length ?? 0;
   const upcomingEvents = events?.filter(e => new Date(e.start_at) >= new Date()).slice(0, 4) ?? [];
 
+  // Period N vs N-1 comparisons
+  const projectTrend = usePeriodComparison(projects, "created_at");
+  const grantTrend = usePeriodComparison(grants, "created_at");
+  const sessionTrend = usePeriodComparison(sessions, "created_at");
+
   const pipelineSteps = [
     { key: "submitted", label: t("pipeline.received") },
     { key: "screening", label: t("pipeline.screening") },
@@ -71,6 +94,17 @@ export default function DashboardPage() {
   const myCoachingSessions = sessions?.filter(s => s.startup_id === myStartup?.id) ?? [];
   const myUpcomingSessions = myCoachingSessions.filter(s => s.status === "planned" || s.status === "confirmed");
   const { data: myKpis } = useStartupKpis(myStartup?.id);
+
+  const TrendBadge = ({ pct }: { pct: number }) => {
+    if (pct === 0) return null;
+    const isUp = pct > 0;
+    return (
+      <span className={`inline-flex items-center gap-0.5 text-[10px] font-mono ${isUp ? "text-green-600" : "text-destructive"}`}>
+        {isUp ? <TrendingUp size={10} /> : <TrendingDown size={10} />}
+        {isUp ? "+" : ""}{pct}%
+      </span>
+    );
+  };
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
@@ -97,13 +131,13 @@ export default function DashboardPage() {
         {isAdmin ? (
           <>
             <div onClick={() => navigate("/app/entreprises")} className="cursor-pointer"><StatCard label={t("dash.activeStartups")} value={loadingStartups ? "…" : String(startupsCount)} note="" icon={<Triangle size={20} />} color="green" sparkData={[2,4,3,6,5,8,7]} /></div>
-            <div onClick={() => navigate("/app/grants")} className="cursor-pointer"><StatCard label={t("dash.funding")} value={loadingGrants ? "…" : new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(totalFunding)} note={`${activeGrants.length} grants actifs`} icon={<DollarSign size={20} />} color="blue" sparkData={[10,15,12,18,22,20,25]} /></div>
-            <div onClick={() => navigate("/app/projets")} className="cursor-pointer"><StatCard label={t("dash.projects")} value={loadingProjects ? "…" : String(projects?.length ?? 0)} note="" icon={<FolderKanban size={20} />} color="amber" sparkData={[3,5,4,7,6,8,9]} /></div>
+            <div onClick={() => navigate("/app/grants")} className="cursor-pointer"><StatCard label={t("dash.funding")} value={loadingGrants ? "…" : new Intl.NumberFormat("fr-FR", { notation: "compact" }).format(totalFunding)} note={<span className="flex items-center gap-1">{activeGrants.length} grants actifs <TrendBadge pct={grantTrend.pct} /></span>} icon={<DollarSign size={20} />} color="blue" sparkData={[10,15,12,18,22,20,25]} /></div>
+            <div onClick={() => navigate("/app/projets")} className="cursor-pointer"><StatCard label={t("dash.projects")} value={loadingProjects ? "…" : String(projects?.length ?? 0)} note={<TrendBadge pct={projectTrend.pct} />} icon={<FolderKanban size={20} />} color="amber" sparkData={[3,5,4,7,6,8,9]} /></div>
             <div onClick={() => navigate("/app/cohortes")} className="cursor-pointer"><StatCard label={t("dash.activeCohorts")} value={String(activeCohorts)} note="" icon={<CircleDot size={20} />} color="purple" sparkData={[1,2,2,3,3,4,4]} /></div>
           </>
         ) : isMentor ? (
           <>
-            <StatCard label={t("dash.mySessions")} value={String(mySessions.length)} note={`${upcomingSessions.length} ${t("dash.upcoming")}`} icon={<Headphones size={20} />} color="blue" sparkData={[1,3,2,4,5,3,6]} />
+            <StatCard label={t("dash.mySessions")} value={String(mySessions.length)} note={<span className="flex items-center gap-1">{upcomingSessions.length} {t("dash.upcoming")} <TrendBadge pct={sessionTrend.pct} /></span>} icon={<Headphones size={20} />} color="blue" sparkData={[1,3,2,4,5,3,6]} />
             <StatCard label={t("dash.followedStartups")} value={String(new Set(mySessions.map(s => s.startup_id)).size)} note="" icon={<Users size={20} />} color="green" />
             <StatCard label={t("dash.completedSessions")} value={String(mySessions.filter(s => s.status === "completed").length)} note="" icon={<CheckSquare size={20} />} color="amber" />
             <StatCard label={t("dash.availableCourses")} value={String(courses?.filter(c => c.is_published).length ?? 0)} note="" icon={<BookOpen size={20} />} color="purple" />
@@ -117,6 +151,28 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* Period comparison card — admin only */}
+      {isAdmin && (
+        <div className="grid grid-cols-3 gap-3 mb-5">
+          {[
+            { label: "Projets ce mois", current: projectTrend.current, previous: projectTrend.previous, pct: projectTrend.pct },
+            { label: "Grants ce mois", current: grantTrend.current, previous: grantTrend.previous, pct: grantTrend.pct },
+            { label: "Sessions ce mois", current: sessionTrend.current, previous: sessionTrend.previous, pct: sessionTrend.pct },
+          ].map(item => (
+            <div key={item.label} className="bg-card border border-border rounded-xl p-3">
+              <div className="text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{item.label}</div>
+              <div className="flex items-end justify-between mt-1">
+                <div className="font-mono text-lg font-bold text-foreground">{item.current}</div>
+                <div className="flex flex-col items-end">
+                  <TrendBadge pct={item.pct} />
+                  <span className="text-[9px] text-muted-foreground">vs {item.previous} mois préc.</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
         {/* Main content — role-adapted */}
@@ -142,7 +198,6 @@ export default function DashboardPage() {
             </div>
           </GhCard>
         ) : isEntrepreneur && !isAdmin ? (
-          /* Entrepreneur: Projects + Coaching combined */
           <div className="flex flex-col gap-4">
             <GhCard title={t("dash.activeProjects")} badge={String(projects?.filter(p => p.startup_id === myStartup?.id).length ?? 0)} action={<GhButton variant="ghost" onClick={() => navigate("/app/projets")}>{t("dash.viewAll")}</GhButton>} noPadding>
               <div className="overflow-x-auto">
@@ -172,8 +227,6 @@ export default function DashboardPage() {
                 </table>
               </div>
             </GhCard>
-
-            {/* Entrepreneur: Coaching Sessions */}
             <GhCard title={t("entrepreneur.myCoaching")} badge={String(myUpcomingSessions.length)} action={<GhButton variant="ghost" onClick={() => navigate("/app/coaching")}>{t("dash.viewAll")}</GhButton>}>
               {myUpcomingSessions.length === 0 ? (
                 <div className="text-[11.5px] text-muted-foreground text-center py-4">{t("entrepreneur.noCoaching")}</div>
@@ -259,7 +312,6 @@ export default function DashboardPage() {
                   </div>
                 )}
               </GhCard>
-              {/* Project status distribution */}
               {projects && projects.length > 0 && (
                 <GhCard title={t("dash.projectDistribution") || "Répartition projets"}>
                   <StatusPieChart data={[
@@ -285,7 +337,6 @@ export default function DashboardPage() {
               )}
             </>
           ) : isEntrepreneur && !isMentor ? (
-            /* Entrepreneur: KPIs widget */
             <GhCard title={t("entrepreneur.myKpis")} action={<GhButton variant="ghost" onClick={() => myStartup && navigate(`/app/entreprises/${myStartup.id}`)}>{t("dash.viewAll")}</GhButton>}>
               {!myKpis || myKpis.length === 0 ? (
                 <div className="text-[11.5px] text-muted-foreground text-center py-4">{t("entrepreneur.noKpis")}</div>
@@ -321,7 +372,6 @@ export default function DashboardPage() {
             </GhCard>
           )}
 
-          {/* Quick access for entrepreneurs */}
           {isEntrepreneur && !isAdmin && (
             <GhCard title={t("dash.quickAccess")}>
               <div className="flex flex-col gap-2">
@@ -341,7 +391,6 @@ export default function DashboardPage() {
             </GhCard>
           )}
 
-          {/* Upcoming Events widget */}
           {upcomingEvents.length > 0 && (
             <GhCard title={t("dash.upcomingEvents")} action={<GhButton variant="ghost" onClick={() => navigate("/app/evenements")}>{t("dash.viewAll")}</GhButton>}>
               <div className="flex flex-col gap-2">
@@ -369,7 +418,6 @@ export default function DashboardPage() {
       {/* Bottom row — admin only */}
       {isAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-4">
-          {/* Funding progress chart */}
           <GhCard title={t("dash.activeFunding")} action={<GhButton variant="ghost" onClick={() => navigate("/app/grants")}>{t("dash.viewAll")}</GhButton>}>
             {loadingGrants ? (
               Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-6 rounded" />)
