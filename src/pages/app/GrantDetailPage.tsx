@@ -32,6 +32,17 @@ import GrantFicheRecapTab from "@/components/grants/GrantFicheRecapTab";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
 
+const politiqueChangeLabel = (v: string | null | undefined): string => {
+  if (!v) return "—";
+  const map: Record<string, string> = {
+    taux_moyen_pondere: "Taux moyen pondéré des versements",
+    taux_fixe_convention: "Taux fixe de la convention",
+    taux_jour: "Taux du jour (transaction)",
+    procedure_interne: "Procédure interne validée",
+  };
+  return map[v] ?? v;
+};
+
 const statusMap: Record<string, { label: string; color: "green" | "amber" | "blue" | "gray" }> = {
   draft: { label: "Brouillon", color: "gray" },
   active: { label: "Active", color: "green" },
