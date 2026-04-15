@@ -403,6 +403,7 @@ export type Database = {
           id: string
           is_deleted: boolean
           is_edited: boolean
+          is_pinned: boolean
           is_thread_reply: boolean
           last_reply_at: string | null
           metadata: Json | null
@@ -419,6 +420,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_edited?: boolean
+          is_pinned?: boolean
           is_thread_reply?: boolean
           last_reply_at?: string | null
           metadata?: Json | null
@@ -435,6 +437,7 @@ export type Database = {
           id?: string
           is_deleted?: boolean
           is_edited?: boolean
+          is_pinned?: boolean
           is_thread_reply?: boolean
           last_reply_at?: string | null
           metadata?: Json | null
@@ -2340,6 +2343,7 @@ export type Database = {
         Row: {
           completed_at: string | null
           created_at: string
+          depends_on: string | null
           description: string | null
           due_date: string | null
           id: string
@@ -2350,6 +2354,7 @@ export type Database = {
         Insert: {
           completed_at?: string | null
           created_at?: string
+          depends_on?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
@@ -2360,6 +2365,7 @@ export type Database = {
         Update: {
           completed_at?: string | null
           created_at?: string
+          depends_on?: string | null
           description?: string | null
           due_date?: string | null
           id?: string
@@ -2368,6 +2374,13 @@ export type Database = {
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "milestones_depends_on_fkey"
+            columns: ["depends_on"]
+            isOneToOne: false
+            referencedRelation: "milestones"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "milestones_project_id_fkey"
             columns: ["project_id"]
@@ -2968,7 +2981,9 @@ export type Database = {
           applications_end_date: string | null
           applications_open: boolean | null
           applications_start_date: string | null
+          archived_at: string | null
           budget: number | null
+          closure_notes: string | null
           code: string | null
           country: string | null
           created_at: string
@@ -2976,6 +2991,8 @@ export type Database = {
           duration_months: number | null
           end_date: string | null
           id: string
+          is_archived: boolean
+          lessons_learned: string | null
           locations: string[] | null
           metadata: Json | null
           name: string
@@ -2994,7 +3011,9 @@ export type Database = {
           applications_end_date?: string | null
           applications_open?: boolean | null
           applications_start_date?: string | null
+          archived_at?: string | null
           budget?: number | null
+          closure_notes?: string | null
           code?: string | null
           country?: string | null
           created_at?: string
@@ -3002,6 +3021,8 @@ export type Database = {
           duration_months?: number | null
           end_date?: string | null
           id?: string
+          is_archived?: boolean
+          lessons_learned?: string | null
           locations?: string[] | null
           metadata?: Json | null
           name: string
@@ -3020,7 +3041,9 @@ export type Database = {
           applications_end_date?: string | null
           applications_open?: boolean | null
           applications_start_date?: string | null
+          archived_at?: string | null
           budget?: number | null
+          closure_notes?: string | null
           code?: string | null
           country?: string | null
           created_at?: string
@@ -3028,6 +3051,8 @@ export type Database = {
           duration_months?: number | null
           end_date?: string | null
           id?: string
+          is_archived?: boolean
+          lessons_learned?: string | null
           locations?: string[] | null
           metadata?: Json | null
           name?: string
@@ -3143,6 +3168,7 @@ export type Database = {
           id: string
           is_public: boolean | null
           program_id: string | null
+          tags: string[] | null
           title: string
           type: string | null
           uploaded_by: string | null
@@ -3155,6 +3181,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           program_id?: string | null
+          tags?: string[] | null
           title: string
           type?: string | null
           uploaded_by?: string | null
@@ -3167,6 +3194,7 @@ export type Database = {
           id?: string
           is_public?: boolean | null
           program_id?: string | null
+          tags?: string[] | null
           title?: string
           type?: string | null
           uploaded_by?: string | null
