@@ -10,6 +10,7 @@ import BudgetGlobalTab from "@/components/budgets/BudgetGlobalTab";
 import BudgetDetailTab from "@/components/budgets/BudgetDetailTab";
 import BudgetCategoryTab from "@/components/budgets/BudgetCategoryTab";
 import BudgetAssumptionsTab from "@/components/budgets/BudgetAssumptionsTab";
+import BudgetExecutionTab from "@/components/budgets/BudgetExecutionTab";
 
 const CURRENCIES = [
   { code: "USD", label: "USD ($)", rate: 1 },
@@ -61,11 +62,12 @@ export default function BudgetsPage() {
       )}
 
       <Tabs defaultValue="global" className="space-y-4">
-        <TabsList className="grid grid-cols-4 w-full max-w-2xl">
+        <TabsList className="grid grid-cols-5 w-full max-w-3xl">
           <TabsTrigger value="global" className="text-xs">1. Budget Global</TabsTrigger>
           <TabsTrigger value="detail" className="text-xs">2. Détail par WP</TabsTrigger>
           <TabsTrigger value="category" className="text-xs">3. Par Catégorie</TabsTrigger>
-          <TabsTrigger value="hypotheses" className="text-xs">4. Hypothèses</TabsTrigger>
+          <TabsTrigger value="execution" className="text-xs">4. Exécution</TabsTrigger>
+          <TabsTrigger value="hypotheses" className="text-xs">5. Hypothèses</TabsTrigger>
         </TabsList>
 
         <TabsContent value="global">
@@ -78,6 +80,10 @@ export default function BudgetsPage() {
 
         <TabsContent value="category">
           <BudgetCategoryTab projectId={selectedProjectId} currency={currency} rate={rate} fmt={fmt} />
+        </TabsContent>
+
+        <TabsContent value="execution">
+          <BudgetExecutionTab projectId={selectedProjectId} currency={currency} rate={rate} fmt={fmt} />
         </TabsContent>
 
         <TabsContent value="hypotheses">
