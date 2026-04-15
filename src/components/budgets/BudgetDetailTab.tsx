@@ -77,7 +77,7 @@ export default function BudgetDetailTab({ projectId, currency = "USD", rate = 1,
               <table className="w-full text-[12px]">
                 <thead>
                   <tr className="bg-secondary">
-                    {["Code", "Activité / Description", "Catégorie", "Unité", "Qté", "Coût Unit.", "An.1 2026", "An.2 2027", "An.3 2028", "An.4 2029", "An.5 2030", "TOTAL", ""].map(h => (
+                    {["Code", "Activité / Description", "Code Enabel", "Unité", "Qté", "Coût Unit.", "An.1 2026", "An.2 2027", "An.3 2028", "An.4 2029", "An.5 2030", "TOTAL", ""].map(h => (
                       <th key={h} className="px-2.5 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -89,8 +89,11 @@ export default function BudgetDetailTab({ projectId, currency = "USD", rate = 1,
                       <tr key={l.id} className="border-b border-border hover:bg-secondary/50 transition-colors">
                         <td className="px-2.5 py-2"><span className="font-mono text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">{l.code}</span></td>
                         <td className="px-2.5 py-2 text-foreground max-w-[200px] truncate" title={l.activity}>{l.activity}</td>
-                        <td className="px-2.5 py-2 text-muted-foreground text-[11px]">{(l as any).nomenclature_code ? <span className="font-mono text-primary">{(l as any).nomenclature_code}</span> : l.category}</td>
-                        <td className="px-2.5 py-2 text-muted-foreground">{l.unit}</td>
+                        {isEditing ? (
+                          <td className="px-1 py-1"><NomenclatureSelect value={editData.nomenclature_code} onValueChange={v => setEditData({ ...editData, nomenclature_code: v === "__none__" ? "" : v })} className="w-28 h-7 text-[10px]" /></td>
+                        ) : (
+                          <td className="px-2.5 py-2 text-muted-foreground text-[11px]">{(l as any).nomenclature_code ? <span className="font-mono text-primary">{(l as any).nomenclature_code}</span> : l.category}</td>
+                        )}
                         {isEditing ? (
                           <>
                             <td className="px-1 py-1"><input type="number" className="w-14 text-right text-xs bg-background border rounded px-1 py-0.5" value={editData.quantity} onChange={e => setEditData({ ...editData, quantity: +e.target.value })} /></td>
