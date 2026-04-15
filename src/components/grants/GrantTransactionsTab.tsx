@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import GhButton from "@/components/shared/GhButton";
+import NomenclatureSelect from "@/components/budgets/NomenclatureSelect";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
@@ -203,7 +204,9 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
           </div>
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Date *</label><input type="date" value={date} onChange={e => setDate(e.target.value)} required className={inputCls} /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Code budgétaire</label><input value={budgetCode} onChange={e => setBudgetCode(e.target.value)} className={inputCls} placeholder="Ex: A1.1.1" /></div>
+            <div className="space-y-2"><label className="text-sm font-medium text-foreground">Code budgétaire Enabel</label>
+              <NomenclatureSelect value={budgetCode} onValueChange={(v) => setBudgetCode(v === "__none__" ? "" : v)} className="h-10 text-sm" />
+            </div>
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Catégorie</label>
               <select value={category} onChange={e => setCategory(e.target.value)} className={inputCls}>
                 <option value="">— Sélectionner —</option>
