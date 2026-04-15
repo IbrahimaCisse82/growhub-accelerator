@@ -94,6 +94,39 @@ function useProjectBudgetLines(id: string | undefined) {
   });
 }
 
+function useProjectBudgetDetails(id: string | undefined) {
+  return useQuery({
+    queryKey: ["project-budget-details", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data } = await supabase.from("project_budget_details").select("*").eq("project_id", id!).order("sort_order");
+      return data ?? [];
+    },
+  });
+}
+
+function useProjectRisks(id: string | undefined) {
+  return useQuery({
+    queryKey: ["project-risks", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data } = await supabase.from("risks").select("*").eq("project_id", id!).order("created_at");
+      return data ?? [];
+    },
+  });
+}
+
+function useProjectPartners(projectProgramId: string | undefined) {
+  return useQuery({
+    queryKey: ["project-partners", projectProgramId],
+    enabled: !!projectProgramId,
+    queryFn: async () => {
+      const { data } = await supabase.from("partners").select("*").eq("program_id", projectProgramId!).order("name");
+      return data ?? [];
+    },
+  });
+}
+
 function useProjectGrants(id: string | undefined) {
   return useQuery({
     queryKey: ["project-grants", id],
@@ -125,8 +158,11 @@ export default function ProjetDetailPage() {
   const { data: toc } = useProjectTheoryOfChange(id);
   const { data: indicators } = useProjectIndicators(id);
   const { data: budgetLines } = useProjectBudgetLines(id);
+  const { data: budgetDetails } = useProjectBudgetDetails(id);
   const { data: milestones } = useProjectMilestones(id);
   const { data: projectGrants } = useProjectGrants(id);
+  const { data: projectRisks } = useProjectRisks(id);
+  const { data: projectPartners } = useProjectPartners(project?.program_id);
   const { data: projectManager } = useUserProfile(project?.owner_id);
   const [descExpanded, setDescExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -177,7 +213,7 @@ export default function ProjetDetailPage() {
               )}
             </div>
             <div className="flex gap-2 shrink-0">
-              <GhButton size="sm" variant="ghost" onClick={() => exportProjectPdf({ project, logFrame: logFrame ?? null, indicators: indicators ?? [], budgetLines: budgetLines ?? [] })}>
+              <GhButton size="sm" variant="ghost" onClick={() => exportProjectPdf({ project, logFrame: logFrame ?? null, toc: toc ?? null, indicators: indicators ?? [], budgetLines: budgetLines ?? [], budgetDetails: budgetDetails ?? [], risks: projectRisks ?? [], milestones: milestones ?? [], partners: projectPartners ?? [] })}>
                 📄 Export PDF
               </GhButton>
               {isAdmin && (
