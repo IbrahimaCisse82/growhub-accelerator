@@ -14,6 +14,8 @@ export default function CreateRiskDialog({ children }: { children: React.ReactNo
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [level, setLevel] = useState("medium");
+  const [impact, setImpact] = useState(3);
+  const [probability, setProbability] = useState(3);
   const [mitigation, setMitigation] = useState("");
   const [projectId, setProjectId] = useState("");
   const { user } = useAuth();
@@ -25,13 +27,13 @@ export default function CreateRiskDialog({ children }: { children: React.ReactNo
       const { error } = await supabase.from("risks").insert({
         title, description: description || null, level: level as Database["public"]["Enums"]["risk_level"],
         mitigation: mitigation || null, project_id: projectId || null,
-        owner_id: user?.id, status: "open",
-      });
+        owner_id: user?.id, status: "open", impact, probability,
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["risks"] });
-      setOpen(false); setTitle(""); setDescription(""); setLevel("medium"); setMitigation(""); setProjectId("");
+      setOpen(false); setTitle(""); setDescription(""); setLevel("medium"); setMitigation(""); setProjectId(""); setImpact(3); setProbability(3);
       toast({ title: "✓ Risque créé" });
     },
     onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
@@ -56,6 +58,28 @@ export default function CreateRiskDialog({ children }: { children: React.ReactNo
                 {projects?.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Impact (1-5)</label>
+              <div className="flex items-center gap-2">
+                <input type="range" min={1} max={5} value={impact} onChange={e => setImpact(+e.target.value)} className="flex-1 accent-primary" />
+                <span className="font-mono text-sm font-bold text-primary w-6 text-center">{impact}</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Probabilité (1-5)</label>
+              <div className="flex items-center gap-2">
+                <input type="range" min={1} max={5} value={probability} onChange={e => setProbability(+e.target.value)} className="flex-1 accent-primary" />
+                <span className="font-mono text-sm font-bold text-primary w-6 text-center">{probability}</span>
+              </div>
+            </div>
+          </div>
+          <div className="text-center">
+            <span className="text-[10px] text-muted-foreground">Score : </span>
+            <span className={`font-mono text-sm font-bold ${impact * probability >= 16 ? "text-destructive" : impact * probability >= 9 ? "text-amber-500" : "text-green-500"}`}>
+              {impact * probability}/25
+            </span>
           </div>
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Description</label><textarea value={description} onChange={e => setDescription(e.target.value)} className={inputCls + " h-16 resize-none"} /></div>
           <div className="space-y-2"><label className="text-sm font-medium text-foreground">Mitigation</label><textarea value={mitigation} onChange={e => setMitigation(e.target.value)} className={inputCls + " h-16 resize-none"} /></div>

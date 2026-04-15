@@ -11,6 +11,9 @@ import BudgetDetailTab from "@/components/budgets/BudgetDetailTab";
 import BudgetCategoryTab from "@/components/budgets/BudgetCategoryTab";
 import BudgetAssumptionsTab from "@/components/budgets/BudgetAssumptionsTab";
 import BudgetExecutionTab from "@/components/budgets/BudgetExecutionTab";
+import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 
 const CURRENCIES = [
   { code: "USD", label: "USD ($)", rate: 1 },
@@ -32,11 +35,40 @@ export default function BudgetsPage() {
 
   const selectedProjectId = projectFilter || (projects?.length === 1 ? projects[0].id : null);
 
+  const handleExportCSV = async () => {
+    if (!selectedProjectId) return;
+    const { data } = await supabase.from("project_budget_lines").select("code, label, section, year1, year2, year3, year4, year5, total_cost, notes").eq("project_id", selectedProjectId).order("code");
+    if (data && data.length > 0) {
+      const rows = data.map(r => ({ ...r, year1: (r.year1 || 0) * rate, year2: (r.year2 || 0) * rate, year3: (r.year3 || 0) * rate, year4: (r.year4 || 0) * rate, year5: (r.year5 || 0) * rate, total_cost: (r.total_cost || 0) * rate }));
+      exportToCSV(rows, `budget-${currency}`, [
+        { key: "code", label: "Code" }, { key: "label", label: "Libellé" }, { key: "section", label: "WP" },
+        { key: "year1", label: "An.1" }, { key: "year2", label: "An.2" }, { key: "year3", label: "An.3" },
+        { key: "year4", label: "An.4" }, { key: "year5", label: "An.5" }, { key: "total_cost", label: "Total" }, { key: "notes", label: "Notes" },
+      ]);
+      toast({ title: "✓ Export CSV généré" });
+    }
+  };
+
+  const handleExportPDF = async () => {
+    if (!selectedProjectId) return;
+    const { data } = await supabase.from("project_budget_lines").select("code, label, section, year1, year2, year3, year4, year5, total_cost").eq("project_id", selectedProjectId).order("code");
+    if (data && data.length > 0) {
+      const rows = data.map(r => ({ ...r, year1: fmt((r.year1 || 0) * rate), year2: fmt((r.year2 || 0) * rate), year3: fmt((r.year3 || 0) * rate), year4: fmt((r.year4 || 0) * rate), year5: fmt((r.year5 || 0) * rate), total_cost: fmt((r.total_cost || 0) * rate) }));
+      exportToPDF(`Budget Prévisionnel (${currency})`, rows, [
+        { key: "code", label: "Code" }, { key: "label", label: "Libellé" }, { key: "section", label: "WP" },
+        { key: "year1", label: "An.1" }, { key: "year2", label: "An.2" }, { key: "year3", label: "An.3" },
+        { key: "year4", label: "An.4" }, { key: "year5", label: "An.5" }, { key: "total_cost", label: "Total" },
+      ]);
+    }
+  };
+
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
       <SectionHeader title="Budget — PAERID" subtitle="Budget prévisionnel complet — 4 feuilles liées"
         actions={
           <div className="flex items-center gap-2">
+            <GhButton variant="secondary" onClick={handleExportCSV} disabled={!selectedProjectId}>⤓ CSV</GhButton>
+            <GhButton variant="secondary" onClick={handleExportPDF} disabled={!selectedProjectId}>🖨 PDF</GhButton>
             <Select value={currency} onValueChange={setCurrency}>
               <SelectTrigger className="w-[130px] h-8 text-xs">
                 <SelectValue />
