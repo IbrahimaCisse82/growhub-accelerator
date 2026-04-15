@@ -19,6 +19,8 @@ import GhButton from "@/components/shared/GhButton";
 import Pill from "@/components/shared/Pill";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTasks, useUpdateTaskStatus } from "@/hooks/useTasks";
+import { useSubTasksByTasks } from "@/hooks/useSubTasks";
+import SubTaskChecklist from "@/components/tasks/SubTaskChecklist";
 import CreateTaskDialog from "@/components/dialogs/CreateTaskDialog";
 import { exportToCSV } from "@/lib/exportUtils";
 import { toast } from "sonner";
@@ -48,11 +50,12 @@ const statusLabel: Record<string, string> = {
   todo: "À faire", in_progress: "En cours", in_review: "En revue", done: "Terminé",
 };
 
-function TaskCard({ card, isDragOverlay }: { card: any; isDragOverlay?: boolean }) {
+function TaskCard({ card, isDragOverlay, subTasks }: { card: any; isDragOverlay?: boolean; subTasks?: { completed: number; total: number } }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: card.id,
     data: { status: card.status },
   });
+  const [expanded, setExpanded] = useState(false);
 
   const style = isDragOverlay
     ? undefined
@@ -74,17 +77,41 @@ function TaskCard({ card, isDragOverlay }: { card: any; isDragOverlay?: boolean 
       {card.milestone_title && (
         <div className="text-[10px] text-accent-foreground/70 mb-1 truncate">🏁 {card.milestone_title}</div>
       )}
+      {/* Sub-task progress bar */}
+      {subTasks && subTasks.total > 0 && (
+        <div className="flex items-center gap-1.5 mt-1">
+          <div className="flex-1 h-1 bg-secondary rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${Math.round((subTasks.completed / subTasks.total) * 100)}%` }} />
+          </div>
+          <span className="text-[9px] font-mono text-muted-foreground">{subTasks.completed}/{subTasks.total}</span>
+        </div>
+      )}
       <div className="flex items-center justify-between mt-2">
         {card.due_date && (
           <span className="text-[9px] font-mono text-muted-foreground">{new Date(card.due_date).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })}</span>
         )}
         <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ml-auto ${priorityColor[card.priority] ?? "bg-gh-amber"}`} />
       </div>
+      {/* Expand sub-tasks inline */}
+      {!isDragOverlay && (
+        <button
+          onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="text-[10px] text-primary hover:underline mt-1.5 cursor-pointer"
+        >
+          {expanded ? "Masquer ▲" : "Sous-tâches ▼"}
+        </button>
+      )}
+      {expanded && !isDragOverlay && (
+        <div className="mt-2 border-t border-border pt-2" onPointerDown={e => e.stopPropagation()}>
+          <SubTaskChecklist taskId={card.id} />
+        </div>
+      )}
     </div>
   );
 }
 
-function KanbanColumn({ col, cards }: { col: (typeof columns)[number]; cards: any[] }) {
+function KanbanColumn({ col, cards, subTasksMap }: { col: (typeof columns)[number]; cards: any[]; subTasksMap?: Map<string, any[]> }) {
   const { isOver, setNodeRef } = useDroppable({ id: col.key });
 
   return (
@@ -102,7 +129,11 @@ function KanbanColumn({ col, cards }: { col: (typeof columns)[number]; cards: an
         {cards.length === 0 ? (
           <div className="text-[11px] text-muted-foreground text-center py-4">{isOver ? "Déposer ici" : "Aucune tâche"}</div>
         ) : (
-          cards.map((card) => <TaskCard key={card.id} card={card} />)
+          cards.map((card) => {
+            const subs = subTasksMap?.get(card.id);
+            const subInfo = subs ? { completed: subs.filter((s: any) => s.is_completed).length, total: subs.length } : undefined;
+            return <TaskCard key={card.id} card={card} subTasks={subInfo} />;
+          })
         )}
       </div>
     </div>
@@ -159,6 +190,8 @@ function TaskListView({ tasks, onStatusChange }: { tasks: any[]; onStatusChange:
 
 export default function TachesPage() {
   const { data: tasks, isLoading } = useTasks();
+  const taskIds = tasks?.map(t => t.id) ?? [];
+  const { data: subTasksMap } = useSubTasksByTasks(taskIds);
   const updateStatus = useUpdateTaskStatus();
   const [activeTask, setActiveTask] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
@@ -227,7 +260,7 @@ export default function TachesPage() {
       ) : viewMode === "kanban" ? (
         <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-            {grouped.map((col) => <KanbanColumn key={col.key} col={col} cards={col.cards} />)}
+            {grouped.map((col) => <KanbanColumn key={col.key} col={col} cards={col.cards} subTasksMap={subTasksMap} />)}
           </div>
           <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
             {activeTask ? <TaskCard card={activeTask} isDragOverlay /> : null}

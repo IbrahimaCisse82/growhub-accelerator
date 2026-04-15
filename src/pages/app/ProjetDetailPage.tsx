@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import ProjectArchiveDialog from "@/components/projects/ProjectArchiveDialog";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import AppBreadcrumb from "@/components/shared/AppBreadcrumb";
@@ -167,6 +168,7 @@ export default function ProjetDetailPage() {
   const [descExpanded, setDescExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
 
   if (isLoading) return (
     <div className="space-y-4">
@@ -226,7 +228,15 @@ export default function ProjetDetailPage() {
                       Valider ✓
                     </GhButton>
                   )}
+                  {!project.is_archived && (
+                    <GhButton size="sm" variant="ghost" onClick={() => setArchiveOpen(true)}>
+                      Clôturer
+                    </GhButton>
+                  )}
                 </>
+              )}
+              {project.is_archived && (
+                <Pill color="gray">Archivé</Pill>
               )}
               {(project.validation_status === "draft" || project.validation_status === "pending_review") && (
                 <GhButton size="sm" variant="ghost" onClick={() => navigate(`/app/projets/nouveau?id=${project.id}`)}>
@@ -414,6 +424,7 @@ export default function ProjetDetailPage() {
 
       <EditProjectDialog open={editOpen} onOpenChange={setEditOpen} project={project} />
       <ValidateEntityDialog open={validateOpen} onOpenChange={setValidateOpen} entityType="projects" entityId={project.id} entityName={project.name} />
+      <ProjectArchiveDialog projectId={project.id} projectName={project.name} open={archiveOpen} onOpenChange={setArchiveOpen} />
     </motion.div>
   );
 }
