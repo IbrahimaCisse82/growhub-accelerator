@@ -28,6 +28,7 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
   const [deleteTx, setDeleteTx] = useState<GrantTransaction | null>(null);
 
   const totalAmount = transactions?.reduce((s, t) => s + (t.amount ?? 0), 0) ?? 0;
+  const pendingCount = transactions?.filter(t => (t as any).approval_status === "submitted").length ?? 0;
 
   return (
     <div className="space-y-4">
@@ -36,6 +37,7 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
           <span className="text-xs font-bold text-foreground">Transactions</span>
           <span className="font-mono text-[10px] bg-secondary text-muted-foreground px-2 py-0.5 rounded-full">{transactions?.length ?? 0} saisies</span>
           <span className="font-mono text-[11px] font-semibold text-primary">{fmt(totalAmount)} €</span>
+          {pendingCount > 0 && <span className="font-mono text-[10px] bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded-full">{pendingCount} en attente</span>}
         </div>
         <GhButton onClick={() => { setEditTx(null); setShowForm(true); }}>+ Nouvelle transaction</GhButton>
       </div>
@@ -54,7 +56,7 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
             <table className="w-full text-[12.5px]">
               <thead>
                 <tr className="bg-secondary">
-                  {["Date", "Libellé", "Code budget", "Fournisseur", "Réf.", "Local", "Taux", "EUR", "Pièce", ""].map(h => (
+                  {["Date", "Libellé", "Code budget", "Fournisseur", "Réf.", "Local", "Taux", "EUR", "Statut", "Pièce", ""].map(h => (
                     <th key={h} className="px-3 py-2.5 text-left text-[10px] font-mono uppercase text-muted-foreground tracking-wider border-b border-border whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
@@ -73,12 +75,16 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
                     <td className="px-3 py-2.5 border-b border-border font-mono text-muted-foreground text-[11px]">{(tx as any).exchange_rate && (tx as any).exchange_rate !== 1 ? (tx as any).exchange_rate : "—"}</td>
                     <td className="px-3 py-2.5 border-b border-border font-mono font-semibold text-foreground whitespace-nowrap">{fmt(tx.amount)} €</td>
                     <td className="px-3 py-2.5 border-b border-border">
+                      <ApprovalBadge status={(tx as any).approval_status ?? "draft"} />
+                    </td>
+                    <td className="px-3 py-2.5 border-b border-border">
                       {tx.receipt_url ? (
                         <a href={tx.receipt_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-[11px]">📎 Voir</a>
                       ) : <span className="text-muted-foreground text-[11px]">—</span>}
                     </td>
                     <td className="px-3 py-2.5 border-b border-border">
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <ApprovalActions tx={tx} grantId={grantId} />
                         <button onClick={() => { setEditTx(tx); setShowForm(true); }} className="text-[11px] text-muted-foreground hover:text-foreground">✏️</button>
                         <button onClick={() => setDeleteTx(tx)} className="text-[11px] text-muted-foreground hover:text-destructive">🗑</button>
                       </div>
@@ -86,9 +92,9 @@ export default function GrantTransactionsTab({ grantId, grantCode }: GrantTransa
                   </tr>
                 ))}
                 <tr className="bg-foreground/5">
-                  <td colSpan={7} className="px-3 py-2.5 text-right text-[11px] font-bold text-foreground uppercase">Total</td>
+                  <td colSpan={8} className="px-3 py-2.5 text-right text-[11px] font-bold text-foreground uppercase">Total</td>
                   <td className="px-3 py-2.5 font-mono text-sm font-bold text-primary">{fmt(totalAmount)} €</td>
-                  <td colSpan={2} />
+                  <td colSpan={3} />
                 </tr>
               </tbody>
             </table>
