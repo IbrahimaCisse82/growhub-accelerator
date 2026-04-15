@@ -32,3 +32,15 @@ export function useAddStartupKpi() {
     onError: () => toast.error("Erreur lors de l'ajout du KPI"),
   });
 }
+
+export function useStartupHealthScore(startupId: string | undefined) {
+  return useQuery({
+    queryKey: ["startup-health-score", startupId],
+    enabled: !!startupId,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("compute_startup_health_score", { p_startup_id: startupId! });
+      if (error) throw error;
+      return (data as number) ?? 0;
+    },
+  });
+}

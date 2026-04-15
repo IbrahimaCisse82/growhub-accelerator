@@ -15,7 +15,20 @@ import { useStartupHealthScore } from "@/hooks/useStartupKpis";
 const riskColor: Record<string, "green" | "amber" | "rose" | "gray"> = { low: "green", medium: "amber", high: "rose", critical: "rose" };
 const sessionColor: Record<string, "green" | "amber" | "blue" | "gray"> = { planned: "amber", confirmed: "blue", completed: "green", cancelled: "gray", in_progress: "blue" };
 
-export default function StartupDetailPage() {
+function StartupHealthBanner({ startupId }: { startupId: string }) {
+  const { data: score, isLoading } = useStartupHealthScore(startupId);
+  if (isLoading || score === undefined) return null;
+  const color = score >= 70 ? "text-green-600 bg-green-500/10" : score >= 40 ? "text-amber-600 bg-amber-500/10" : "text-destructive bg-destructive/10";
+  const label = score >= 70 ? "Santé excellente" : score >= 40 ? "Santé moyenne" : "Attention requise";
+  return (
+    <div className={`flex items-center gap-3 px-4 py-2.5 rounded-xl mb-4 ${color}`}>
+      <span className="text-lg font-bold font-mono">{score}/100</span>
+      <span className="text-xs font-semibold">{label}</span>
+      <span className="text-[10px] ml-auto opacity-70">Score calculé à partir des KPIs (couverture, fraîcheur, tendances)</span>
+    </div>
+  );
+}
+
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: startup, isLoading } = useStartup(id);
