@@ -123,8 +123,8 @@ export default function DashboardPage() {
         }
       />
 
-      {/* Alerts — admin only */}
-      {isAdmin && <DashboardAlerts milestones={milestones as any} grants={grants as any} />}
+      {/* Alerts — all roles */}
+      <DashboardAlerts milestones={milestones as any} grants={grants as any} sessions={sessions as any} events={events as any} />
 
       {/* KPI Stats — role-adapted */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
