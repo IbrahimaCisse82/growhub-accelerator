@@ -410,6 +410,77 @@ export default function GrantsAnalyticsPage() {
           </table>
         </div>
       </ChartCard>
+
+      {/* Prévisions financières */}
+      {forecast.length > 0 && (
+        <ChartCard title="📈 Prévisions financières" subtitle="Projection 6 mois basée sur la tendance des 3 derniers mois">
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={forecast} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <defs>
+                <linearGradient id="gradForecast" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS[5]} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={COLORS[5]} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="mois" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={v => fmt(v)} />
+              <Tooltip {...tooltipStyle} formatter={(v: number) => fmt(v)} />
+              <Legend wrapperStyle={{ fontSize: "11px" }} />
+              <Area type="monotone" dataKey="dépenses" stroke={COLORS[0]} fill="url(#gradDep)" strokeWidth={2} name="Réel" />
+              <Area type="monotone" dataKey="prévision" stroke={COLORS[5]} fill="url(#gradForecast)" strokeWidth={2} strokeDasharray="5 5" name="Prévision" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      )}
+
+      {/* Comparaison entre grants */}
+      <ChartCard title="⚖️ Comparaison entre grants" subtitle="Sélectionnez 2+ grants pour comparer">
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {grants.map(g => (
+            <button key={g.id} onClick={() => setCompareGrants(prev => prev.includes(g.id) ? prev.filter(id => id !== g.id) : [...prev, g.id])}
+              className={`text-[11px] px-2.5 py-1 rounded-lg transition-colors ${compareGrants.includes(g.id) ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary border border-border"}`}>
+              {g.code}
+            </button>
+          ))}
+        </div>
+        {comparisonData.length >= 2 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12px]">
+              <thead>
+                <tr className="bg-secondary">
+                  {["Code", "Nom", "Budget", "Décaissé", "Dépensé", "Taux", "Activités"].map(h => (
+                    <th key={h} className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground border-b border-border">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonData.map((r: any) => (
+                  <tr key={r.code} className="hover:bg-secondary/50">
+                    <td className="px-3 py-2 border-b border-border font-mono text-primary font-semibold">{r.code}</td>
+                    <td className="px-3 py-2 border-b border-border text-foreground truncate max-w-[180px]">{r.name}</td>
+                    <td className="px-3 py-2 border-b border-border font-mono">{fmt(r.budget)}</td>
+                    <td className="px-3 py-2 border-b border-border font-mono">{fmt(r.disbursed)}</td>
+                    <td className="px-3 py-2 border-b border-border font-mono">{fmt(r.spent)}</td>
+                    <td className="px-3 py-2 border-b border-border"><span className={`font-mono text-xs px-1.5 py-0.5 rounded ${r.pct > 80 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{r.pct}%</span></td>
+                    <td className="px-3 py-2 border-b border-border font-mono text-center">{r.completedActs}/{r.activities}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex justify-end mt-2">
+              <GhButton variant="secondary" size="sm" onClick={() => {
+                exportToCSV(comparisonData, "comparaison-grants", [
+                  { key: "code", label: "Code" }, { key: "name", label: "Nom" }, { key: "budget", label: "Budget" },
+                  { key: "disbursed", label: "Décaissé" }, { key: "spent", label: "Dépensé" }, { key: "pct", label: "Taux %" },
+                ]);
+              }}>⤓ CSV</GhButton>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center text-muted-foreground text-sm py-6">Sélectionnez au moins 2 grants ci-dessus pour comparer</div>
+        )}
+      </ChartCard>
     </motion.div>
   );
 }
