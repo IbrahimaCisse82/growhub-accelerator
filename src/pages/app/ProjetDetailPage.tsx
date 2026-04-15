@@ -424,6 +424,7 @@ export default function ProjetDetailPage() {
 
       <EditProjectDialog open={editOpen} onOpenChange={setEditOpen} project={project} />
       <ValidateEntityDialog open={validateOpen} onOpenChange={setValidateOpen} entityType="projects" entityId={project.id} entityName={project.name} />
+      <ProjectArchiveDialog projectId={project.id} projectName={project.name} open={archiveOpen} onOpenChange={setArchiveOpen} />
     </motion.div>
   );
 }
