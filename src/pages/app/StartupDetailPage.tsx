@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useStartup, useStartupMembers, useStartupProjects, useStartupSessions, useStartupRisks } from "@/hooks/useStartupDetail";
 import StartupKpiTab from "@/components/startups/StartupKpiTab";
 import EntityDocumentsTab from "@/components/shared/EntityDocumentsTab";
+import { useStartupHealthScore } from "@/hooks/useStartupKpis";
 
 const riskColor: Record<string, "green" | "amber" | "rose" | "gray"> = { low: "green", medium: "amber", high: "rose", critical: "rose" };
 const sessionColor: Record<string, "green" | "amber" | "blue" | "gray"> = { planned: "amber", confirmed: "blue", completed: "green", cancelled: "gray", in_progress: "blue" };
@@ -48,6 +49,8 @@ export default function StartupDetailPage() {
         subtitle={`${startup.sector ?? ""} · ${startup.city ?? ""}, ${startup.country ?? ""}`}
         actions={<Pill color={startup.stage === "croissance" || startup.stage === "scale" ? "green" : "amber"}>{startup.stage ?? "—"}</Pill>}
       />
+
+      <StartupHealthBanner startupId={id!} />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
         <StatCard label="Score" value={startup.score != null ? `${startup.score}/100` : "—"} note="" color="green" />
