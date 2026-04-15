@@ -158,8 +158,11 @@ export default function ProjetDetailPage() {
   const { data: toc } = useProjectTheoryOfChange(id);
   const { data: indicators } = useProjectIndicators(id);
   const { data: budgetLines } = useProjectBudgetLines(id);
+  const { data: budgetDetails } = useProjectBudgetDetails(id);
   const { data: milestones } = useProjectMilestones(id);
   const { data: projectGrants } = useProjectGrants(id);
+  const { data: projectRisks } = useProjectRisks(id);
+  const { data: projectPartners } = useProjectPartners(project?.program_id);
   const { data: projectManager } = useUserProfile(project?.owner_id);
   const [descExpanded, setDescExpanded] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
