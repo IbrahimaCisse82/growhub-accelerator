@@ -15,10 +15,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, AreaChart, Area, Legend } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { useStartupKpis } from "@/hooks/useStartupKpis";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+
+const COLORS = ["hsl(165,100%,41%)", "hsl(199,90%,48%)", "hsl(37,91%,55%)", "hsl(258,73%,62%)", "hsl(348,90%,60%)", "hsl(280,60%,50%)"];
 const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--foreground))" };
+const fmtNum = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
+
+function useAllKpis() {
+  return useQuery({
+    queryKey: ["all-kpis-analytics"],
+    queryFn: async () => {
+      const { data } = await supabase.from("startup_kpis").select("*").order("recorded_at", { ascending: false });
+      return data ?? [];
+    },
+  });
+}
 
 function useApplications() {
   return useQuery({
