@@ -190,6 +190,8 @@ function TaskListView({ tasks, onStatusChange }: { tasks: any[]; onStatusChange:
 
 export default function TachesPage() {
   const { data: tasks, isLoading } = useTasks();
+  const taskIds = tasks?.map(t => t.id) ?? [];
+  const { data: subTasksMap } = useSubTasksByTasks(taskIds);
   const updateStatus = useUpdateTaskStatus();
   const [activeTask, setActiveTask] = useState<any | null>(null);
   const [viewMode, setViewMode] = useState<"kanban" | "list">("kanban");
@@ -258,7 +260,7 @@ export default function TachesPage() {
       ) : viewMode === "kanban" ? (
         <DndContext sensors={sensors} collisionDetection={closestCorners} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
-            {grouped.map((col) => <KanbanColumn key={col.key} col={col} cards={col.cards} />)}
+            {grouped.map((col) => <KanbanColumn key={col.key} col={col} cards={col.cards} subTasksMap={subTasksMap} />)}
           </div>
           <DragOverlay dropAnimation={{ duration: 200, easing: "ease" }}>
             {activeTask ? <TaskCard card={activeTask} isDragOverlay /> : null}
