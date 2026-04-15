@@ -56,7 +56,11 @@ export default function BudgetCategoryTab({ projectId }: { projectId: string | n
 
   details.forEach(d => {
     const rawCat = d.category || "Autre";
-    const consolidated = CATEGORY_CONSOLIDATION[rawCat] || rawCat;
+    const wp = d.work_package || "";
+    // SE lines always go to "Suivi-Évaluation & Études" regardless of their detail category
+    const consolidated = wp === "SE"
+      ? "Suivi-Évaluation & Études"
+      : (CATEGORY_CONSOLIDATION[rawCat] || rawCat);
     const existing = catMap.get(consolidated) || { y1: 0, y2: 0, y3: 0, y4: 0, y5: 0, total: 0 };
     existing.y1 += d.year_1 || 0;
     existing.y2 += d.year_2 || 0;
