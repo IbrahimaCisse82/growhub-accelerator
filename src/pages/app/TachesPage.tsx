@@ -25,9 +25,6 @@ import CreateTaskDialog from "@/components/dialogs/CreateTaskDialog";
 import { exportToCSV } from "@/lib/exportUtils";
 import { toast } from "sonner";
 import type { Database } from "@/integrations/supabase/types";
-import { exportToCSV } from "@/lib/exportUtils";
-import { toast } from "sonner";
-import type { Database } from "@/integrations/supabase/types";
 
 type TaskStatus = Database["public"]["Enums"]["task_status"];
 
