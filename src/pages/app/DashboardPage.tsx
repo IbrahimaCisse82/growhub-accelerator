@@ -22,6 +22,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/lib/i18n";
 import { useStartupKpis } from "@/hooks/useStartupKpis";
 import { exportToCSV } from "@/lib/exportUtils";
+import { useMilestones } from "@/hooks/useMilestones";
+import DashboardAlerts from "@/components/dashboard/DashboardAlerts";
 
 const statusColor: Record<string, "green" | "blue" | "amber" | "gray"> = {
   active: "green", draft: "gray", paused: "amber", completed: "blue", cancelled: "gray",
@@ -45,6 +47,7 @@ export default function DashboardPage() {
   const { data: events } = useEvents();
   const { data: activities } = useActivities();
   const { data: programs } = usePrograms();
+  const { data: milestones } = useMilestones();
 
   const activeGrants = grants?.filter((g) => g.status === "active" || g.status === "disbursing") ?? [];
   const totalFunding = activeGrants.reduce((a, g) => a + g.amount_total, 0);
@@ -85,6 +88,9 @@ export default function DashboardPage() {
           </>
         }
       />
+
+      {/* Alerts — admin only */}
+      {isAdmin && <DashboardAlerts milestones={milestones as any} grants={grants as any} />}
 
       {/* KPI Stats — role-adapted */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
