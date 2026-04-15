@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AppBreadcrumb from "@/components/shared/AppBreadcrumb";
@@ -7,6 +8,7 @@ import GhButton from "@/components/shared/GhButton";
 import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCohort, useCohortStartups, useCohortApplications } from "@/hooks/useCohortDetail";
+import { exportToCSV } from "@/lib/exportUtils";
 
 const statusMap: Record<string, { label: string; color: "green" | "blue" | "amber" | "gray" }> = {
   active: { label: "Active", color: "green" },
@@ -27,6 +29,22 @@ export default function CohortDetailPage() {
   const { data: cohort, isLoading } = useCohort(id);
   const { data: startups, isLoading: loadingStartups } = useCohortStartups(id);
   const { data: applications } = useCohortApplications(id);
+
+  // Collective progression
+  const avgScore = useMemo(() => {
+    if (!startups || startups.length === 0) return 0;
+    const scores = startups.filter(s => s.score != null).map(s => s.score!);
+    return scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  }, [startups]);
+
+  const fillRate = useMemo(() => {
+    if (!cohort || !startups) return 0;
+    const max = cohort.max_startups ?? 20;
+    return Math.round((startups.length / max) * 100);
+  }, [cohort, startups]);
+
+  const acceptedApps = applications?.filter(a => a.status === "accepted").length ?? 0;
+  const rejectedApps = applications?.filter(a => a.status === "rejected").length ?? 0;
 
   if (isLoading) return <div className="p-8"><Skeleton className="h-8 w-64 mb-4" /><Skeleton className="h-[300px] rounded-xl" /></div>;
   if (!cohort) return <div className="text-center py-12 text-muted-foreground">Cohorte introuvable</div>;
@@ -50,15 +68,51 @@ export default function CohortDetailPage() {
       <SectionHeader
         title={cohort.name}
         subtitle={cohort.description ?? "Cohorte d'accompagnement"}
-        actions={<Pill color={st.color}>● {st.label}</Pill>}
+        actions={
+          <div className="flex items-center gap-2">
+            <Pill color={st.color}>● {st.label}</Pill>
+            <GhButton variant="ghost" onClick={() => startups && exportToCSV(startups.map(s => ({
+              name: s.name, sector: s.sector ?? "", city: s.city ?? "", score: s.score ?? "", stage: s.stage ?? "",
+            })), `cohorte-${cohort.name}`, [
+              { key: "name", label: "Entreprise" }, { key: "sector", label: "Secteur" }, { key: "city", label: "Ville" },
+              { key: "score", label: "Score" }, { key: "stage", label: "Stade" },
+            ])}>⤓ Export</GhButton>
+          </div>
+        }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3.5 mb-6">
         <StatCard label="Entreprises" value={String(startups?.length ?? 0)} note={`/ ${cohort.max_startups ?? "—"}`} color="green" />
-        <StatCard label="Projet" value={project?.name ?? "—"} note="" color="blue" />
-        <StatCard label="Début" value={cohort.start_date ? new Date(cohort.start_date).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "—"} note="" color="amber" />
-        <StatCard label="Candidatures" value={String(applications?.length ?? 0)} note="" color="purple" />
+        <StatCard label="Taux remplissage" value={`${fillRate}%`} note="" color="blue" />
+        <StatCard label="Score moyen" value={avgScore > 0 ? `${avgScore}/100` : "—"} note="" color="purple" />
+        <StatCard label="Candidatures" value={String(applications?.length ?? 0)} note="" color="amber" />
+        <StatCard label="Acceptées" value={String(acceptedApps)} note="" color="green" />
+        <StatCard label="Début" value={cohort.start_date ? new Date(cohort.start_date).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "—"} note="" color="gray" />
       </div>
+
+      {/* Progression collective */}
+      {startups && startups.length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-4 mb-6">
+          <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider mb-3">Progression collective de la cohorte</div>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+              <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${fillRate}%` }} />
+            </div>
+            <span className="font-mono text-xs text-foreground">{startups.length}/{cohort.max_startups ?? "—"}</span>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {startups.slice(0, 8).map(s => (
+              <div key={s.id} className="flex items-center gap-2 bg-surface-2 border border-border rounded-lg p-2 cursor-pointer hover:border-border/80" onClick={() => navigate(`/app/entreprises/${s.id}`)}>
+                <div className={`w-2 h-2 rounded-full ${(s.score ?? 0) >= 70 ? "bg-primary" : (s.score ?? 0) >= 40 ? "bg-gh-amber" : "bg-muted-foreground"}`} />
+                <div className="flex-1 min-w-0">
+                  <div className="text-[11px] font-semibold text-foreground truncate">{s.name}</div>
+                  <div className="text-[9px] text-muted-foreground">{s.score ?? "—"}/100</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Startups */}
       <div className="mb-6">

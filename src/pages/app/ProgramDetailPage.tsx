@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import AppBreadcrumb from "@/components/shared/AppBreadcrumb";
@@ -44,6 +44,15 @@ export default function ProgramDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [validateOpen, setValidateOpen] = useState(false);
 
+  // Aggregated dashboard
+  const avgProgress = useMemo(() => {
+    if (!projects || projects.length === 0) return 0;
+    return Math.round(projects.reduce((s, p) => s + (p.progress ?? 0), 0) / projects.length);
+  }, [projects]);
+
+  const activeProjects = projects?.filter(p => p.status === "active").length ?? 0;
+  const completedProjects = projects?.filter(p => p.status === "completed").length ?? 0;
+
   if (isLoading) return <div className="p-8"><Skeleton className="h-8 w-64 mb-4" /><Skeleton className="h-[300px] rounded-xl" /></div>;
   if (!program) return <div className="text-center py-12 text-muted-foreground">Programme introuvable</div>;
 
@@ -78,12 +87,38 @@ export default function ProgramDetailPage() {
         }
       />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3.5 mb-6">
         <StatCard label="Budget Total" value={program.budget_total ? new Intl.NumberFormat("fr-FR").format(program.budget_total) : "—"} note={program.currency ?? "XOF"} color="blue" />
-        <StatCard label="Projets" value={String(projects?.length ?? 0)} note="" color="green" />
-        <StatCard label="Grants" value={String(grants?.length ?? 0)} note={totalGrantAmount > 0 ? formatXOF(totalGrantAmount) : ""} color="amber" />
-        <StatCard label="Événements" value={String(events?.length ?? 0)} note="" color="purple" />
+        <StatCard label="Projets" value={String(projects?.length ?? 0)} note={`${activeProjects} actifs`} color="green" />
+        <StatCard label="Progression" value={`${avgProgress}%`} note="moyenne" color="amber" />
+        <StatCard label="Terminés" value={String(completedProjects)} note="projets" color="blue" />
+        <StatCard label="Grants" value={String(grants?.length ?? 0)} note={totalGrantAmount > 0 ? formatXOF(totalGrantAmount) : ""} color="purple" />
+        <StatCard label="Événements" value={String(events?.length ?? 0)} note="" color="rose" />
       </div>
+
+      {/* Progression bar */}
+      {projects && projects.length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-4 mb-6">
+          <div className="flex items-center justify-between mb-2">
+            <div className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">Progression agrégée des projets</div>
+            <span className="font-mono text-sm font-bold text-primary">{avgProgress}%</span>
+          </div>
+          <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div className="h-full bg-primary rounded-full transition-all" style={{ width: `${avgProgress}%` }} />
+          </div>
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {projects.slice(0, 6).map(p => (
+              <div key={p.id} className="flex items-center gap-2 text-[11px]">
+                <div className="flex-1 h-1 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-accent rounded-full" style={{ width: `${p.progress ?? 0}%` }} />
+                </div>
+                <span className="text-muted-foreground truncate max-w-[80px]">{p.name}</span>
+                <span className="font-mono text-[10px] text-foreground">{p.progress ?? 0}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {program.description && (
         <div className="bg-card border border-border rounded-xl p-4 mb-6">
