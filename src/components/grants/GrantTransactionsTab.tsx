@@ -14,6 +14,40 @@ const inputCls = "flex h-10 w-full rounded-lg border border-input bg-surface-2 p
 
 export { useGrantTransactions };
 
+const APPROVAL_MAP: Record<string, { label: string; cls: string }> = {
+  draft: { label: "Brouillon", cls: "bg-secondary text-muted-foreground" },
+  submitted: { label: "Soumis", cls: "bg-amber-500/10 text-amber-600" },
+  approved: { label: "Approuvé", cls: "bg-green-500/10 text-green-600" },
+  rejected: { label: "Rejeté", cls: "bg-destructive/10 text-destructive" },
+};
+
+function ApprovalBadge({ status }: { status: string }) {
+  const s = APPROVAL_MAP[status] ?? APPROVAL_MAP.draft;
+  return <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${s.cls}`}>{s.label}</span>;
+}
+
+function ApprovalActions({ tx, grantId }: { tx: GrantTransaction; grantId: string }) {
+  const qc = useQueryClient();
+  const status = (tx as any).approval_status ?? "draft";
+
+  const update = useMutation({
+    mutationFn: async (newStatus: string) => {
+      const { error } = await supabase.from("grant_transactions").update({ approval_status: newStatus, approved_at: newStatus === "approved" ? new Date().toISOString() : null } as any).eq("id", tx.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["grant_transactions", grantId] }); toast({ title: "✓ Statut mis à jour" }); },
+  });
+
+  if (status === "draft") return <button onClick={() => update.mutate("submitted")} className="text-[10px] text-amber-600 hover:underline">Soumettre</button>;
+  if (status === "submitted") return (
+    <>
+      <button onClick={() => update.mutate("approved")} className="text-[10px] text-green-600 hover:underline">✓</button>
+      <button onClick={() => update.mutate("rejected")} className="text-[10px] text-destructive hover:underline">✗</button>
+    </>
+  );
+  return null;
+}
+
 interface GrantTransactionsTabProps {
   grantId: string;
   grantCode: string;
