@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Check, X } from "lucide-react";
+import NomenclatureSelect from "@/components/budgets/NomenclatureSelect";
 
 const WP_LABELS: Record<string, string> = {
   WP1: "WP1 — Renforcement des compétences & structuration",
@@ -39,12 +40,12 @@ export default function BudgetDetailTab({ projectId, currency = "USD", rate = 1,
 
   const startEdit = (row: any) => {
     setEditingId(row.id);
-    setEditData({ quantity: row.quantity, unit_cost: row.unit_cost, year_1: row.year_1, year_2: row.year_2, year_3: row.year_3, year_4: row.year_4, year_5: row.year_5 });
+    setEditData({ quantity: row.quantity, unit_cost: row.unit_cost, year_1: row.year_1, year_2: row.year_2, year_3: row.year_3, year_4: row.year_4, year_5: row.year_5, nomenclature_code: (row as any).nomenclature_code || "" });
   };
 
   const saveEdit = async (id: string) => {
     const total = (editData.year_1 || 0) + (editData.year_2 || 0) + (editData.year_3 || 0) + (editData.year_4 || 0) + (editData.year_5 || 0);
-    const { error } = await supabase.from("project_budget_details").update({ ...editData, total, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await supabase.from("project_budget_details").update({ ...editData, total, nomenclature_code: editData.nomenclature_code || null, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) { toast.error("Erreur de sauvegarde"); return; }
     toast.success("Ligne mise à jour");
     setEditingId(null);
