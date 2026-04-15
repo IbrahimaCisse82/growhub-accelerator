@@ -31,6 +31,9 @@ interface Grant {
   prepared_by?: string | null;
   submit_date?: string | null;
   version?: string | null;
+  frais_structure_pct?: number | null;
+  contribution_propre?: number | null;
+  politique_change?: string | null;
 }
 
 export default function EditGrantDialog({ grant, children, open: controlledOpen, onOpenChange }: { grant: Grant; children?: React.ReactNode; open?: boolean; onOpenChange?: (o: boolean) => void }) {
@@ -58,6 +61,9 @@ export default function EditGrantDialog({ grant, children, open: controlledOpen,
   const [preparedBy, setPreparedBy] = useState(grant.prepared_by ?? "");
   const [submitDate, setSubmitDate] = useState(grant.submit_date ?? "");
   const [version, setVersion] = useState(grant.version ?? "");
+  const [fraisStructure, setFraisStructure] = useState(String(grant.frais_structure_pct ?? ""));
+  const [contributionPropre, setContributionPropre] = useState(String(grant.contribution_propre ?? ""));
+  const [politiqueChange, setPolitiqueChange] = useState(grant.politique_change ?? "");
   const qc = useQueryClient();
 
   useEffect(() => {
@@ -71,6 +77,9 @@ export default function EditGrantDialog({ grant, children, open: controlledOpen,
       setTauxChange(String(grant.taux_change ?? 655.957)); setPeriodicite(grant.periodicite ?? "Trimestrielle");
       setRiskScore(String(grant.risk_score ?? "")); setPreparedBy(grant.prepared_by ?? "");
       setSubmitDate(grant.submit_date ?? ""); setVersion(grant.version ?? "");
+      setFraisStructure(String((grant as any).frais_structure_pct ?? ""));
+      setContributionPropre(String((grant as any).contribution_propre ?? ""));
+      setPolitiqueChange((grant as any).politique_change ?? "");
     }
   }, [open, grant]);
 
@@ -89,7 +98,10 @@ export default function EditGrantDialog({ grant, children, open: controlledOpen,
         periodicite: periodicite || "Trimestrielle",
         risk_score: parseFloat(riskScore) || null,
         prepared_by: preparedBy || null, submit_date: submitDate || null, version: version || null,
-      }).eq("id", grant.id);
+        frais_structure_pct: parseFloat(fraisStructure) || 0,
+        contribution_propre: parseFloat(contributionPropre) || 0,
+        politique_change: politiqueChange || null,
+      } as any).eq("id", grant.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -147,6 +159,25 @@ export default function EditGrantDialog({ grant, children, open: controlledOpen,
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Montant total (EUR) *</label><input type="number" value={amountTotal} onChange={e => setAmountTotal(e.target.value)} required className={inputCls} /></div>
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Décaissé (EUR)</label><input type="number" value={amountDisbursed} onChange={e => setAmountDisbursed(e.target.value)} className={inputCls} /></div>
           </div>
+
+          {/* New Enabel fields */}
+          <div className="border-t border-border pt-3">
+            <div className="text-[11px] font-bold text-foreground mb-2 uppercase tracking-wider">Paramètres Enabel</div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2"><label className="text-sm font-medium text-foreground">Frais de structure (%)</label><input type="number" step="0.1" min="0" max="100" value={fraisStructure} onChange={e => setFraisStructure(e.target.value)} className={inputCls} placeholder="Ex: 7" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium text-foreground">Contribution propre (€)</label><input type="number" value={contributionPropre} onChange={e => setContributionPropre(e.target.value)} className={inputCls} placeholder="Cofinancement" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium text-foreground">Politique de change</label>
+                <select value={politiqueChange} onChange={e => setPolitiqueChange(e.target.value)} className={selectCls}>
+                  <option value="">— Sélectionner —</option>
+                  <option value="taux_moyen_pondere">Taux moyen pondéré des versements</option>
+                  <option value="taux_fixe_convention">Taux fixe de la convention</option>
+                  <option value="taux_jour">Taux du jour (transaction)</option>
+                  <option value="procedure_interne">Procédure interne validée</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Périodicité</label>
               <select value={periodicite} onChange={e => setPeriodicite(e.target.value)} className={selectCls}>
