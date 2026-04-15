@@ -1626,6 +1626,9 @@ export type Database = {
         Row: {
           amount: number
           amount_local: number | null
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           budget_code: string | null
           category: string | null
           created_at: string
@@ -1646,6 +1649,9 @@ export type Database = {
         Insert: {
           amount?: number
           amount_local?: number | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           budget_code?: string | null
           category?: string | null
           created_at?: string
@@ -1666,6 +1672,9 @@ export type Database = {
         Update: {
           amount?: number
           amount_local?: number | null
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           budget_code?: string | null
           category?: string | null
           created_at?: string
@@ -3177,9 +3186,11 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          impact: number | null
           level: Database["public"]["Enums"]["risk_level"]
           mitigation: string | null
           owner_id: string | null
+          probability: number | null
           project_id: string | null
           status: string | null
           title: string
@@ -3189,9 +3200,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          impact?: number | null
           level?: Database["public"]["Enums"]["risk_level"]
           mitigation?: string | null
           owner_id?: string | null
+          probability?: number | null
           project_id?: string | null
           status?: string | null
           title: string
@@ -3201,9 +3214,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          impact?: number | null
           level?: Database["public"]["Enums"]["risk_level"]
           mitigation?: string | null
           owner_id?: string | null
+          probability?: number | null
           project_id?: string | null
           status?: string | null
           title?: string
