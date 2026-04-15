@@ -2,9 +2,6 @@ import { useBudgetDetails } from "@/hooks/useBudgetDetails";
 import { Skeleton } from "@/components/ui/skeleton";
 import StatCard from "@/components/shared/StatCard";
 
-const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
-
-// Map detail-level categories to the 12 consolidated OCDE-DAC categories from Excel F3
 const CATEGORY_CONSOLIDATION: Record<string, string> = {
   "Ressources Humaines": "Ressources Humaines (personnel clé & terrain)",
   "Formation/Animation": "Formation & Renforcement des Capacités",
@@ -43,21 +40,29 @@ const CATEGORY_ORDER: { name: string; rubrique: string }[] = [
   { name: "Audit & Contrôle externe", rubrique: "Audit" },
 ];
 
-export default function BudgetCategoryTab({ projectId }: { projectId: string | null }) {
+interface Props {
+  projectId: string | null;
+  currency?: string;
+  rate?: number;
+  fmt?: (n: number) => string;
+}
+
+export default function BudgetCategoryTab({ projectId, currency = "USD", rate = 1, fmt: fmtProp }: Props) {
   const { data: details, isLoading } = useBudgetDetails(projectId);
+
+  const fmt = fmtProp || ((n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n));
+  const c = (n: number) => n * rate;
 
   if (!projectId) return <p className="text-center text-muted-foreground py-8 text-sm">Sélectionnez un projet</p>;
   if (isLoading) return <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-12 rounded-xl" />)}</div>;
   if (!details?.length) return <p className="text-center text-muted-foreground py-8 text-sm">Aucun détail budgétaire</p>;
 
-  // Aggregate by consolidated category
   type CatData = { y1: number; y2: number; y3: number; y4: number; y5: number; total: number };
   const catMap = new Map<string, CatData>();
 
   details.forEach(d => {
     const rawCat = d.category || "Autre";
     const wp = d.work_package || "";
-    // SE lines always go to "Suivi-Évaluation & Études" regardless of their detail category
     const consolidated = wp === "SE"
       ? "Suivi-Évaluation & Études"
       : (CATEGORY_CONSOLIDATION[rawCat] || rawCat);
@@ -71,11 +76,6 @@ export default function BudgetCategoryTab({ projectId }: { projectId: string | n
     catMap.set(consolidated, existing);
   });
 
-  // Also map SE and GC lines that have specific categories
-  // SE lines map to "Suivi-Évaluation & Études" and GC audit to "Audit"
-  // These are already handled via the category field in project_budget_details
-
-  // Build ordered list following Excel F3 order
   const categories: { name: string; rubrique: string; data: CatData }[] = [];
   CATEGORY_ORDER.forEach(({ name, rubrique }) => {
     const data = catMap.get(name);
@@ -83,7 +83,6 @@ export default function BudgetCategoryTab({ projectId }: { projectId: string | n
       categories.push({ name, rubrique, data });
     }
   });
-  // Add any unmapped categories
   catMap.forEach((data, name) => {
     if (!categories.find(c => c.name === name) && data.total > 0) {
       categories.push({ name, rubrique: "Autre", data });
@@ -103,15 +102,16 @@ export default function BudgetCategoryTab({ projectId }: { projectId: string | n
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
-        <StatCard label="Coûts directs" value={`${fmt(grandTotal)} USD`} note={`${categories.length} catégories`} color="blue" />
-        <StatCard label="Imprévus (7%)" value={`${fmt(imprevu)} USD`} note="Standard bailleurs" color="amber" />
-        <StatCard label="TOTAL GÉNÉRAL" value={`${fmt(grandTotal + imprevu)} USD`} note="" color="green" />
-        <StatCard label="Catégorie n°1" value={categories[0]?.name || "—"} note={`${fmt(categories[0]?.data.total || 0)} USD`} color="purple" />
+        <StatCard label="Coûts directs" value={`${fmt(c(grandTotal))} ${currency}`} note={`${categories.length} catégories`} color="blue" />
+        <StatCard label="Imprévus (7%)" value={`${fmt(c(imprevu))} ${currency}`} note="Standard bailleurs" color="amber" />
+        <StatCard label="TOTAL GÉNÉRAL" value={`${fmt(c(grandTotal + imprevu))} ${currency}`} note="" color="green" />
+        <StatCard label="Catégorie n°1" value={categories[0]?.name || "—"} note={`${fmt(c(categories[0]?.data.total || 0))} ${currency}`} color="purple" />
       </div>
 
       <div className="bg-card border border-border rounded-xl overflow-hidden">
-        <div className="px-4 py-3 border-b border-border">
-          <span className="text-xs font-bold text-foreground">Récapitulatif par catégorie de dépenses — 12 rubriques OCDE-DAC</span>
+        <div className="px-4 py-3 border-b border-border bg-primary/5">
+          <p className="text-xs font-bold text-primary uppercase tracking-wider">Récapitulatif par Catégorie de Dépenses ({currency})</p>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Ventilation transversale des dépenses par nature économique sur 5 ans (2026–2030)</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-[12.5px]">
@@ -123,42 +123,42 @@ export default function BudgetCategoryTab({ projectId }: { projectId: string | n
               </tr>
             </thead>
             <tbody>
-              {categories.map((c, i) => (
-                <tr key={c.name} className="border-b border-border hover:bg-secondary/50 transition-colors">
+              {categories.map((cat, i) => (
+                <tr key={cat.name} className="border-b border-border hover:bg-secondary/50 transition-colors">
                   <td className="px-3 py-2 font-mono text-muted-foreground">{i + 1}</td>
-                  <td className="px-3 py-2 text-foreground font-medium">{c.name}</td>
-                  <td className="px-3 py-2 text-muted-foreground text-[11px]">{c.rubrique}</td>
-                  <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(c.data.y1)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(c.data.y2)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(c.data.y3)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(c.data.y4)}</td>
-                  <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(c.data.y5)}</td>
-                  <td className="px-3 py-2 text-right"><span className="font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">{fmt(c.data.total)}</span></td>
-                  <td className="px-3 py-2 text-right font-mono text-muted-foreground">{grandTotal > 0 ? ((c.data.total / grandTotal) * 100).toFixed(1) : 0}%</td>
+                  <td className="px-3 py-2 text-foreground font-medium">{cat.name}</td>
+                  <td className="px-3 py-2 text-muted-foreground text-[11px]">{cat.rubrique}</td>
+                  <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(c(cat.data.y1))}</td>
+                  <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(c(cat.data.y2))}</td>
+                  <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(c(cat.data.y3))}</td>
+                  <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(c(cat.data.y4))}</td>
+                  <td className="px-3 py-2 text-right font-mono text-foreground">{fmt(c(cat.data.y5))}</td>
+                  <td className="px-3 py-2 text-right"><span className="font-mono bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">{fmt(c(cat.data.total))}</span></td>
+                  <td className="px-3 py-2 text-right font-mono text-muted-foreground">{grandTotal > 0 ? ((cat.data.total / grandTotal) * 100).toFixed(1) : 0}%</td>
                 </tr>
               ))}
               <tr className="bg-secondary/60">
                 <td colSpan={3} className="px-3 py-2 text-right text-[11px] font-bold text-foreground">SOUS-TOTAL COÛTS DIRECTS</td>
                 {yearTotals.map((v, i) => (
-                  <td key={i} className="px-3 py-2 text-right font-mono font-bold text-foreground">{fmt(v)}</td>
+                  <td key={i} className="px-3 py-2 text-right font-mono font-bold text-foreground">{fmt(c(v))}</td>
                 ))}
-                <td className="px-3 py-2 text-right font-mono font-bold text-primary">{fmt(grandTotal)}</td>
+                <td className="px-3 py-2 text-right font-mono font-bold text-primary">{fmt(c(grandTotal))}</td>
                 <td />
               </tr>
               <tr className="bg-amber-50/50 dark:bg-amber-950/20">
                 <td colSpan={3} className="px-3 py-2 text-right text-[11px] font-bold text-foreground">IMPRÉVUS (7%)</td>
                 {yearTotals.map((v, i) => (
-                  <td key={i} className="px-3 py-2 text-right font-mono text-foreground">{fmt(v * 0.07)}</td>
+                  <td key={i} className="px-3 py-2 text-right font-mono text-foreground">{fmt(c(v * 0.07))}</td>
                 ))}
-                <td className="px-3 py-2 text-right font-mono font-bold text-foreground">{fmt(imprevu)}</td>
+                <td className="px-3 py-2 text-right font-mono font-bold text-foreground">{fmt(c(imprevu))}</td>
                 <td />
               </tr>
               <tr className="bg-foreground/5">
                 <td colSpan={3} className="px-3 py-2.5 text-right text-xs font-bold text-foreground uppercase">TOTAL GÉNÉRAL</td>
                 {yearTotals.map((v, i) => (
-                  <td key={i} className="px-3 py-2.5 text-right font-mono font-bold text-foreground">{fmt(v * 1.07)}</td>
+                  <td key={i} className="px-3 py-2.5 text-right font-mono font-bold text-foreground">{fmt(c(v * 1.07))}</td>
                 ))}
-                <td className="px-3 py-2.5 text-right font-mono text-sm font-bold text-primary">{fmt(grandTotal + imprevu)}</td>
+                <td className="px-3 py-2.5 text-right font-mono text-sm font-bold text-primary">{fmt(c(grandTotal + imprevu))}</td>
                 <td className="px-3 py-2.5 text-right font-mono font-bold text-foreground">100%</td>
               </tr>
             </tbody>
