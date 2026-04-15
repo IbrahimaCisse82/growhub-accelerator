@@ -29,6 +29,7 @@ function StartupHealthBanner({ startupId }: { startupId: string }) {
   );
 }
 
+export default function StartupDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: startup, isLoading } = useStartup(id);
