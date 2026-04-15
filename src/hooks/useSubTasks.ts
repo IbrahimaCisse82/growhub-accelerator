@@ -15,13 +15,13 @@ export function useSubTasks(taskId: string | null) {
     queryKey: ["sub-tasks", taskId],
     enabled: !!taskId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("sub_tasks")
         .select("*")
         .eq("task_id", taskId!)
         .order("sort_order");
       if (error) throw error;
-      return data as SubTask[];
+      return (data ?? []) as SubTask[];
     },
   });
 }
@@ -31,16 +31,16 @@ export function useSubTasksByTasks(taskIds: string[]) {
     queryKey: ["sub-tasks-batch", taskIds.sort().join(",")],
     enabled: taskIds.length > 0,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("sub_tasks")
         .select("*")
         .in("task_id", taskIds)
         .order("sort_order");
       if (error) throw error;
       const map = new Map<string, SubTask[]>();
-      for (const st of data ?? []) {
+      for (const st of (data ?? []) as SubTask[]) {
         if (!map.has(st.task_id)) map.set(st.task_id, []);
-        map.get(st.task_id)!.push(st as SubTask);
+        map.get(st.task_id)!.push(st);
       }
       return map;
     },
@@ -51,7 +51,7 @@ export function useAddSubTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ taskId, title }: { taskId: string; title: string }) => {
-      const { error } = await supabase.from("sub_tasks").insert({ task_id: taskId, title });
+      const { error } = await (supabase as any).from("sub_tasks").insert({ task_id: taskId, title });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -65,7 +65,7 @@ export function useToggleSubTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, is_completed }: { id: string; is_completed: boolean }) => {
-      const { error } = await supabase.from("sub_tasks").update({ is_completed }).eq("id", id);
+      const { error } = await (supabase as any).from("sub_tasks").update({ is_completed }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -79,7 +79,7 @@ export function useDeleteSubTask() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("sub_tasks").delete().eq("id", id);
+      const { error } = await (supabase as any).from("sub_tasks").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
