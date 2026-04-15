@@ -1,5 +1,7 @@
 /**
- * Export project document as a structured PDF — aligned with the PAERID DOCX template (20 sections)
+ * Export project document as a structured PDF — pixel-perfect replica of the PAERID DOCX template
+ * Colors: H1 bg=#1B3A6B text=white, H2 text=#1B3A6B border-bottom=#2E7D6F, H3 text=#2E7D6F
+ * Font: Arial 11pt, Header: gray #5D6D7E + green #2E7D6F, Footer: gray + navy #1B3A6B
  */
 
 interface ProjectPdfData {
@@ -21,188 +23,368 @@ export function exportProjectPdf({ project, logFrame, toc, indicators, budgetLin
   const totalWithContingency = Math.round(totalBudget * (1 + contingencyPct));
 
   const css = `<style>
-    @page { margin: 25mm 20mm; size: A4; }
-    body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1a1a2e; line-height: 1.65; padding: 40px; max-width: 800px; margin: 0 auto; }
-    .cover { text-align: center; padding: 100px 0 60px; border-bottom: 3px solid #1e3a5f; margin-bottom: 40px; page-break-after: always; }
-    .cover h1 { font-size: 26px; font-weight: 800; color: #1a1a2e; margin: 0 0 6px; }
-    .cover .subtitle { font-size: 16px; font-weight: 600; color: #1e3a5f; margin: 0 0 24px; }
-    .cover .code { font-family: monospace; font-size: 12px; color: #6b7280; }
-    .cover-table { width: 80%; margin: 24px auto 0; border-collapse: collapse; font-size: 12px; text-align: left; }
-    .cover-table td { padding: 6px 10px; border-bottom: 1px solid #e2e8f0; }
-    .cover-table td:first-child { font-weight: 600; color: #374151; width: 40%; }
-    .footer-note { font-size: 10px; color: #9ca3af; margin-top: 40px; }
+    @page {
+      margin: 25mm 20mm 20mm 20mm;
+      size: A4;
+      @top-left { content: ""; }
+    }
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 11pt;
+      color: #1a1a1a;
+      line-height: 1.55;
+      padding: 0 40px;
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: justify;
+    }
+
+    /* ─── HEADER BAR (simulated) ─── */
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      border-bottom: 1px solid #d1d5db;
+      margin-bottom: 20px;
+      font-size: 9pt;
+      font-style: italic;
+    }
+    .page-header .left { color: #5D6D7E; }
+    .page-header .right { color: #2E7D6F; font-weight: 600; font-style: normal; }
+
+    /* ─── FOOTER (simulated) ─── */
+    .page-footer {
+      font-size: 9pt;
+      color: #5D6D7E;
+      border-top: 1px solid #d1d5db;
+      padding-top: 6px;
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      font-style: italic;
+    }
+    .page-footer .page-num { color: #1B3A6B; font-weight: 700; font-style: normal; }
+
+    /* ─── COVER PAGE ─── */
+    .cover {
+      text-align: center;
+      padding: 120px 0 40px;
+      page-break-after: always;
+    }
+    .cover .doc-type {
+      font-size: 24pt;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin: 0 0 12px;
+    }
+    .cover .project-name {
+      font-size: 18pt;
+      font-weight: 600;
+      color: #2E7D6F;
+      margin: 0 0 8px;
+    }
+    .cover .project-code {
+      font-size: 28pt;
+      font-weight: 800;
+      color: #C5A04A;
+      margin: 0 0 16px;
+      letter-spacing: 2px;
+    }
+    .cover .separator {
+      border: none;
+      border-top: 2px solid #1B3A6B;
+      margin: 20px auto;
+      width: 80%;
+    }
+    .cover-table {
+      width: 80%;
+      margin: 60px auto 0;
+      border-collapse: collapse;
+      font-size: 10.5pt;
+      text-align: left;
+    }
+    .cover-table td {
+      padding: 7px 12px;
+      border-bottom: 1px solid #e2e8f0;
+      vertical-align: top;
+    }
+    .cover-table td:first-child {
+      font-weight: 700;
+      color: #2E7D6F;
+      width: 38%;
+    }
+    .cover-table td:last-child {
+      color: #374151;
+    }
+
+    /* ─── HEADINGS (match DOCX exactly) ─── */
+    h2 {
+      font-size: 14pt;
+      font-weight: 700;
+      color: #FFFFFF;
+      background: #1B3A6B;
+      padding: 8px 14px;
+      margin: 32px 0 14px;
+      border-radius: 0;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      page-break-after: avoid;
+    }
+    h3 {
+      font-size: 12pt;
+      font-weight: 700;
+      color: #1B3A6B;
+      margin: 24px 0 10px;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #2E7D6F;
+    }
+    h4 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #2E7D6F;
+      margin: 16px 0 6px;
+    }
+
+    /* ─── CONTENT ─── */
+    p { margin: 0 0 10px; font-size: 11pt; color: #1a1a1a; }
+    ul { padding-left: 20px; margin: 6px 0 12px; }
+    li { margin-bottom: 4px; font-size: 11pt; }
+    .os-label { color: #2E7D6F; font-weight: 700; }
+
+    .field {
+      margin-bottom: 10px;
+    }
+    .field-value {
+      font-size: 11pt;
+      color: #1a1a1a;
+      white-space: pre-line;
+      text-align: justify;
+    }
+
+    /* ─── TOC ─── */
     .toc { page-break-after: always; }
-    .toc h2 { font-size: 18px; border: none; padding: 0; margin-bottom: 16px; }
-    .toc ul { list-style: none; padding: 0; }
-    .toc li { padding: 4px 0; font-size: 13px; border-bottom: 1px dotted #d1d5db; }
-    .toc li span { color: #6b7280; float: right; }
-    .toc .indent { padding-left: 20px; }
-    h2 { font-size: 17px; font-weight: 700; color: #1e3a5f; margin: 36px 0 10px; border-left: 4px solid #2563eb; padding-left: 12px; page-break-after: avoid; }
-    h3 { font-size: 14px; font-weight: 600; color: #374151; margin: 20px 0 8px; }
-    h4 { font-size: 13px; font-weight: 600; color: #4b5563; margin: 14px 0 6px; }
-    p, li { font-size: 12.5px; color: #374151; }
-    .field { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px; margin-bottom: 10px; }
-    .field-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: #6b7280; margin-bottom: 4px; }
-    .field-value { font-size: 12.5px; color: #1f2937; white-space: pre-line; }
-    ul { padding-left: 18px; }
-    li { margin-bottom: 3px; }
-    .os-label { color: #2563eb; font-weight: 700; }
-    table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 10px; margin-bottom: 14px; }
-    th { background: #f1f5f9; padding: 7px 8px; text-align: left; border-bottom: 2px solid #cbd5e1; font-weight: 700; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
-    td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
-    .total-row { background: #f1f5f9; font-weight: 700; }
+    .toc h2 { margin-bottom: 16px; }
+    .toc-list { list-style: none; padding: 0; margin: 0; }
+    .toc-list li {
+      padding: 3px 0;
+      font-size: 10.5pt;
+      color: #374151;
+      border-bottom: none;
+      display: flex;
+      justify-content: space-between;
+    }
+    .toc-list li.toc-main { font-weight: 600; color: #1B3A6B; margin-top: 4px; }
+    .toc-list li.toc-sub { padding-left: 20px; font-weight: 400; }
+    .toc-list li.toc-subsub { padding-left: 40px; font-size: 10pt; }
+    .toc-dots { flex: 1; border-bottom: 1px dotted #c1c7cd; margin: 0 8px; align-self: flex-end; margin-bottom: 4px; }
+
+    /* ─── TABLES ─── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 10pt;
+      margin: 10px 0 16px;
+    }
+    th {
+      background: #f1f5f9;
+      padding: 7px 8px;
+      text-align: left;
+      border: 1px solid #d1d5db;
+      font-weight: 700;
+      font-size: 9pt;
+      color: #1B3A6B;
+      text-transform: uppercase;
+    }
+    td {
+      padding: 6px 8px;
+      border: 1px solid #d1d5db;
+      color: #374151;
+    }
+    .total-row { background: #f1f5f9; font-weight: 700; color: #1B3A6B; }
+
     .risk-high { color: #dc2626; font-weight: 600; }
     .risk-medium { color: #d97706; font-weight: 600; }
     .risk-low { color: #16a34a; font-weight: 600; }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .stat-box {
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 14px;
+      text-align: center;
+    }
+    .stat-box .stat-value { font-size: 22pt; font-weight: 800; color: #2E7D6F; }
+    .stat-box .stat-label { font-size: 8pt; color: #5D6D7E; margin-top: 4px; }
+
     .section-break { page-break-before: always; }
-    @media print { body { padding: 0; } .cover { padding: 60px 0 40px; } }
+
+    @media print {
+      body { padding: 0; }
+      .page-header, .page-footer { display: none; }
+    }
   </style>`;
 
   const e = escapeHtml;
-  const f = (label: string, value: string | undefined | null): string => {
-    if (!value) return "";
-    return `<div class="field"><div class="field-label">${label}</div><div class="field-value">${e(value)}</div></div>`;
-  };
   const nl = (v: unknown): string => typeof v === "string" ? v : (Array.isArray(v) ? v.join("\n") : JSON.stringify(v ?? ""));
   const fmtDate = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
   const fmtNum = (n: number) => n.toLocaleString("fr-FR");
 
+  const field = (value: string | undefined | null): string => {
+    if (!value) return "";
+    return `<div class="field"><div class="field-value">${e(value)}</div></div>`;
+  };
+
+  const header = () => `<div class="page-header"><span class="left">PAERID — Projet d'Appui à l'Entrepreneuriat Rural Innovant et Durable</span><span class="right">Sénégal — Kédougou · Kolda · Ziguinchor</span></div>`;
+
   let html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><title>${e(project.name)}</title>${css}</head><body>`;
 
   // ═══════════════ COVER PAGE ═══════════════
+  html += header();
   html += `<div class="cover">`;
-  html += `<h1>${e(project.name)}</h1>`;
-  html += `<div class="subtitle">DOCUMENT DE PROJET</div>`;
-  if (project.code) html += `<div class="code">${e(project.code)}</div>`;
+  html += `<div class="doc-type">DOCUMENT DE PROJET</div>`;
+  html += `<div class="project-name">Projet d'Appui à l'Entrepreneuriat Rural<br/>Innovant et Durable</div>`;
+  html += `<div class="project-code">${e(project.code || "PAERID")}</div>`;
+  html += `<hr class="separator"/>`;
   html += `<table class="cover-table">`;
   const coverFields: [string, string | undefined][] = [
+    ["Intitulé du projet", project.name],
     ["Pays", project.country],
-    ["Zones d'intervention", (project.locations as string[])?.join(", ") || nl(meta.lieux_implementation) as string],
-    ["Durée", project.duration_months ? `${project.duration_months} mois` : nl(meta.duree_programme) as string],
-    ["Secteurs prioritaires", nl(meta.secteurs_prioritaires) as string],
-    ["Porteur du projet", nl(meta.porteur) as string],
-    ["Budget du projet", totalWithContingency ? `${fmtNum(totalWithContingency)} USD` : nl(meta.budget_total_label) as string],
-    ["Alignement ODD", nl(meta.alignement_odd) as string],
-    ["Version du document", nl(meta.version_document) as string],
+    ["Zones d'intervention", (project.locations as string[])?.join(", ") || nl(meta.lieux_implementation)],
+    ["Durée", project.duration_months ? `${project.duration_months} mois` : nl(meta.duree_programme)],
+    ["Secteurs prioritaires", nl(meta.secteurs_prioritaires)],
+    ["Porteur du projet", nl(meta.porteur)],
+    ["Budget du projet", totalWithContingency ? `${fmtNum(totalWithContingency)} USD` : nl(meta.budget_total_label)],
+    ["Alignement ODD", nl(meta.alignement_odd)],
+    ["Version du document", nl(meta.version_document)],
   ];
   coverFields.forEach(([label, val]) => {
     if (val) html += `<tr><td>${e(label)}</td><td>${e(val)}</td></tr>`;
   });
-  html += `</table>`;
-  html += `<div class="footer-note">Document de projet — Usage interne et soumission aux bailleurs de fonds</div>`;
-  html += `</div>`;
+  html += `</table></div>`;
+  html += `<div class="page-footer"><span>Document de projet — Usage interne et soumission aux bailleurs de fonds</span><span class="page-num">Page 1</span></div>`;
 
   // ═══════════════ TABLE DES MATIÈRES ═══════════════
-  html += `<div class="toc"><h2>TABLE DES MATIÈRES</h2><ul>`;
-  const tocEntries = [
-    ["0", "Liste des abréviations"],
-    ["1", "Résumé exécutif"],
-    ["2", "Description du projet"],
-    ["3", "Introduction"],
-    ["4", "Contexte et justification du projet"],
-    ["", "4.1 Contexte territorial", true],
-    ["", "4.2 Contraintes structurelles et vulnérabilités", true],
-    ["", "4.3 Alignement stratégique", true],
-    ["", "4.4 Justification de l'intervention", true],
-    ["5", "Théorie du changement"],
-    ["6", "Objectif général et objectifs spécifiques"],
-    ["7", "Résultats attendus"],
-    ["", "7.1 Tableau des indicateurs KPIs", true],
-    ["8", "Stratégie d'implémentation du projet"],
-    ["9", "Méthodologie"],
-    ["10", "Durée du programme"],
-    ["11", "Lieu(x) d'implémentation"],
-    ["12", "Population cible / Bénéficiaires"],
-    ["13", "Personnel clé"],
-    ["14", "Partenaires cibles du programme"],
-    ["15", "Suivi et évaluation"],
-    ["16", "Plan de sortie / Stratégie de durabilité"],
-    ["17", "Analyse des risques et mesures d'atténuation"],
-    ["18", "Annexe : Budget prévisionnel"],
-    ["19", "Cadre logique du programme"],
+  html += `<div class="toc">`;
+  html += header();
+  html += `<h2>TABLE DES MATIÈRES</h2>`;
+  html += `<ul class="toc-list">`;
+  const tocItems: [string, string, string][] = [
+    ["main", "0. LISTE DES ABRÉVIATIONS", ""],
+    ["main", "1. RÉSUMÉ EXÉCUTIF", ""],
+    ["main", "2. DESCRIPTION DU PROJET", ""],
+    ["main", "3. INTRODUCTION", ""],
+    ["main", "4. CONTEXTE ET JUSTIFICATION DU PROJET", ""],
+    ["sub", "4.1. Contexte territorial des régions du sud du Sénégal", ""],
+    ["sub", "4.2. Contraintes structurelles et vulnérabilités", ""],
+    ["sub", "4.3. Alignement avec les orientations stratégiques", ""],
+    ["sub", "4.4. Justification de l'intervention", ""],
+    ["main", "5. THÉORIE DU CHANGEMENT", ""],
+    ["sub", "5.1 Cheminement du changement", ""],
+    ["sub", "5.2 Hypothèses clés", ""],
+    ["main", "6. OBJECTIF GÉNÉRAL ET OBJECTIFS SPÉCIFIQUES DU PROJET", ""],
+    ["sub", "6.1 Objectif général du projet", ""],
+    ["sub", "6.2 Objectifs spécifiques", ""],
+    ["main", "7. RÉSULTATS ATTENDUS", ""],
+    ["sub", "7.1 Tableau des indicateurs KPIs", ""],
+    ["main", "8. STRATÉGIE D'IMPLÉMENTATION DU PROJET", ""],
+    ["sub", "8.1 Architecture opérationnelle — Work Packages", ""],
+    ["main", "9. MÉTHODOLOGIE", ""],
+    ["main", "10. DURÉE DU PROGRAMME", ""],
+    ["main", "11. LIEU(X) D'IMPLÉMENTATION DU PROJET", ""],
+    ["main", "12. POPULATION CIBLE / BÉNÉFICIAIRES", ""],
+    ["main", "13. PERSONNEL CLÉ IMPLIQUÉ DANS LE PROGRAMME", ""],
+    ["main", "14. PARTENAIRES CIBLES DU PROGRAMME", ""],
+    ["main", "15. SUIVI ET ÉVALUATION DU PROGRAMME", ""],
+    ["sub", "15.1 Outils et méthodes de suivi", ""],
+    ["sub", "15.2 Évaluation", ""],
+    ["sub", "15.3 Rapports et communication des résultats", ""],
+    ["main", "16. PLAN DE SORTIE / STRATÉGIE DE DURABILITÉ", ""],
+    ["main", "17. ANALYSE DES RISQUES ET MESURES D'ATTÉNUATION", ""],
+    ["main", "18. ANNEXE : BUDGET PRÉVISIONNEL", ""],
+    ["main", "19. CADRE LOGIQUE DU PROGRAMME", ""],
   ];
-  tocEntries.forEach(([num, label, indent]) => {
-    html += `<li class="${indent ? "indent" : ""}">${num ? `${num}. ` : ""}${label}</li>`;
+  tocItems.forEach(([level, label]) => {
+    html += `<li class="toc-${level}"><span>${label}</span><span class="toc-dots"></span></li>`;
   });
   html += `</ul></div>`;
 
   // ═══════════════ 0. ABRÉVIATIONS ═══════════════
-  html += `<h2>0. Liste des abréviations</h2>`;
-  html += f("Abréviations", nl(meta.abreviations));
+  html += header();
+  html += `<h2>0. LISTE DES ABRÉVIATIONS</h2>`;
+  html += field(nl(meta.abreviations));
 
   // ═══════════════ 1. RÉSUMÉ EXÉCUTIF ═══════════════
-  html += `<h2>1. Résumé exécutif</h2>`;
-  html += f("Résumé exécutif", nl(meta.resume_executif));
+  html += `<h2>1. RÉSUMÉ EXÉCUTIF</h2>`;
+  html += field(nl(meta.resume_executif));
 
   // ═══════════════ 2. DESCRIPTION DU PROJET ═══════════════
-  html += `<h2>2. Description du projet</h2>`;
-  html += f("Description", nl(meta.description_projet) || project.description);
+  html += `<h2 class="section-break">2. DESCRIPTION DU PROJET</h2>`;
+  html += field(nl(meta.description_projet) || project.description);
 
   // ═══════════════ 3. INTRODUCTION ═══════════════
-  html += `<h2 class="section-break">3. Introduction</h2>`;
-  html += f("Introduction", nl(meta.introduction));
-  if (project.country) html += f("Pays", project.country);
-  if (project.start_date) html += f("Date de début", fmtDate(project.start_date));
-  if (project.end_date) html += f("Date de fin", fmtDate(project.end_date));
+  html += `<h2 class="section-break">3. INTRODUCTION</h2>`;
+  html += field(nl(meta.introduction));
 
   // ═══════════════ 4. CONTEXTE ET JUSTIFICATION ═══════════════
-  html += `<h2>4. Contexte et justification du projet</h2>`;
-  html += f("Contexte et justification", nl(meta.contexte_justification));
-  html += `<h3>4.1. Contexte territorial</h3>`;
-  html += f("Contexte territorial", nl(meta.contexte_territorial));
+  html += `<h2 class="section-break">4. CONTEXTE ET JUSTIFICATION DU PROJET</h2>`;
+  html += field(nl(meta.contexte_justification));
+  html += `<h3>4.1. Contexte territorial des régions du sud du Sénégal</h3>`;
+  html += field(nl(meta.contexte_territorial));
   html += `<h3>4.2. Contraintes structurelles et vulnérabilités</h3>`;
-  html += f("Contraintes", nl(meta.contraintes) || nl(meta.contraintes_vulnerabilites));
-  html += `<h3>4.3. Alignement stratégique</h3>`;
-  html += f("Alignement", nl(meta.alignement_strategique));
+  html += field(nl(meta.contraintes) || nl(meta.contraintes_vulnerabilites));
+  html += `<h3>4.3. Alignement avec les orientations stratégiques nationales et internationales</h3>`;
+  html += field(nl(meta.alignement_strategique));
   html += `<h3>4.4. Justification de l'intervention</h3>`;
-  html += f("Justification", nl(meta.justification));
+  html += field(nl(meta.justification));
 
   // ═══════════════ 5. THÉORIE DU CHANGEMENT ═══════════════
-  html += `<h2 class="section-break">5. Théorie du changement</h2>`;
+  html += `<h2 class="section-break">5. THÉORIE DU CHANGEMENT</h2>`;
   if (meta.theorie_changement) {
-    html += f("Théorie du changement", nl(meta.theorie_changement));
+    html += field(nl(meta.theorie_changement));
   }
   if (toc) {
-    if (toc.inputs) html += f("Intrants", nl(toc.inputs));
-    if (toc.activities) html += f("Activités", nl(toc.activities));
-    if (toc.outputs) html += f("Extrants (Outputs)", nl(toc.outputs));
-    if (toc.outcomes) html += f("Effets (Outcomes)", nl(toc.outcomes));
-    if (toc.impact) html += f("Impact", nl(toc.impact));
-    if (toc.assumptions) html += f("Hypothèses clés", nl(toc.assumptions));
-    if (toc.risks) html += f("Risques identifiés", nl(toc.risks));
+    if (toc.inputs) { html += `<h3>5.1 Intrants</h3>`; html += field(nl(toc.inputs)); }
+    if (toc.activities) { html += `<h3>5.2 Activités</h3>`; html += field(nl(toc.activities)); }
+    if (toc.outputs) { html += `<h3>5.3 Extrants (Outputs)</h3>`; html += field(nl(toc.outputs)); }
+    if (toc.outcomes) { html += `<h3>5.4 Effets (Outcomes)</h3>`; html += field(nl(toc.outcomes)); }
+    if (toc.impact) { html += `<h3>5.5 Impact</h3>`; html += field(nl(toc.impact)); }
+    if (toc.assumptions) { html += `<h3>5.6 Hypothèses clés</h3>`; html += field(nl(toc.assumptions)); }
   }
 
   // ═══════════════ 6. OBJECTIFS ═══════════════
-  html += `<h2>6. Objectif général et objectifs spécifiques du projet</h2>`;
+  html += `<h2 class="section-break">6. OBJECTIF GÉNÉRAL ET OBJECTIFS SPÉCIFIQUES DU PROJET</h2>`;
   if (logFrame?.overall_objective) {
-    html += `<h3>6.1. Objectif général du projet</h3>`;
-    html += f("Objectif général", logFrame.overall_objective);
+    html += `<h3>6.1 Objectif général du projet</h3>`;
+    html += field(logFrame.overall_objective);
   }
   if (logFrame?.specific_objectives && Array.isArray(logFrame.specific_objectives) && logFrame.specific_objectives.length > 0) {
-    html += `<h3>6.2. Objectifs spécifiques</h3><ul>`;
+    html += `<h3>6.2 Objectifs spécifiques</h3>`;
     (logFrame.specific_objectives as string[]).forEach((obj, i) => {
-      html += `<li><span class="os-label">OS${i + 1} :</span> ${e(typeof obj === "string" ? obj : JSON.stringify(obj))}</li>`;
+      html += `<h4>OS${i + 1} : ${e(typeof obj === "string" ? obj : JSON.stringify(obj))}</h4>`;
     });
-    html += `</ul>`;
   }
 
   // ═══════════════ 7. RÉSULTATS ATTENDUS ═══════════════
-  html += `<h2>7. Résultats attendus</h2>`;
+  html += `<h2>7. RÉSULTATS ATTENDUS</h2>`;
   if (meta.resultats_attendus) {
-    html += f("Résultats attendus", nl(meta.resultats_attendus));
+    html += field(nl(meta.resultats_attendus));
   }
   if (logFrame?.expected_results && Array.isArray(logFrame.expected_results) && logFrame.expected_results.length > 0) {
-    html += `<ul>`;
     (logFrame.expected_results as string[]).forEach((r, i) => {
-      html += `<li><span class="os-label">R${i + 1} :</span> ${e(typeof r === "string" ? r : JSON.stringify(r))}</li>`;
+      html += `<h4>R${i + 1} : ${e(typeof r === "string" ? r : JSON.stringify(r))}</h4>`;
     });
-    html += `</ul>`;
   }
 
   // 7.1 Indicateurs KPI
   if (indicators.length > 0) {
-    html += `<h3>7.1. Tableau des indicateurs KPIs</h3>`;
-    html += `<table><thead><tr><th>Indicateur</th><th>Catégorie</th><th>Base</th><th>Cible</th><th>Actuel</th><th>Unité</th><th>Fréquence</th></tr></thead><tbody>`;
+    html += `<h3>7.1 Tableau des indicateurs KPIs</h3>`;
+    html += `<table><thead><tr><th>Indicateur</th><th>Catégorie</th><th>Référence</th><th>Cible</th><th>Actuel</th><th>Unité</th><th>Fréquence</th></tr></thead><tbody>`;
     indicators.forEach(ind => {
       html += `<tr><td>${e(ind.name)}</td><td>${e(ind.category ?? "")}</td><td>${ind.baseline_value ?? "—"}</td><td>${ind.target_value ?? "—"}</td><td>${ind.current_value ?? "—"}</td><td>${e(ind.unit ?? "")}</td><td>${e(ind.frequency ?? "")}</td></tr>`;
     });
@@ -210,18 +392,19 @@ export function exportProjectPdf({ project, logFrame, toc, indicators, budgetLin
   }
 
   // ═══════════════ 8. STRATÉGIE D'IMPLÉMENTATION ═══════════════
-  html += `<h2 class="section-break">8. Stratégie d'implémentation du projet</h2>`;
-  html += f("Objectif de la stratégie", nl(meta.strategie_objectif));
-  html += f("Principaux axes d'action", nl(meta.strategie_axes));
-  html += f("Modalités de mise en œuvre", nl(meta.strategie_modalites));
+  html += `<h2 class="section-break">8. STRATÉGIE D'IMPLÉMENTATION DU PROJET</h2>`;
+  if (meta.strategie_objectif) { html += `<h3>8.1 Objectif de la stratégie</h3>`; html += field(nl(meta.strategie_objectif)); }
+  if (meta.strategie_axes) { html += `<h3>8.2 Principaux axes d'action</h3>`; html += field(nl(meta.strategie_axes)); }
+  if (meta.strategie_modalites) { html += `<h3>8.3 Modalités de mise en œuvre</h3>`; html += field(nl(meta.strategie_modalites)); }
 
-  // Work Packages from budget details
+  // Work Packages
   if (budgetDetails.length > 0) {
+    html += `<h3>8.4 Architecture opérationnelle — Work Packages</h3>`;
     const wps = [...new Set(budgetDetails.map(d => d.work_package).filter(Boolean))].sort();
     wps.forEach(wp => {
       const wpDetails = budgetDetails.filter(d => d.work_package === wp);
       const wpTotal = wpDetails.reduce((s, d) => s + (Number(d.total) || 0), 0);
-      html += `<h3>${e(wp)} — ${fmtNum(wpTotal)} USD</h3>`;
+      html += `<h4>${e(wp)} — ${fmtNum(wpTotal)} USD</h4>`;
       html += `<table><thead><tr><th>Code</th><th>Activité</th><th>Catégorie</th><th>Qté</th><th>Coût unit.</th><th>Total</th></tr></thead><tbody>`;
       wpDetails.forEach(d => {
         html += `<tr><td>${e(d.code ?? "")}</td><td>${e(d.activity ?? "")}</td><td>${e(d.category ?? "")}</td><td>${d.quantity ?? ""}</td><td>${fmtNum(Number(d.unit_cost) || 0)}</td><td>${fmtNum(Number(d.total) || 0)}</td></tr>`;
@@ -231,16 +414,15 @@ export function exportProjectPdf({ project, logFrame, toc, indicators, budgetLin
   }
 
   // ═══════════════ 9. MÉTHODOLOGIE ═══════════════
-  html += `<h2>9. Méthodologie</h2>`;
-  html += f("Méthodologie", nl(meta.methodologie));
+  html += `<h2 class="section-break">9. MÉTHODOLOGIE</h2>`;
+  html += field(nl(meta.methodologie));
 
   // ═══════════════ 10. DURÉE DU PROGRAMME ═══════════════
-  html += `<h2>10. Durée du programme</h2>`;
-  html += f("Durée", nl(meta.duree_programme) || (project.duration_months ? `${project.duration_months} mois` : ""));
+  html += `<h2>10. DURÉE DU PROGRAMME</h2>`;
+  html += field(nl(meta.duree_programme) || (project.duration_months ? `${project.duration_months} mois` : ""));
   if (project.start_date && project.end_date) {
     html += `<p>Du <strong>${fmtDate(project.start_date)}</strong> au <strong>${fmtDate(project.end_date)}</strong></p>`;
   }
-  // Milestones
   if (milestones.length > 0) {
     html += `<h3>Jalons clés</h3>`;
     html += `<table><thead><tr><th>Jalon</th><th>Échéance</th><th>Statut</th></tr></thead><tbody>`;
@@ -250,23 +432,26 @@ export function exportProjectPdf({ project, logFrame, toc, indicators, budgetLin
     html += `</tbody></table>`;
   }
 
-  // ═══════════════ 11. LIEU(X) D'IMPLÉMENTATION ═══════════════
-  html += `<h2>11. Lieu(x) d'implémentation du projet</h2>`;
-  html += f("Lieux d'implémentation", nl(meta.lieux_implementation) || (project.locations as string[])?.join(", "));
+  // ═══════════════ 11. LIEU(X) ═══════════════
+  html += `<h2>11. LIEU(X) D'IMPLÉMENTATION DU PROJET</h2>`;
+  html += field(nl(meta.lieux_implementation) || (project.locations as string[])?.join(", "));
 
   // ═══════════════ 12. POPULATION CIBLE ═══════════════
-  html += `<h2>12. Population cible / Bénéficiaires</h2>`;
-  html += f("Population cible", nl(meta.population_cible));
-  html += f("Estimation des bénéficiaires", nl(meta.estimation_beneficiaires));
+  html += `<h2>12. POPULATION CIBLE / BÉNÉFICIAIRES</h2>`;
+  html += field(nl(meta.population_cible));
+  if (meta.estimation_beneficiaires) {
+    html += `<h3>12.1 Estimation des bénéficiaires</h3>`;
+    html += field(nl(meta.estimation_beneficiaires));
+  }
 
   // ═══════════════ 13. PERSONNEL CLÉ ═══════════════
-  html += `<h2 class="section-break">13. Personnel clé impliqué dans le programme</h2>`;
-  html += f("Personnel clé", nl(meta.personnel_cle));
+  html += `<h2 class="section-break">13. PERSONNEL CLÉ IMPLIQUÉ DANS LE PROGRAMME</h2>`;
+  html += field(nl(meta.personnel_cle));
 
   // ═══════════════ 14. PARTENAIRES ═══════════════
-  html += `<h2>14. Partenaires cibles du programme</h2>`;
+  html += `<h2>14. PARTENAIRES CIBLES DU PROGRAMME</h2>`;
   if (meta.partenaires) {
-    html += f("Partenaires", nl(meta.partenaires));
+    html += field(nl(meta.partenaires));
   }
   if (partners.length > 0) {
     html += `<table><thead><tr><th>Nom</th><th>Type</th><th>Secteur</th><th>Pays</th><th>Statut</th></tr></thead><tbody>`;
@@ -277,34 +462,34 @@ export function exportProjectPdf({ project, logFrame, toc, indicators, budgetLin
   }
 
   // ═══════════════ 15. SUIVI ET ÉVALUATION ═══════════════
-  html += `<h2>15. Suivi et évaluation du programme</h2>`;
-  html += f("Outils et méthodes de suivi", nl(meta.suivi_outils));
-  html += f("Évaluation", nl(meta.suivi_evaluation));
-  html += f("Rapports et communication des résultats", nl(meta.suivi_rapports));
+  html += `<h2>15. SUIVI ET ÉVALUATION DU PROGRAMME</h2>`;
+  if (meta.suivi_outils) { html += `<h3>15.1 Outils et méthodes de suivi</h3>`; html += field(nl(meta.suivi_outils)); }
+  if (meta.suivi_evaluation) { html += `<h3>15.2 Évaluation</h3>`; html += field(nl(meta.suivi_evaluation)); }
+  if (meta.suivi_rapports) { html += `<h3>15.3 Rapports et communication des résultats</h3>`; html += field(nl(meta.suivi_rapports)); }
 
   // ═══════════════ 16. PLAN DE SORTIE ═══════════════
-  html += `<h2>16. Plan de sortie / Stratégie de durabilité</h2>`;
-  html += f("Plan de sortie", nl(meta.plan_sortie));
+  html += `<h2>16. PLAN DE SORTIE (EXIT STRATEGY) / STRATÉGIE DE DURABILITÉ</h2>`;
+  html += field(nl(meta.plan_sortie));
 
   // ═══════════════ 17. ANALYSE DES RISQUES ═══════════════
-  html += `<h2 class="section-break">17. Analyse des risques et mesures d'atténuation</h2>`;
+  html += `<h2 class="section-break">17. ANALYSE DES RISQUES ET MESURES D'ATTÉNUATION</h2>`;
   if (meta.analyse_risques) {
-    html += f("Analyse des risques", nl(meta.analyse_risques));
+    html += field(nl(meta.analyse_risques));
   }
   if (risks.length > 0) {
-    html += `<table><thead><tr><th>Risque</th><th>Niveau</th><th>Mesure d'atténuation</th><th>Responsable</th></tr></thead><tbody>`;
+    html += `<table><thead><tr><th>Risque</th><th>Niveau</th><th>Description</th><th>Mesure d'atténuation</th></tr></thead><tbody>`;
     risks.forEach(r => {
       const levelClass = r.level === "high" ? "risk-high" : r.level === "medium" ? "risk-medium" : "risk-low";
       const levelLabel = r.level === "high" ? "Élevé" : r.level === "medium" ? "Moyen" : "Faible";
-      html += `<tr><td>${e(r.title)}</td><td class="${levelClass}">${levelLabel}</td><td>${e(r.mitigation ?? "")}</td><td>${e(r.description ?? "")}</td></tr>`;
+      html += `<tr><td>${e(r.title)}</td><td class="${levelClass}">${levelLabel}</td><td>${e(r.description ?? "")}</td><td>${e(r.mitigation ?? "")}</td></tr>`;
     });
     html += `</tbody></table>`;
   }
 
   // ═══════════════ 18. BUDGET PRÉVISIONNEL ═══════════════
-  html += `<h2 class="section-break">18. Annexe : Budget prévisionnel</h2>`;
+  html += `<h2 class="section-break">18. ANNEXE : BUDGET PRÉVISIONNEL</h2>`;
   if (budgetLines.length > 0) {
-    html += `<table><thead><tr><th>Code</th><th>Poste</th><th>Catégorie</th><th>An 1</th><th>An 2</th><th>An 3</th><th>An 4</th><th>An 5</th><th>Total</th></tr></thead><tbody>`;
+    html += `<table><thead><tr><th>Code</th><th>Poste budgétaire</th><th>Catégorie</th><th>An 1</th><th>An 2</th><th>An 3</th><th>An 4</th><th>An 5</th><th>Total (USD)</th></tr></thead><tbody>`;
     budgetLines.forEach(line => {
       html += `<tr>`;
       html += `<td>${e(line.code ?? "")}</td>`;
@@ -326,9 +511,9 @@ export function exportProjectPdf({ project, logFrame, toc, indicators, budgetLin
   }
 
   // ═══════════════ 19. CADRE LOGIQUE ═══════════════
-  html += `<h2 class="section-break">19. Cadre logique du programme</h2>`;
+  html += `<h2 class="section-break">19. CADRE LOGIQUE DU PROGRAMME</h2>`;
   if (logFrame) {
-    if (logFrame.overall_objective) html += f("Objectif global", logFrame.overall_objective);
+    if (logFrame.overall_objective) { html += `<h3>Objectif global</h3>`; html += field(logFrame.overall_objective); }
     if (logFrame.specific_objectives && Array.isArray(logFrame.specific_objectives)) {
       html += `<h3>Objectifs spécifiques</h3><ul>`;
       (logFrame.specific_objectives as string[]).forEach((obj, i) => {
@@ -343,15 +528,23 @@ export function exportProjectPdf({ project, logFrame, toc, indicators, budgetLin
       });
       html += `</ul>`;
     }
-    if (logFrame.activities) html += f("Activités", nl(logFrame.activities));
-    if (logFrame.assumptions) html += f("Hypothèses", logFrame.assumptions);
-    if (logFrame.pre_conditions) html += f("Pré-conditions", logFrame.pre_conditions);
+    if (logFrame.activities) { html += `<h3>Activités</h3>`; html += field(nl(logFrame.activities)); }
+    if (logFrame.assumptions) { html += `<h3>Hypothèses</h3>`; html += field(logFrame.assumptions); }
+    if (logFrame.pre_conditions) { html += `<h3>Pré-conditions</h3>`; html += field(logFrame.pre_conditions); }
   }
 
-  // Footer
-  html += `<div style="margin-top: 60px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #9ca3af; text-align: center;">`;
-  html += `Document de projet — ${e(project.name)} — Exporté le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`;
-  html += `</div>`;
+  // Indicators table in cadre logique
+  if (indicators.length > 0) {
+    html += `<h3>Indicateurs de performance</h3>`;
+    html += `<table><thead><tr><th>Indicateur</th><th>Référence</th><th>Cible</th><th>Source de données</th><th>Fréquence</th></tr></thead><tbody>`;
+    indicators.forEach(ind => {
+      html += `<tr><td>${e(ind.name)}</td><td>${ind.baseline_value ?? "—"}</td><td>${ind.target_value ?? "—"} ${e(ind.unit ?? "")}</td><td>${e(ind.data_source ?? "")}</td><td>${e(ind.frequency ?? "")}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+  }
+
+  // Final footer
+  html += `<div class="page-footer" style="margin-top: 60px;"><span>Document de projet — Usage interne et soumission aux bailleurs de fonds</span><span class="page-num">Exporté le ${new Date().toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}</span></div>`;
 
   html += `</body></html>`;
 
