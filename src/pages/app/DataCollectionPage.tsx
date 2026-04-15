@@ -303,7 +303,7 @@ export default function DataCollectionPage() {
         <div className="lg:col-span-2">
           {selectedFormId ? (
             <GhCard title="Réponses" badge={String(responses?.length ?? 0)} noPadding
-              actions={responses && responses.length > 0 ? (
+              action={responses && responses.length > 0 ? (
                 <GhButton variant="secondary" size="sm" onClick={() => {
                   const selectedForm = forms?.find(f => f.id === selectedFormId);
                   const fields = Array.isArray(selectedForm?.fields) ? (selectedForm.fields as any[]) : [];
