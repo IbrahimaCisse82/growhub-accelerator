@@ -23,6 +23,9 @@ export default function CreateGrantDialog({ children }: { children: React.ReactN
   const [periodicite, setPeriodicite] = useState("Trimestrielle");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [fraisStructure, setFraisStructure] = useState("");
+  const [contributionPropre, setContributionPropre] = useState("");
+  const [politiqueChange, setPolitiqueChange] = useState("");
   const qc = useQueryClient();
   const { data: projects } = useProjects();
 
@@ -53,7 +56,10 @@ export default function CreateGrantDialog({ children }: { children: React.ReactN
         project_id: projectId || null,
         start_date: startDate || null,
         end_date: endDate || null,
-      });
+        frais_structure_pct: parseFloat(fraisStructure) || 0,
+        contribution_propre: parseFloat(contributionPropre) || 0,
+        politique_change: politiqueChange || null,
+      } as any);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -62,6 +68,7 @@ export default function CreateGrantDialog({ children }: { children: React.ReactN
       setName(""); setCode(""); setConvention(""); setAmountTotal(""); setOrganization("");
       setOrgType(""); setPays(""); setDevise("XOF"); setTauxChange("655.957");
       setPeriodicite("Trimestrielle"); setProjectId(""); setStartDate(""); setEndDate("");
+      setFraisStructure(""); setContributionPropre(""); setPolitiqueChange("");
       toast({ title: "Projet créé" });
     },
     onError: (e) => toast({ title: "Erreur", description: (e as Error).message, variant: "destructive" }),
@@ -116,6 +123,25 @@ export default function CreateGrantDialog({ children }: { children: React.ReactN
               </select>
             </div>
           </div>
+
+          {/* Enabel-specific fields */}
+          <div className="border-t border-border pt-3">
+            <div className="text-[11px] font-bold text-foreground mb-2 uppercase tracking-wider">Paramètres Enabel</div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2"><label className="text-sm font-medium text-foreground">Frais de structure (%)</label><input type="number" step="0.1" min="0" max="100" value={fraisStructure} onChange={e => setFraisStructure(e.target.value)} className={inputCls} placeholder="Ex: 7" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium text-foreground">Contribution propre (€)</label><input type="number" value={contributionPropre} onChange={e => setContributionPropre(e.target.value)} className={inputCls} placeholder="Cofinancement" /></div>
+              <div className="space-y-2"><label className="text-sm font-medium text-foreground">Politique de change</label>
+                <select value={politiqueChange} onChange={e => setPolitiqueChange(e.target.value)} className={selectCls}>
+                  <option value="">— Sélectionner —</option>
+                  <option value="taux_moyen_pondere">Taux moyen pondéré</option>
+                  <option value="taux_fixe_convention">Taux fixe convention</option>
+                  <option value="taux_jour">Taux du jour</option>
+                  <option value="procedure_interne">Procédure interne</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Date début</label><input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} className={inputCls} /></div>
             <div className="space-y-2"><label className="text-sm font-medium text-foreground">Date fin</label><input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} className={inputCls} /></div>
