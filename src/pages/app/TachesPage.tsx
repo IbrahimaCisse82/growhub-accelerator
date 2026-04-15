@@ -111,7 +111,7 @@ function TaskCard({ card, isDragOverlay, subTasks }: { card: any; isDragOverlay?
   );
 }
 
-function KanbanColumn({ col, cards }: { col: (typeof columns)[number]; cards: any[] }) {
+function KanbanColumn({ col, cards, subTasksMap }: { col: (typeof columns)[number]; cards: any[]; subTasksMap?: Map<string, any[]> }) {
   const { isOver, setNodeRef } = useDroppable({ id: col.key });
 
   return (
@@ -129,7 +129,11 @@ function KanbanColumn({ col, cards }: { col: (typeof columns)[number]; cards: an
         {cards.length === 0 ? (
           <div className="text-[11px] text-muted-foreground text-center py-4">{isOver ? "Déposer ici" : "Aucune tâche"}</div>
         ) : (
-          cards.map((card) => <TaskCard key={card.id} card={card} />)
+          cards.map((card) => {
+            const subs = subTasksMap?.get(card.id);
+            const subInfo = subs ? { completed: subs.filter((s: any) => s.is_completed).length, total: subs.length } : undefined;
+            return <TaskCard key={card.id} card={card} subTasks={subInfo} />;
+          })
         )}
       </div>
     </div>
