@@ -3833,6 +3833,20 @@ export type Database = {
       }
     }
     Functions: {
+      compute_startup_health_score: {
+        Args: { p_startup_id: string }
+        Returns: number
+      }
+      create_notification: {
+        Args: {
+          p_content?: string
+          p_link?: string
+          p_title: string
+          p_type?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

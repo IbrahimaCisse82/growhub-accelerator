@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, Clock, DollarSign } from "lucide-react";
+import { AlertTriangle, Clock, DollarSign, CalendarClock, GraduationCap } from "lucide-react";
 
 interface Milestone {
   id: string;
@@ -19,14 +19,30 @@ interface Grant {
   end_date?: string | null;
 }
 
+interface Session {
+  id: string;
+  title: string;
+  scheduled_at: string;
+  status?: string;
+  startup_id?: string;
+}
+
+interface Event {
+  id: string;
+  title: string;
+  start_at: string;
+}
+
 interface Props {
   milestones?: Milestone[];
   grants?: Grant[];
+  sessions?: Session[];
+  events?: Event[];
 }
 
 interface Alert {
   id: string;
-  type: "overdue" | "approaching" | "budget_exceeded" | "grant_ending";
+  type: string;
   icon: React.ReactNode;
   title: string;
   description: string;
@@ -34,14 +50,14 @@ interface Alert {
   severity: "error" | "warning" | "info";
 }
 
-export default function DashboardAlerts({ milestones, grants }: Props) {
+export default function DashboardAlerts({ milestones, grants, sessions, events }: Props) {
   const navigate = useNavigate();
   const now = new Date();
 
   const alerts = useMemo<Alert[]>(() => {
     const result: Alert[] = [];
 
-    // Overdue milestones
+    // Overdue & approaching milestones
     milestones?.forEach((m) => {
       if (m.status === "completed" || !m.due_date) return;
       const due = new Date(m.due_date);
@@ -49,23 +65,19 @@ export default function DashboardAlerts({ milestones, grants }: Props) {
 
       if (daysLeft < 0) {
         result.push({
-          id: `ms-overdue-${m.id}`,
-          type: "overdue",
+          id: `ms-overdue-${m.id}`, type: "overdue",
           icon: <AlertTriangle className="w-4 h-4 text-destructive" />,
           title: `Jalon en retard : ${m.title}`,
           description: `${Math.abs(daysLeft)}j de retard${m.projects?.name ? ` — ${m.projects.name}` : ""}`,
-          link: "/app/jalons",
-          severity: "error",
+          link: "/app/jalons", severity: "error",
         });
       } else if (daysLeft <= 7) {
         result.push({
-          id: `ms-approaching-${m.id}`,
-          type: "approaching",
+          id: `ms-approaching-${m.id}`, type: "approaching",
           icon: <Clock className="w-4 h-4 text-amber-500" />,
           title: `Jalon imminent : ${m.title}`,
           description: `Échéance dans ${daysLeft}j${m.projects?.name ? ` — ${m.projects.name}` : ""}`,
-          link: "/app/jalons",
-          severity: "warning",
+          link: "/app/jalons", severity: "warning",
         });
       }
     });
@@ -78,47 +90,73 @@ export default function DashboardAlerts({ milestones, grants }: Props) {
 
       if (rate > 100) {
         result.push({
-          id: `grant-over-${g.id}`,
-          type: "budget_exceeded",
+          id: `grant-over-${g.id}`, type: "budget_exceeded",
           icon: <DollarSign className="w-4 h-4 text-destructive" />,
           title: `Budget dépassé : ${g.code}`,
           description: `Exécution à ${rate.toFixed(0)}% — ${g.name}`,
-          link: `/app/grants/${g.id}`,
-          severity: "error",
+          link: `/app/grants/${g.id}`, severity: "error",
         });
       } else if (rate >= 90) {
         result.push({
-          id: `grant-warn-${g.id}`,
-          type: "budget_exceeded",
+          id: `grant-warn-${g.id}`, type: "budget_exceeded",
           icon: <DollarSign className="w-4 h-4 text-amber-500" />,
           title: `Budget bientôt épuisé : ${g.code}`,
           description: `Exécution à ${rate.toFixed(0)}% — ${g.name}`,
-          link: `/app/grants/${g.id}`,
-          severity: "warning",
+          link: `/app/grants/${g.id}`, severity: "warning",
         });
       }
 
-      // Grant ending soon
       if (g.end_date) {
         const endDays = Math.ceil((new Date(g.end_date).getTime() - now.getTime()) / 86400000);
         if (endDays > 0 && endDays <= 30) {
           result.push({
-            id: `grant-end-${g.id}`,
-            type: "grant_ending",
+            id: `grant-end-${g.id}`, type: "grant_ending",
             icon: <Clock className="w-4 h-4 text-amber-500" />,
             title: `Grant expire bientôt : ${g.code}`,
             description: `Fin dans ${endDays}j — ${g.name}`,
-            link: `/app/grants/${g.id}`,
-            severity: "warning",
+            link: `/app/grants/${g.id}`, severity: "warning",
           });
         }
       }
     });
 
-    // Sort: errors first, then warnings
-    result.sort((a, b) => (a.severity === "error" ? -1 : 1) - (b.severity === "error" ? -1 : 1));
+    // Upcoming coaching sessions (next 24h)
+    sessions?.forEach((s) => {
+      if (s.status === "completed" || s.status === "cancelled") return;
+      const sDate = new Date(s.scheduled_at);
+      const hoursLeft = (sDate.getTime() - now.getTime()) / 3600000;
+      if (hoursLeft > 0 && hoursLeft <= 24) {
+        result.push({
+          id: `session-${s.id}`, type: "session_soon",
+          icon: <GraduationCap className="w-4 h-4 text-primary" />,
+          title: `Session dans ${Math.round(hoursLeft)}h : ${s.title}`,
+          description: `Planifiée à ${sDate.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}`,
+          link: "/app/coaching", severity: "info",
+        });
+      }
+    });
+
+    // Upcoming events (next 48h)
+    events?.forEach((e) => {
+      const eDate = new Date(e.start_at);
+      const hoursLeft = (eDate.getTime() - now.getTime()) / 3600000;
+      if (hoursLeft > 0 && hoursLeft <= 48) {
+        result.push({
+          id: `event-${e.id}`, type: "event_soon",
+          icon: <CalendarClock className="w-4 h-4 text-primary" />,
+          title: `Événement imminent : ${e.title}`,
+          description: `Dans ${hoursLeft < 24 ? `${Math.round(hoursLeft)}h` : `${Math.round(hoursLeft / 24)}j`}`,
+          link: `/app/evenements/${e.id}`, severity: "info",
+        });
+      }
+    });
+
+    result.sort((a, b) => {
+      const order = { error: 0, warning: 1, info: 2 };
+      return (order[a.severity] ?? 2) - (order[b.severity] ?? 2);
+    });
     return result;
-  }, [milestones, grants, now]);
+  }, [milestones, grants, sessions, events, now]);
 
   if (alerts.length === 0) return null;
 
@@ -126,11 +164,11 @@ export default function DashboardAlerts({ milestones, grants }: Props) {
     <div className="bg-card border border-border rounded-xl overflow-hidden mb-4">
       <div className="px-4 py-2.5 border-b border-border bg-destructive/5 flex items-center gap-2">
         <AlertTriangle className="w-4 h-4 text-destructive" />
-        <span className="text-xs font-bold text-foreground uppercase tracking-wider">Alertes</span>
+        <span className="text-xs font-bold text-foreground uppercase tracking-wider">Alertes & Rappels</span>
         <span className="font-mono text-[10px] bg-destructive/10 text-destructive px-2 py-0.5 rounded-full">{alerts.length}</span>
       </div>
       <div className="divide-y divide-border max-h-[240px] overflow-y-auto">
-        {alerts.slice(0, 8).map((alert) => (
+        {alerts.slice(0, 10).map((alert) => (
           <div
             key={alert.id}
             onClick={() => navigate(alert.link)}
@@ -142,9 +180,9 @@ export default function DashboardAlerts({ milestones, grants }: Props) {
               <div className="text-[10px] text-muted-foreground">{alert.description}</div>
             </div>
             <span className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
-              alert.severity === "error" ? "bg-destructive/10 text-destructive" : "bg-amber-500/10 text-amber-600"
+              alert.severity === "error" ? "bg-destructive/10 text-destructive" : alert.severity === "warning" ? "bg-amber-500/10 text-amber-600" : "bg-primary/10 text-primary"
             }`}>
-              {alert.severity === "error" ? "URGENT" : "ATTENTION"}
+              {alert.severity === "error" ? "URGENT" : alert.severity === "warning" ? "ATTENTION" : "RAPPEL"}
             </span>
           </div>
         ))}
