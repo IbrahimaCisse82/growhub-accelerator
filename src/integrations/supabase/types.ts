@@ -2587,6 +2587,7 @@ export type Database = {
       project_budget_lines: {
         Row: {
           allocation_pct: number | null
+          budget_category: string | null
           category: string
           code: string | null
           created_at: string
@@ -2594,6 +2595,8 @@ export type Database = {
           funding_source: string | null
           id: string
           label: string
+          marker_climate: string | null
+          marker_gender: string | null
           notes: string | null
           project_id: string
           quantity: number | null
@@ -2602,9 +2605,15 @@ export type Database = {
           unit: string | null
           unit_cost: number | null
           updated_at: string
+          year1: number | null
+          year2: number | null
+          year3: number | null
+          year4: number | null
+          year5: number | null
         }
         Insert: {
           allocation_pct?: number | null
+          budget_category?: string | null
           category: string
           code?: string | null
           created_at?: string
@@ -2612,6 +2621,8 @@ export type Database = {
           funding_source?: string | null
           id?: string
           label: string
+          marker_climate?: string | null
+          marker_gender?: string | null
           notes?: string | null
           project_id: string
           quantity?: number | null
@@ -2620,9 +2631,15 @@ export type Database = {
           unit?: string | null
           unit_cost?: number | null
           updated_at?: string
+          year1?: number | null
+          year2?: number | null
+          year3?: number | null
+          year4?: number | null
+          year5?: number | null
         }
         Update: {
           allocation_pct?: number | null
+          budget_category?: string | null
           category?: string
           code?: string | null
           created_at?: string
@@ -2630,6 +2647,8 @@ export type Database = {
           funding_source?: string | null
           id?: string
           label?: string
+          marker_climate?: string | null
+          marker_gender?: string | null
           notes?: string | null
           project_id?: string
           quantity?: number | null
@@ -2638,6 +2657,11 @@ export type Database = {
           unit?: string | null
           unit_cost?: number | null
           updated_at?: string
+          year1?: number | null
+          year2?: number | null
+          year3?: number | null
+          year4?: number | null
+          year5?: number | null
         }
         Relationships: [
           {
