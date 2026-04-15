@@ -307,32 +307,7 @@ export default function ProjetDetailPage() {
         {/* Budget tab */}
         <TabsContent value="budget" className="mt-4">
           {budgetLines && budgetLines.length > 0 ? (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-secondary">
-                    <Th>Poste</Th><Th>Catégorie</Th><Th>Qté × Coût unit.</Th><Th>Total</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {budgetLines.map(line => (
-                    <tr key={line.id} className="border-b border-border last:border-b-0 hover:bg-secondary/50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="text-foreground font-semibold text-xs">{line.label}</div>
-                        {line.description && <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{line.description}</div>}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{line.category}</td>
-                      <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{line.quantity ?? 1} × {Number(line.unit_cost ?? 0).toLocaleString("fr-FR")}</td>
-                      <td className="px-4 py-3 text-xs font-mono font-semibold text-foreground">{Number(line.total_cost ?? 0).toLocaleString("fr-FR")} XOF</td>
-                    </tr>
-                  ))}
-                  <tr className="bg-secondary/80">
-                    <td colSpan={3} className="px-4 py-3 text-xs font-bold text-foreground uppercase">Total général</td>
-                    <td className="px-4 py-3 text-sm font-mono font-extrabold text-primary">{totalBudget.toLocaleString("fr-FR")} XOF</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <BudgetTab budgetLines={budgetLines} totalBudget={totalBudget} currency={(project.metadata as any)?.currency || "USD"} startYear={project.start_date ? parseInt(project.start_date.split("-")[0]) : 2026} contingencyPct={(project.metadata as any)?.contingency_pct ?? 7} projectId={project.id} isAdmin={isAdmin} />
           ) : <Empty text="Aucune ligne budgétaire" />}
         </TabsContent>
 
@@ -564,6 +539,126 @@ function ResultatsAttendusTab({ logFrame, indicators }: { logFrame: any; indicat
           </ul>
         </div>
       )}
+    </div>
+  );
+}
+
+function BudgetTab({ budgetLines, totalBudget, currency, startYear, contingencyPct, projectId, isAdmin }: { budgetLines: any[]; totalBudget: number; currency: string; startYear: number; contingencyPct: number; projectId: string; isAdmin: boolean }) {
+  const navigate = useNavigate();
+  const fmt = (n: number) => new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(n);
+  const sections = ["WP1", "WP2", "WP3", "WP4", "GC", "SE"];
+  const sectionLabels: Record<string, string> = {
+    WP1: "WP1 — Renforcement des compétences & structuration",
+    WP2: "WP2 — Accès aux marchés & développement commercial",
+    WP3: "WP3 — Accès au financement & investissement productif",
+    WP4: "WP4 — Innovation, durabilité & écosystème entrepreneurial",
+    GC: "Gouvernance, Coordination & Gestion",
+    SE: "Suivi, Évaluation & Communication",
+  };
+  const activeSections = sections.filter(s => budgetLines.some(l => l.section === s));
+  const yearKey = (y: number) => `year${y}` as const;
+  const lineTotal = (l: any) => (Number(l.year1)||0) + (Number(l.year2)||0) + (Number(l.year3)||0) + (Number(l.year4)||0) + (Number(l.year5)||0);
+  const sectionTotal = (s: string) => budgetLines.filter(l => l.section === s).reduce((a, l) => a + lineTotal(l), 0);
+  const sectionYearTotal = (s: string, y: number) => budgetLines.filter(l => l.section === s).reduce((a, l) => a + (Number((l as any)[`year${y}`]) || 0), 0);
+  const grandTotal = activeSections.reduce((a, s) => a + sectionTotal(s), 0);
+  const yearGrandTotal = (y: number) => activeSections.reduce((a, s) => a + sectionYearTotal(s, y), 0);
+  const contingency = Math.round(grandTotal * (contingencyPct / 100));
+  const totalGeneral = grandTotal + contingency;
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Budget prévisionnel</h2>
+          <p className="text-xs text-muted-foreground">Ventilation par composante et par année — Montants en {currency}</p>
+        </div>
+        {isAdmin && (
+          <GhButton size="sm" variant="secondary" onClick={() => navigate(`/app/projets/nouveau?id=${projectId}`)}>
+            Modifier le budget ✏️
+          </GhButton>
+        )}
+      </div>
+      <div className="bg-card border border-border rounded-xl overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-secondary">
+              <Th>Code</Th><Th>Poste budgétaire</Th><Th>Catégorie</Th>
+              {[1,2,3,4,5].map(y => <Th key={y}>A{y} ({startYear + y - 1})</Th>)}
+              <Th>Total 5 ans</Th><Th>%</Th><Th>Genre</Th><Th>Climat</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {activeSections.map(sec => (
+              <>
+                <tr key={`h-${sec}`} className="bg-primary/5 border-b border-border">
+                  <td colSpan={13} className="px-4 py-2.5 text-xs font-bold text-foreground uppercase tracking-wide">
+                    {sectionLabels[sec] || sec}
+                  </td>
+                </tr>
+                {budgetLines.filter(l => l.section === sec).map(line => {
+                  const lt = lineTotal(line);
+                  const pct = grandTotal > 0 ? ((lt / grandTotal) * 100).toFixed(1) : "0.0";
+                  return (
+                    <tr key={line.id} className="border-b border-border last:border-b-0 hover:bg-secondary/30 transition-colors">
+                      <td className="px-3 py-2 text-[10px] font-mono text-primary font-semibold">{line.code}</td>
+                      <td className="px-3 py-2">
+                        <div className="text-foreground font-medium text-xs">{line.label}</div>
+                        {(line as any).notes && <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{(line as any).notes}</div>}
+                      </td>
+                      <td className="px-3 py-2 text-[10px] text-muted-foreground">{(line as any).budget_category || line.category}</td>
+                      {[1,2,3,4,5].map(y => (
+                        <td key={y} className="px-3 py-2 text-xs font-mono text-foreground text-right">{fmt(Number((line as any)[`year${y}`]) || 0)}</td>
+                      ))}
+                      <td className="px-3 py-2 text-xs font-mono font-semibold text-foreground text-right">{fmt(lt)}</td>
+                      <td className="px-3 py-2 text-[10px] font-mono text-muted-foreground text-right">{pct}%</td>
+                      <td className="px-3 py-2 text-center text-xs">{(line as any).marker_gender || "○"}</td>
+                      <td className="px-3 py-2 text-center text-xs">{(line as any).marker_climate || "○"}</td>
+                    </tr>
+                  );
+                })}
+                <tr key={`st-${sec}`} className="bg-secondary/60 border-b border-border">
+                  <td colSpan={3} className="px-3 py-2 text-xs font-bold text-foreground">Sous-total {sec}</td>
+                  {[1,2,3,4,5].map(y => (
+                    <td key={y} className="px-3 py-2 text-xs font-mono font-semibold text-foreground text-right">{fmt(sectionYearTotal(sec, y))}</td>
+                  ))}
+                  <td className="px-3 py-2 text-xs font-mono font-bold text-primary text-right">{fmt(sectionTotal(sec))}</td>
+                  <td className="px-3 py-2 text-[10px] font-mono text-muted-foreground text-right">{grandTotal > 0 ? ((sectionTotal(sec) / grandTotal) * 100).toFixed(1) : "0.0"}%</td>
+                  <td colSpan={2}></td>
+                </tr>
+              </>
+            ))}
+            <tr className="bg-secondary/80 border-b border-border">
+              <td colSpan={3} className="px-3 py-2.5 text-xs font-bold text-foreground uppercase">Sous-total coûts directs</td>
+              {[1,2,3,4,5].map(y => (
+                <td key={y} className="px-3 py-2.5 text-xs font-mono font-bold text-foreground text-right">{fmt(yearGrandTotal(y))}</td>
+              ))}
+              <td className="px-3 py-2.5 text-sm font-mono font-extrabold text-primary text-right">{fmt(grandTotal)}</td>
+              <td colSpan={3}></td>
+            </tr>
+            <tr className="border-b border-border">
+              <td colSpan={3} className="px-3 py-2 text-xs text-foreground">Imprévus & contingences ({contingencyPct}%)</td>
+              {[1,2,3,4,5].map(y => (
+                <td key={y} className="px-3 py-2 text-xs font-mono text-muted-foreground text-right">{fmt(Math.round(yearGrandTotal(y) * contingencyPct / 100))}</td>
+              ))}
+              <td className="px-3 py-2 text-xs font-mono font-semibold text-foreground text-right">{fmt(contingency)}</td>
+              <td colSpan={3}></td>
+            </tr>
+            <tr className="bg-primary/10">
+              <td colSpan={3} className="px-3 py-3 text-sm font-bold text-foreground uppercase">Total général projet (5 ans)</td>
+              {[1,2,3,4,5].map(y => {
+                const yt = yearGrandTotal(y);
+                return <td key={y} className="px-3 py-3 text-xs font-mono font-bold text-foreground text-right">{fmt(Math.round(yt * (1 + contingencyPct / 100)))}</td>;
+              })}
+              <td className="px-3 py-3 text-sm font-mono font-extrabold text-primary text-right">{fmt(totalGeneral)}</td>
+              <td colSpan={3}></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div className="text-[10px] text-muted-foreground space-y-0.5">
+        <p>✓✓ = Contribution principale | ✓ = Contribution significative | ○ = Non applicable</p>
+        <p>Marqueur Genre (OCDE-DAC) · Marqueur Climat (OCDE-DAC)</p>
+      </div>
     </div>
   );
 }

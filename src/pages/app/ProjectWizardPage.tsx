@@ -551,7 +551,10 @@ export default function ProjectWizardPage() {
           project_id: pid, category: b.wpCode.startsWith("WP") ? "operational" : b.wpCode === "GC" ? "management" : "monitoring",
           label: b.description, code: b.code, section: b.wpCode,
           unit: b.unit || null, quantity: b.qty, unit_cost: b.unitCost, allocation_pct: 100, funding_source: null,
-        }))
+          year1: b.year1, year2: b.year2, year3: b.year3, year4: b.year4, year5: b.year5,
+          marker_gender: b.markerGender, marker_climate: b.markerClimate,
+          budget_category: b.category, notes: b.notes || null,
+        } as any))
       ).throwOnError();
     }
     await supabase.from("projects").update({ budget: totalBudget }).eq("id", pid);
