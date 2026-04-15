@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import SectionHeader from "@/components/shared/SectionHeader";
+import { exportToCSV } from "@/lib/exportUtils";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
 import Pill from "@/components/shared/Pill";
@@ -301,7 +302,33 @@ export default function DataCollectionPage() {
         {/* Responses */}
         <div className="lg:col-span-2">
           {selectedFormId ? (
-            <GhCard title="Réponses" badge={String(responses?.length ?? 0)} noPadding>
+            <GhCard title="Réponses" badge={String(responses?.length ?? 0)} noPadding
+              actions={responses && responses.length > 0 ? (
+                <GhButton variant="secondary" size="sm" onClick={() => {
+                  const selectedForm = forms?.find(f => f.id === selectedFormId);
+                  const fields = Array.isArray(selectedForm?.fields) ? (selectedForm.fields as any[]) : [];
+                  const rows = responses.map(r => {
+                    const resp = r.responses as Record<string, any>;
+                    const row: Record<string, any> = {
+                      entreprise: (r as any).startups?.name ?? "—",
+                      période: r.period ?? "—",
+                      statut: r.status ?? "—",
+                      date: r.created_at?.slice(0, 10) ?? "",
+                    };
+                    fields.forEach((f: any) => { row[f.label || f.id] = resp?.[f.id] ?? ""; });
+                    return row;
+                  });
+                  const cols = [
+                    { key: "entreprise", label: "Entreprise" },
+                    { key: "période", label: "Période" },
+                    { key: "statut", label: "Statut" },
+                    { key: "date", label: "Date" },
+                    ...fields.map((f: any) => ({ key: f.label || f.id, label: f.label || f.id })),
+                  ];
+                  exportToCSV(rows, `collecte-${selectedForm?.title ?? "data"}`, cols);
+                }}>⤓ CSV</GhButton>
+              ) : undefined}
+            >
               {!responses || responses.length === 0 ? (
                 <EmptyState icon="📊" title="Aucune réponse" description="Les réponses des startups apparaîtront ici" />
               ) : (

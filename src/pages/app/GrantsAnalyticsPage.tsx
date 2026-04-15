@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SectionHeader from "@/components/shared/SectionHeader";
 import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import GhButton from "@/components/shared/GhButton";
+import { exportToCSV } from "@/lib/exportUtils";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   PieChart, Pie, Cell,
@@ -114,12 +116,43 @@ export default function GrantsAnalyticsPage() {
   const { grants, transactions, disbursements, activities, indicators, reports, isLoading } = useGrantsAnalyticsData();
 
   // KPIs
+  const [compareGrants, setCompareGrants] = useState<string[]>([]);
+
   const totalBudget = grants.reduce((s, g) => s + (g.amount_total ?? 0), 0);
   const totalDisbursed = grants.reduce((s, g) => s + (g.amount_disbursed ?? 0), 0);
   const totalSpent = transactions.reduce((s, t) => s + (t.amount ?? 0), 0);
   const activeGrants = grants.filter(g => g.status === "active" || g.status === "disbursing").length;
   const avgConsumption = totalBudget > 0 ? Math.round((totalDisbursed / totalBudget) * 100) : 0;
   const pendingDisbursements = disbursements.filter(d => d.status === "pending").length;
+
+  // Forecast: project spending trend forward
+  const forecast = useMemo(() => {
+    if (monthlySpending.length < 3) return [];
+    const last3 = monthlySpending.slice(-3);
+    const avgMonthly = last3.reduce((s, m) => s + m.dépenses, 0) / 3;
+    const lastMonth = last3[last3.length - 1]?.mois ?? "";
+    const result = [...monthlySpending];
+    for (let i = 1; i <= 6; i++) {
+      const [y, m] = (lastMonth || "2026-01").split("-").map(Number);
+      const nm = m + i > 12 ? m + i - 12 : m + i;
+      const ny = m + i > 12 ? y + 1 : y;
+      result.push({ mois: `${ny}-${String(nm).padStart(2, "0")}`, dépenses: 0, prévision: Math.round(avgMonthly) } as any);
+    }
+    return result;
+  }, [monthlySpending]);
+
+  // Grant comparison data
+  const comparisonData = useMemo(() => {
+    if (compareGrants.length < 2) return [];
+    return compareGrants.map(id => {
+      const g = grants.find(gr => gr.id === id);
+      if (!g) return null;
+      const spent = transactions.filter(t => t.grant_id === id).reduce((s, t) => s + (t.amount ?? 0), 0);
+      const gActs = activities.filter(a => a.grant_id === id);
+      const pct = g.amount_total > 0 ? Math.round(((g.amount_disbursed ?? 0) / g.amount_total) * 100) : 0;
+      return { code: g.code, name: g.name, budget: g.amount_total, disbursed: g.amount_disbursed ?? 0, spent, pct, activities: gActs.length, completedActs: gActs.filter(a => a.status === "completed").length };
+    }).filter(Boolean) as any[];
+  }, [compareGrants, grants, transactions, activities]);
 
   // Chart 1: Budget par grant (bar)
   const budgetByGrant = useMemo(() =>
