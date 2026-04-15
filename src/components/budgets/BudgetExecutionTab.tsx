@@ -33,7 +33,7 @@ export default function BudgetExecutionTab({ projectId, currency = "USD", rate =
         <StatCard label="Budget planifié" value={`${fmt(c(totalPlanned))} ${currency}`} note="Total 5 ans" color="blue" />
         <StatCard label="Dépenses réelles" value={`${fmt(c(totalSpent))} ${currency}`} note="Via transactions Grant" color="amber" />
         <StatCard label="Solde disponible" value={`${fmt(c(totalPlanned - totalSpent))} ${currency}`} note="" color="green" />
-        <StatCard label="Taux d'exécution" value={`${globalRate}%`} note={globalRate > 100 ? "⚠ Dépassement" : "En cours"} color={globalRate > 100 ? "gray" : "purple"} />
+        <StatCard label="Taux d'exécution" value={`${globalRate}%`} note={globalRate > 100 ? "⚠ Dépassement" : "En cours"} color={globalRate > 100 ? "rose" : "purple"} />
       </div>
 
       {/* Global progress */}
