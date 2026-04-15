@@ -254,6 +254,44 @@ export type Database = {
           },
         ]
       }
+      budget_nomenclature: {
+        Row: {
+          code: string
+          created_at: string
+          is_active: boolean
+          label: string
+          level: number
+          parent_code: string | null
+          sort_order: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          is_active?: boolean
+          label: string
+          level?: number
+          parent_code?: string | null
+          sort_order?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          is_active?: boolean
+          label?: string
+          level?: number
+          parent_code?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "budget_nomenclature_parent_code_fkey"
+            columns: ["parent_code"]
+            isOneToOne: false
+            referencedRelation: "budget_nomenclature"
+            referencedColumns: ["code"]
+          },
+        ]
+      }
       budgets: {
         Row: {
           amount_planned: number | null
@@ -264,6 +302,7 @@ export type Database = {
           grant_id: string | null
           id: string
           label: string
+          nomenclature_code: string | null
           project_id: string | null
           updated_at: string
         }
@@ -276,6 +315,7 @@ export type Database = {
           grant_id?: string | null
           id?: string
           label: string
+          nomenclature_code?: string | null
           project_id?: string | null
           updated_at?: string
         }
@@ -288,6 +328,7 @@ export type Database = {
           grant_id?: string | null
           id?: string
           label?: string
+          nomenclature_code?: string | null
           project_id?: string | null
           updated_at?: string
         }
@@ -298,6 +339,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "grants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "budgets_nomenclature_code_fkey"
+            columns: ["nomenclature_code"]
+            isOneToOne: false
+            referencedRelation: "budget_nomenclature"
+            referencedColumns: ["code"]
           },
           {
             foreignKeyName: "budgets_project_id_fkey"
@@ -1587,6 +1635,7 @@ export type Database = {
           grant_id: string
           id: string
           label: string
+          nomenclature_code: string | null
           receipt_url: string | null
           reference: string | null
           report_id: string | null
@@ -1606,6 +1655,7 @@ export type Database = {
           grant_id: string
           id?: string
           label: string
+          nomenclature_code?: string | null
           receipt_url?: string | null
           reference?: string | null
           report_id?: string | null
@@ -1625,6 +1675,7 @@ export type Database = {
           grant_id?: string
           id?: string
           label?: string
+          nomenclature_code?: string | null
           receipt_url?: string | null
           reference?: string | null
           report_id?: string | null
@@ -1639,6 +1690,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "grants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grant_transactions_nomenclature_code_fkey"
+            columns: ["nomenclature_code"]
+            isOneToOne: false
+            referencedRelation: "budget_nomenclature"
+            referencedColumns: ["code"]
           },
           {
             foreignKeyName: "grant_transactions_report_id_fkey"
@@ -2677,6 +2735,7 @@ export type Database = {
           code: string
           created_at: string
           id: string
+          nomenclature_code: string | null
           project_id: string
           quantity: number | null
           sort_order: number | null
@@ -2697,6 +2756,7 @@ export type Database = {
           code: string
           created_at?: string
           id?: string
+          nomenclature_code?: string | null
           project_id: string
           quantity?: number | null
           sort_order?: number | null
@@ -2717,6 +2777,7 @@ export type Database = {
           code?: string
           created_at?: string
           id?: string
+          nomenclature_code?: string | null
           project_id?: string
           quantity?: number | null
           sort_order?: number | null
@@ -2732,6 +2793,13 @@ export type Database = {
           year_5?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "project_budget_details_nomenclature_code_fkey"
+            columns: ["nomenclature_code"]
+            isOneToOne: false
+            referencedRelation: "budget_nomenclature"
+            referencedColumns: ["code"]
+          },
           {
             foreignKeyName: "project_budget_details_project_id_fkey"
             columns: ["project_id"]
@@ -3613,6 +3681,27 @@ export type Database = {
       }
     }
     Views: {
+      budget_vs_actual: {
+        Row: {
+          execution_rate: number | null
+          nomenclature_code: string | null
+          nomenclature_label: string | null
+          planned_amount: number | null
+          project_id: string | null
+          remaining: number | null
+          spent_amount: number | null
+          work_package: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budget_details_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles_safe: {
         Row: {
           avatar_url: string | null
