@@ -87,7 +87,7 @@ export default function CohortDetailPage() {
         <StatCard label="Score moyen" value={avgScore > 0 ? `${avgScore}/100` : "—"} note="" color="purple" />
         <StatCard label="Candidatures" value={String(applications?.length ?? 0)} note="" color="amber" />
         <StatCard label="Acceptées" value={String(acceptedApps)} note="" color="green" />
-        <StatCard label="Début" value={cohort.start_date ? new Date(cohort.start_date).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "—"} note="" color="gray" />
+        <StatCard label="Début" value={cohort.start_date ? new Date(cohort.start_date).toLocaleDateString("fr-FR", { month: "short", year: "numeric" }) : "—"} note="" color="blue" />
       </div>
 
       {/* Progression collective */}

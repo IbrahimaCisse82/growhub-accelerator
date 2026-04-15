@@ -5,7 +5,7 @@ import { Area, AreaChart, ResponsiveContainer } from "recharts";
 interface StatCardProps {
   label: string;
   value: string;
-  note: string;
+  note: React.ReactNode;
   icon?: ReactNode;
   color: "green" | "blue" | "amber" | "purple" | "rose";
   sparkData?: number[];
