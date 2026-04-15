@@ -1495,6 +1495,12 @@ export type Database = {
           amount_validated: number | null
           created_at: string
           end_date: string | null
+          forecast_q1: number | null
+          forecast_q2: number | null
+          forecast_q3: number | null
+          forecast_year1: number | null
+          forecast_year2: number | null
+          forecast_year3: number | null
           grant_id: string
           id: string
           notes: string | null
@@ -1514,6 +1520,12 @@ export type Database = {
           amount_validated?: number | null
           created_at?: string
           end_date?: string | null
+          forecast_q1?: number | null
+          forecast_q2?: number | null
+          forecast_q3?: number | null
+          forecast_year1?: number | null
+          forecast_year2?: number | null
+          forecast_year3?: number | null
           grant_id: string
           id?: string
           notes?: string | null
@@ -1533,6 +1545,12 @@ export type Database = {
           amount_validated?: number | null
           created_at?: string
           end_date?: string | null
+          forecast_q1?: number | null
+          forecast_q2?: number | null
+          forecast_q3?: number | null
+          forecast_year1?: number | null
+          forecast_year2?: number | null
+          forecast_year3?: number | null
           grant_id?: string
           id?: string
           notes?: string | null
@@ -1636,17 +1654,20 @@ export type Database = {
           amount_disbursed: number | null
           amount_total: number
           code: string
+          contribution_propre: number | null
           convention: string | null
           created_at: string
           currency: string | null
           description: string | null
           end_date: string | null
+          frais_structure_pct: number | null
           id: string
           name: string
           org_type: string | null
           organization: string | null
           pays: string | null
           periodicite: string | null
+          politique_change: string | null
           prepared_by: string | null
           program_id: string | null
           project_id: string | null
@@ -1662,17 +1683,20 @@ export type Database = {
           amount_disbursed?: number | null
           amount_total?: number
           code: string
+          contribution_propre?: number | null
           convention?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
           end_date?: string | null
+          frais_structure_pct?: number | null
           id?: string
           name: string
           org_type?: string | null
           organization?: string | null
           pays?: string | null
           periodicite?: string | null
+          politique_change?: string | null
           prepared_by?: string | null
           program_id?: string | null
           project_id?: string | null
@@ -1688,17 +1712,20 @@ export type Database = {
           amount_disbursed?: number | null
           amount_total?: number
           code?: string
+          contribution_propre?: number | null
           convention?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
           end_date?: string | null
+          frais_structure_pct?: number | null
           id?: string
           name?: string
           org_type?: string | null
           organization?: string | null
           pays?: string | null
           periodicite?: string | null
+          politique_change?: string | null
           prepared_by?: string | null
           program_id?: string | null
           project_id?: string | null
