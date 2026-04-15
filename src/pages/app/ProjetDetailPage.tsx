@@ -94,6 +94,39 @@ function useProjectBudgetLines(id: string | undefined) {
   });
 }
 
+function useProjectBudgetDetails(id: string | undefined) {
+  return useQuery({
+    queryKey: ["project-budget-details", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data } = await supabase.from("project_budget_details").select("*").eq("project_id", id!).order("sort_order");
+      return data ?? [];
+    },
+  });
+}
+
+function useProjectRisks(id: string | undefined) {
+  return useQuery({
+    queryKey: ["project-risks", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data } = await supabase.from("risks").select("*").eq("project_id", id!).order("created_at");
+      return data ?? [];
+    },
+  });
+}
+
+function useProjectPartners(projectProgramId: string | undefined) {
+  return useQuery({
+    queryKey: ["project-partners", projectProgramId],
+    enabled: !!projectProgramId,
+    queryFn: async () => {
+      const { data } = await supabase.from("partners").select("*").eq("program_id", projectProgramId!).order("name");
+      return data ?? [];
+    },
+  });
+}
+
 function useProjectGrants(id: string | undefined) {
   return useQuery({
     queryKey: ["project-grants", id],
