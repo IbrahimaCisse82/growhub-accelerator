@@ -176,6 +176,7 @@ function TransactionFormDialog({ open, onOpenChange, grantId, grantCode, editDat
         budget_code: budgetCode || null, vendor: vendor || null, reference: reference || null,
         description: description || null, category: category || null, receipt_url: receiptUrl, created_by: userId ?? null,
         exchange_rate: parseFloat(exchangeRate) || 1, amount_local: parseFloat(amountLocal) || 0,
+        nomenclature_code: budgetCode || null,
       };
       if (isEdit) {
         const { error } = await supabase.from("grant_transactions").update(payload).eq("id", editData.id);
