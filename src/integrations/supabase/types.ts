@@ -2593,6 +2593,127 @@ export type Database = {
           },
         ]
       }
+      project_budget_assumptions: {
+        Row: {
+          created_at: string
+          detail: string | null
+          id: string
+          label: string
+          note: string | null
+          numeric_value: number | null
+          project_id: string
+          section: string
+          sort_order: number | null
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          label: string
+          note?: string | null
+          numeric_value?: number | null
+          project_id: string
+          section?: string
+          sort_order?: number | null
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          detail?: string | null
+          id?: string
+          label?: string
+          note?: string | null
+          numeric_value?: number | null
+          project_id?: string
+          section?: string
+          sort_order?: number | null
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budget_assumptions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_budget_details: {
+        Row: {
+          activity: string
+          category: string | null
+          code: string
+          created_at: string
+          id: string
+          project_id: string
+          quantity: number | null
+          sort_order: number | null
+          total: number | null
+          unit: string | null
+          unit_cost: number | null
+          updated_at: string
+          work_package: string
+          year_1: number | null
+          year_2: number | null
+          year_3: number | null
+          year_4: number | null
+          year_5: number | null
+        }
+        Insert: {
+          activity: string
+          category?: string | null
+          code: string
+          created_at?: string
+          id?: string
+          project_id: string
+          quantity?: number | null
+          sort_order?: number | null
+          total?: number | null
+          unit?: string | null
+          unit_cost?: number | null
+          updated_at?: string
+          work_package: string
+          year_1?: number | null
+          year_2?: number | null
+          year_3?: number | null
+          year_4?: number | null
+          year_5?: number | null
+        }
+        Update: {
+          activity?: string
+          category?: string | null
+          code?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          quantity?: number | null
+          sort_order?: number | null
+          total?: number | null
+          unit?: string | null
+          unit_cost?: number | null
+          updated_at?: string
+          work_package?: string
+          year_1?: number | null
+          year_2?: number | null
+          year_3?: number | null
+          year_4?: number | null
+          year_5?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_budget_details_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       project_budget_lines: {
         Row: {
           allocation_pct: number | null
