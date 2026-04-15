@@ -11,6 +11,7 @@ import { useCohorts } from "@/hooks/useCohorts";
 import { useStartupKpis } from "@/hooks/useStartupKpis";
 import { useCoachingSessions } from "@/hooks/useCoachingSessions";
 import { exportToJSON, exportToCSV, exportToPDF } from "@/lib/exportUtils";
+import { useEvents } from "@/hooks/useEvents";
 import { Triangle, Target, FolderKanban, TrendingUp, FileText, Download, Printer, Users, DollarSign, Briefcase, type LucideIcon } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, LineChart, Line } from "recharts";
 import { useQuery } from "@tanstack/react-query";
@@ -44,6 +45,7 @@ export default function RapportsPage() {
   const { data: cohorts } = useCohorts();
   const { data: sessions } = useCoachingSessions();
   const { data: allKpis } = useAllStartupKpis();
+  const { data: events } = useEvents();
 
   const activeGrants = grants?.filter(g => g.status === "active" || g.status === "disbursing") ?? [];
   const totalFunding = activeGrants.reduce((a, g) => a + g.amount_total, 0);
@@ -141,15 +143,46 @@ export default function RapportsPage() {
         { metric: "Emplois créés", value: impactMetrics?.totalJobs ?? 0 },
         { metric: "CA cumulé (XOF)", value: fmt(impactMetrics?.totalRevenue ?? 0) },
         { metric: "Fonds levés (XOF)", value: fmt(impactMetrics?.totalFundsRaised ?? 0) },
+        { metric: "Clients/Utilisateurs", value: impactMetrics?.totalClients ?? 0 },
         { metric: "Heures de coaching", value: Math.round(coachingStats.hours) },
         { metric: "Sessions coaching", value: coachingStats.completed },
+        { metric: "Grants actifs", value: activeGrants.length },
+        { metric: "Financement total (XOF)", value: fmt(totalFunding) },
+        { metric: "Projets", value: projects?.length ?? 0 },
+        { metric: "Cohortes", value: cohorts?.length ?? 0 },
+        { metric: "Événements", value: events?.length ?? 0 },
       ];
-      exportToPDF("Rapport d'Impact", impactRows, [{ key: "metric", label: "Indicateur" }, { key: "value", label: "Valeur" }]);
+      exportToPDF("Rapport d'Impact Complet — Grow Hub", impactRows, [{ key: "metric", label: "Indicateur" }, { key: "value", label: "Valeur" }]);
     } else if (reportId === "programs" && projects) {
       exportToPDF("Rapport Programmes", projects, [
         { key: "name", label: "Projet" }, { key: "status", label: "Statut" }, { key: "progress", label: "%" },
       ]);
+    } else if (reportId === "startups" && startups) {
+      exportToPDF("Rapport Entreprises", startups, [
+        { key: "name", label: "Nom" }, { key: "sector", label: "Secteur" }, { key: "stage", label: "Stade" },
+        { key: "score", label: "Score" }, { key: "country", label: "Pays" },
+      ]);
     }
+  };
+
+  const handleExportImpactCSV = () => {
+    const rows = [
+      { indicateur: "Entreprises accompagnées", valeur: startupsCount ?? 0, unité: "nombre" },
+      { indicateur: "Emplois créés", valeur: impactMetrics?.totalJobs ?? 0, unité: "nombre" },
+      { indicateur: "CA cumulé", valeur: impactMetrics?.totalRevenue ?? 0, unité: "XOF" },
+      { indicateur: "Fonds levés", valeur: impactMetrics?.totalFundsRaised ?? 0, unité: "XOF" },
+      { indicateur: "Clients/Utilisateurs", valeur: impactMetrics?.totalClients ?? 0, unité: "nombre" },
+      { indicateur: "Heures coaching", valeur: Math.round(coachingStats.hours), unité: "heures" },
+      { indicateur: "Sessions coaching", valeur: coachingStats.completed, unité: "nombre" },
+      { indicateur: "Grants actifs", valeur: activeGrants.length, unité: "nombre" },
+      { indicateur: "Financement total", valeur: totalFunding, unité: "XOF" },
+      { indicateur: "Projets", valeur: projects?.length ?? 0, unité: "nombre" },
+      { indicateur: "Cohortes", valeur: cohorts?.length ?? 0, unité: "nombre" },
+      { indicateur: "Événements", valeur: events?.length ?? 0, unité: "nombre" },
+    ];
+    exportToCSV(rows, `rapport-impact-${new Date().toISOString().slice(0, 10)}`, [
+      { key: "indicateur", label: "Indicateur" }, { key: "valeur", label: "Valeur" }, { key: "unité", label: "Unité" },
+    ]);
   };
 
   return (
@@ -198,6 +231,16 @@ export default function RapportsPage() {
           )}
         </GhCard>
       </div>
+
+      {/* Export impact complet */}
+      <GhCard title="📊 Export Rapport d'Impact Complet">
+        <p className="text-[12px] text-muted-foreground mb-4">Export consolidé de tous les indicateurs d'impact : entreprises, emplois, financement, coaching, cohortes, événements.</p>
+        <div className="flex flex-wrap gap-2">
+          <GhButton variant="primary" onClick={handleExportImpactCSV}><Download size={12} className="mr-1" /> CSV Impact</GhButton>
+          <GhButton variant="secondary" onClick={() => handleExportPDF("impact")}><Printer size={12} className="mr-1" /> PDF Impact</GhButton>
+          <GhButton variant="ghost" onClick={() => handleExportJSON("impact")}><Download size={12} className="mr-1" /> JSON</GhButton>
+        </div>
+      </GhCard>
 
       {/* Rapport de livraison */}
       <GhCard title="Rapport de Livraison GrowHub">

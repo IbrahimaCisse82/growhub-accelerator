@@ -5,6 +5,7 @@ import SectionHeader from "@/components/shared/SectionHeader";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
 import Pill from "@/components/shared/Pill";
+import { exportToCSV, exportToPDF } from "@/lib/exportUtils";
 import EmptyState from "@/components/shared/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCoachingSessions } from "@/hooks/useCoachingSessions";
@@ -275,6 +276,38 @@ export default function CoachingPage() {
         title="Coaching & Sessions"
         subtitle="Planification, notes de réunion, tâches de suivi et évaluations"
         actions={<div className="flex gap-2">
+          <GhButton variant="ghost" onClick={() => {
+            if (!sessions || sessions.length === 0) return;
+            // Group sessions by startup for a consolidated report
+            const byStartup = new Map<string, { name: string; sessions: number; completed: number; hours: number; avgRating: number; ratings: number[] }>();
+            sessions.forEach(s => {
+              const name = s.startups?.name ?? "—";
+              const entry = byStartup.get(name) || { name, sessions: 0, completed: 0, hours: 0, avgRating: 0, ratings: [] };
+              entry.sessions++;
+              if (s.status === "completed") entry.completed++;
+              entry.hours += (s.duration_minutes ?? 60) / 60;
+              if (s.rating) entry.ratings.push(s.rating);
+              byStartup.set(name, entry);
+            });
+            const rows = Array.from(byStartup.values()).map(e => ({
+              ...e, avgRating: e.ratings.length > 0 ? (e.ratings.reduce((a, b) => a + b, 0) / e.ratings.length).toFixed(1) : "—",
+              hours: Math.round(e.hours * 10) / 10,
+            }));
+            exportToPDF("Rapport Coaching par Entreprise", rows, [
+              { key: "name", label: "Entreprise" }, { key: "sessions", label: "Sessions" },
+              { key: "completed", label: "Terminées" }, { key: "hours", label: "Heures" }, { key: "avgRating", label: "Note moy." },
+            ]);
+          }}>📊 Rapport</GhButton>
+          <GhButton variant="ghost" onClick={() => {
+            if (!sessions || sessions.length === 0) return;
+            exportToCSV(sessions.map(s => ({
+              date: s.scheduled_at?.slice(0, 10), entreprise: s.startups?.name ?? "—", titre: s.title,
+              durée: s.duration_minutes, statut: s.status, note: s.rating ?? "",
+            })), "coaching-sessions", [
+              { key: "date", label: "Date" }, { key: "entreprise", label: "Entreprise" }, { key: "titre", label: "Titre" },
+              { key: "durée", label: "Durée (min)" }, { key: "statut", label: "Statut" }, { key: "note", label: "Note" },
+            ]);
+          }}>⤓ CSV</GhButton>
           <CoachingInviteComposer><GhButton variant="secondary">📧 Inviter</GhButton></CoachingInviteComposer>
           <CreateSessionDialog><GhButton>+ Planifier session</GhButton></CreateSessionDialog>
         </div>}

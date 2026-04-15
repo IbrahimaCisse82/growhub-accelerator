@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import SectionHeader from "@/components/shared/SectionHeader";
 import StatCard from "@/components/shared/StatCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import GhButton from "@/components/shared/GhButton";
+import { exportToCSV } from "@/lib/exportUtils";
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
   PieChart, Pie, Cell,
@@ -114,12 +116,29 @@ export default function GrantsAnalyticsPage() {
   const { grants, transactions, disbursements, activities, indicators, reports, isLoading } = useGrantsAnalyticsData();
 
   // KPIs
+  const [compareGrants, setCompareGrants] = useState<string[]>([]);
+
   const totalBudget = grants.reduce((s, g) => s + (g.amount_total ?? 0), 0);
   const totalDisbursed = grants.reduce((s, g) => s + (g.amount_disbursed ?? 0), 0);
   const totalSpent = transactions.reduce((s, t) => s + (t.amount ?? 0), 0);
   const activeGrants = grants.filter(g => g.status === "active" || g.status === "disbursing").length;
   const avgConsumption = totalBudget > 0 ? Math.round((totalDisbursed / totalBudget) * 100) : 0;
   const pendingDisbursements = disbursements.filter(d => d.status === "pending").length;
+
+  // (forecast moved after monthlySpending)
+
+  // Grant comparison data
+  const comparisonData = useMemo(() => {
+    if (compareGrants.length < 2) return [];
+    return compareGrants.map(id => {
+      const g = grants.find(gr => gr.id === id);
+      if (!g) return null;
+      const spent = transactions.filter(t => t.grant_id === id).reduce((s, t) => s + (t.amount ?? 0), 0);
+      const gActs = activities.filter(a => a.grant_id === id);
+      const pct = g.amount_total > 0 ? Math.round(((g.amount_disbursed ?? 0) / g.amount_total) * 100) : 0;
+      return { code: g.code, name: g.name, budget: g.amount_total, disbursed: g.amount_disbursed ?? 0, spent, pct, activities: gActs.length, completedActs: gActs.filter(a => a.status === "completed").length };
+    }).filter(Boolean) as any[];
+  }, [compareGrants, grants, transactions, activities]);
 
   // Chart 1: Budget par grant (bar)
   const budgetByGrant = useMemo(() =>
@@ -157,6 +176,22 @@ export default function GrantsAnalyticsPage() {
         dépenses: total,
       }));
   }, [transactions]);
+
+  // Forecast: project spending trend forward
+  const forecast = useMemo(() => {
+    if (monthlySpending.length < 3) return [];
+    const last3 = monthlySpending.slice(-3);
+    const avgMonthly = last3.reduce((s, m) => s + m.dépenses, 0) / 3;
+    const lastMonth = last3[last3.length - 1]?.mois ?? "";
+    const result = [...monthlySpending];
+    for (let i = 1; i <= 6; i++) {
+      const [y, m] = (lastMonth || "2026-01").split("-").map(Number);
+      const nm = m + i > 12 ? m + i - 12 : m + i;
+      const ny = m + i > 12 ? y + 1 : y;
+      result.push({ mois: `${ny}-${String(nm).padStart(2, "0")}`, dépenses: 0, prévision: Math.round(avgMonthly) } as any);
+    }
+    return result;
+  }, [monthlySpending]);
 
   // Chart 4: Avancement des activités par grant (radial)
   const activityProgress = useMemo(() => {
@@ -374,6 +409,77 @@ export default function GrantsAnalyticsPage() {
             </tbody>
           </table>
         </div>
+      </ChartCard>
+
+      {/* Prévisions financières */}
+      {forecast.length > 0 && (
+        <ChartCard title="📈 Prévisions financières" subtitle="Projection 6 mois basée sur la tendance des 3 derniers mois">
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={forecast} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <defs>
+                <linearGradient id="gradForecast" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={COLORS[5]} stopOpacity={0.3} />
+                  <stop offset="95%" stopColor={COLORS[5]} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="mois" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+              <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickFormatter={v => fmt(v)} />
+              <Tooltip {...tooltipStyle} formatter={(v: number) => fmt(v)} />
+              <Legend wrapperStyle={{ fontSize: "11px" }} />
+              <Area type="monotone" dataKey="dépenses" stroke={COLORS[0]} fill="url(#gradDep)" strokeWidth={2} name="Réel" />
+              <Area type="monotone" dataKey="prévision" stroke={COLORS[5]} fill="url(#gradForecast)" strokeWidth={2} strokeDasharray="5 5" name="Prévision" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      )}
+
+      {/* Comparaison entre grants */}
+      <ChartCard title="⚖️ Comparaison entre grants" subtitle="Sélectionnez 2+ grants pour comparer">
+        <div className="flex flex-wrap gap-1.5 mb-4">
+          {grants.map(g => (
+            <button key={g.id} onClick={() => setCompareGrants(prev => prev.includes(g.id) ? prev.filter(id => id !== g.id) : [...prev, g.id])}
+              className={`text-[11px] px-2.5 py-1 rounded-lg transition-colors ${compareGrants.includes(g.id) ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:bg-secondary border border-border"}`}>
+              {g.code}
+            </button>
+          ))}
+        </div>
+        {comparisonData.length >= 2 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-[12px]">
+              <thead>
+                <tr className="bg-secondary">
+                  {["Code", "Nom", "Budget", "Décaissé", "Dépensé", "Taux", "Activités"].map(h => (
+                    <th key={h} className="px-3 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground border-b border-border">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonData.map((r: any) => (
+                  <tr key={r.code} className="hover:bg-secondary/50">
+                    <td className="px-3 py-2 border-b border-border font-mono text-primary font-semibold">{r.code}</td>
+                    <td className="px-3 py-2 border-b border-border text-foreground truncate max-w-[180px]">{r.name}</td>
+                    <td className="px-3 py-2 border-b border-border font-mono">{fmt(r.budget)}</td>
+                    <td className="px-3 py-2 border-b border-border font-mono">{fmt(r.disbursed)}</td>
+                    <td className="px-3 py-2 border-b border-border font-mono">{fmt(r.spent)}</td>
+                    <td className="px-3 py-2 border-b border-border"><span className={`font-mono text-xs px-1.5 py-0.5 rounded ${r.pct > 80 ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary"}`}>{r.pct}%</span></td>
+                    <td className="px-3 py-2 border-b border-border font-mono text-center">{r.completedActs}/{r.activities}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="flex justify-end mt-2">
+              <GhButton variant="secondary" size="sm" onClick={() => {
+                exportToCSV(comparisonData, "comparaison-grants", [
+                  { key: "code", label: "Code" }, { key: "name", label: "Nom" }, { key: "budget", label: "Budget" },
+                  { key: "disbursed", label: "Décaissé" }, { key: "spent", label: "Dépensé" }, { key: "pct", label: "Taux %" },
+                ]);
+              }}>⤓ CSV</GhButton>
+            </div>
+          </div>
+        ) : (
+          <div className="text-center text-muted-foreground text-sm py-6">Sélectionnez au moins 2 grants ci-dessus pour comparer</div>
+        )}
       </ChartCard>
     </motion.div>
   );
