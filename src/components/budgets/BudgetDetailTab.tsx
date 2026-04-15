@@ -94,6 +94,7 @@ export default function BudgetDetailTab({ projectId, currency = "USD", rate = 1,
                         ) : (
                           <td className="px-2.5 py-2 text-muted-foreground text-[11px]">{(l as any).nomenclature_code ? <span className="font-mono text-primary">{(l as any).nomenclature_code}</span> : l.category}</td>
                         )}
+                        <td className="px-2.5 py-2 text-muted-foreground">{l.unit}</td>
                         {isEditing ? (
                           <>
                             <td className="px-1 py-1"><input type="number" className="w-14 text-right text-xs bg-background border rounded px-1 py-0.5" value={editData.quantity} onChange={e => setEditData({ ...editData, quantity: +e.target.value })} /></td>
