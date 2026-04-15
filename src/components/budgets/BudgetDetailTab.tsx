@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Pencil, Check, X } from "lucide-react";
+import NomenclatureSelect from "@/components/budgets/NomenclatureSelect";
 
 const WP_LABELS: Record<string, string> = {
   WP1: "WP1 — Renforcement des compétences & structuration",
@@ -39,12 +40,12 @@ export default function BudgetDetailTab({ projectId, currency = "USD", rate = 1,
 
   const startEdit = (row: any) => {
     setEditingId(row.id);
-    setEditData({ quantity: row.quantity, unit_cost: row.unit_cost, year_1: row.year_1, year_2: row.year_2, year_3: row.year_3, year_4: row.year_4, year_5: row.year_5 });
+    setEditData({ quantity: row.quantity, unit_cost: row.unit_cost, year_1: row.year_1, year_2: row.year_2, year_3: row.year_3, year_4: row.year_4, year_5: row.year_5, nomenclature_code: (row as any).nomenclature_code || "" });
   };
 
   const saveEdit = async (id: string) => {
     const total = (editData.year_1 || 0) + (editData.year_2 || 0) + (editData.year_3 || 0) + (editData.year_4 || 0) + (editData.year_5 || 0);
-    const { error } = await supabase.from("project_budget_details").update({ ...editData, total, updated_at: new Date().toISOString() }).eq("id", id);
+    const { error } = await supabase.from("project_budget_details").update({ ...editData, total, nomenclature_code: editData.nomenclature_code || null, updated_at: new Date().toISOString() }).eq("id", id);
     if (error) { toast.error("Erreur de sauvegarde"); return; }
     toast.success("Ligne mise à jour");
     setEditingId(null);
@@ -76,7 +77,7 @@ export default function BudgetDetailTab({ projectId, currency = "USD", rate = 1,
               <table className="w-full text-[12px]">
                 <thead>
                   <tr className="bg-secondary">
-                    {["Code", "Activité / Description", "Catégorie", "Unité", "Qté", "Coût Unit.", "An.1 2026", "An.2 2027", "An.3 2028", "An.4 2029", "An.5 2030", "TOTAL", ""].map(h => (
+                    {["Code", "Activité / Description", "Code Enabel", "Unité", "Qté", "Coût Unit.", "An.1 2026", "An.2 2027", "An.3 2028", "An.4 2029", "An.5 2030", "TOTAL", ""].map(h => (
                       <th key={h} className="px-2.5 py-2 text-left text-[10px] font-mono uppercase text-muted-foreground whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -88,7 +89,11 @@ export default function BudgetDetailTab({ projectId, currency = "USD", rate = 1,
                       <tr key={l.id} className="border-b border-border hover:bg-secondary/50 transition-colors">
                         <td className="px-2.5 py-2"><span className="font-mono text-[11px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">{l.code}</span></td>
                         <td className="px-2.5 py-2 text-foreground max-w-[200px] truncate" title={l.activity}>{l.activity}</td>
-                        <td className="px-2.5 py-2 text-muted-foreground text-[11px]">{l.category}</td>
+                        {isEditing ? (
+                          <td className="px-1 py-1"><NomenclatureSelect value={editData.nomenclature_code} onValueChange={v => setEditData({ ...editData, nomenclature_code: v === "__none__" ? "" : v })} className="w-28 h-7 text-[10px]" /></td>
+                        ) : (
+                          <td className="px-2.5 py-2 text-muted-foreground text-[11px]">{(l as any).nomenclature_code ? <span className="font-mono text-primary">{(l as any).nomenclature_code}</span> : l.category}</td>
+                        )}
                         <td className="px-2.5 py-2 text-muted-foreground">{l.unit}</td>
                         {isEditing ? (
                           <>
