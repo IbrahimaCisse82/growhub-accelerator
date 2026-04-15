@@ -214,7 +214,7 @@ export default function GrantDetailPage() {
         </TabsContent>
 
         <TabsContent value="reports">
-          {grant && <GrantReportsTab grantId={grant.id} />}
+          {grant && <GrantReportsTab grantId={grant.id} budgetTotal={grant.amount_total} />}
         </TabsContent>
 
         <TabsContent value="activities">
@@ -299,10 +299,13 @@ export default function GrantDetailPage() {
                   { label: "Pays", val: (grant as any).pays ?? "—" },
                   { label: "Devise", val: grant.currency ?? "EUR" },
                   { label: "Taux de change (→ EUR)", val: `1 EUR = ${fmtFCFA(EUR_TO_FCFA)} FCFA` },
+                  { label: "Politique de change", val: politiqueChangeLabel((grant as any).politique_change) },
                   { label: "Date début", val: grant.start_date ?? "—" },
                   { label: "Date fin", val: grant.end_date ?? "—" },
                   { label: "Durée", val: calcDuree() },
                   { label: "Périodicité", val: (grant as any).periodicite ?? "Trimestrielle" },
+                  { label: "Frais de structure", val: (grant as any).frais_structure_pct ? `${(grant as any).frais_structure_pct}%` : "—" },
+                  { label: "Contribution propre", val: (grant as any).contribution_propre ? `${fmt((grant as any).contribution_propre)} €` : "—" },
                   { label: "Programme", val: grant.programs?.name ?? "—" },
                   { label: "Description", val: grant.description ?? "—" },
                 ].map(row => (
