@@ -15,8 +15,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, AreaChart, Area, Legend } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-
-const COLORS = ["hsl(165,100%,41%)", "hsl(199,90%,48%)", "hsl(37,91%,55%)", "hsl(258,73%,62%)", "hsl(348,90%,60%)", "hsl(280,60%,50%)"];
+import { useStartupKpis } from "@/hooks/useStartupKpis";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 const tooltipStyle = { background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, color: "hsl(var(--foreground))" };
 
 function useApplications() {
@@ -37,7 +38,25 @@ export default function AnalyticsPage() {
   const { data: cohorts } = useCohorts();
   const { data: sessions } = useCoachingSessions();
   const { data: applications } = useApplications();
+  const { data: allKpis } = useAllKpis();
   const [period, setPeriod] = useState<"30d" | "90d" | "12m" | "all">("12m");
+
+  // Impact KPIs
+  const impactKpis = useMemo(() => {
+    if (!allKpis || allKpis.length === 0) return { jobs: 0, revenue: 0, funding: 0 };
+    const latestMap = new Map<string, typeof allKpis[0]>();
+    for (const kpi of allKpis) {
+      const key = `${kpi.startup_id}-${kpi.metric_name}`;
+      if (!latestMap.has(key)) latestMap.set(key, kpi);
+    }
+    const latest = Array.from(latestMap.values());
+    const sum = (m: string) => latest.filter(k => k.metric_name?.toLowerCase().includes(m)).reduce((s, k) => s + (Number(k.metric_value) || 0), 0);
+    return {
+      jobs: sum("emploi") + sum("job") + sum("effectif"),
+      revenue: sum("chiffre") + sum("revenue") + sum("ca"),
+      funding: sum("levée") + sum("fundrais") + sum("funding"),
+    };
+  }, [allKpis]);
 
   const inPeriod = (dateLike?: string | null) => {
     if (!dateLike || period === "all") return true;
@@ -153,6 +172,13 @@ export default function AnalyticsPage() {
         <StatCard label="Cohortes" value={String(cohorts?.length ?? 0)} note={`${cohorts?.filter(c => c.status === "active").length ?? 0} actives`} color="amber" />
         <StatCard label="Coaching" value={String(totalSessions)} note={`${completedSessions} terminées`} color="purple" />
         <StatCard label="Candidatures" value={String(applications?.length ?? 0)} note={`${applications?.filter(a => a.status === "accepted").length ?? 0} acceptées`} color="green" />
+      </div>
+
+      {/* Impact KPIs */}
+      <div className="grid grid-cols-3 gap-3">
+        <StatCard label="Emplois créés" value={String(impactKpis.jobs)} note="estimés via KPIs" color="amber" />
+        <StatCard label="CA cumulé" value={fmtNum(impactKpis.revenue)} note="XOF" color="green" />
+        <StatCard label="Fonds levés" value={fmtNum(impactKpis.funding)} note="XOF" color="purple" />
       </div>
 
       {/* Monthly trend */}
