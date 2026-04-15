@@ -622,6 +622,7 @@ export type Database = {
       cohorts: {
         Row: {
           created_at: string
+          current_startups: number | null
           description: string | null
           end_date: string | null
           id: string
@@ -634,6 +635,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          current_startups?: number | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -646,6 +648,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          current_startups?: number | null
           description?: string | null
           end_date?: string | null
           id?: string
@@ -2538,8 +2541,10 @@ export type Database = {
           id: string
           name: string
           portfolio_id: string | null
+          project_count: number | null
           start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
+          total_budget: number | null
           updated_at: string
         }
         Insert: {
@@ -2554,8 +2559,10 @@ export type Database = {
           id?: string
           name: string
           portfolio_id?: string | null
+          project_count?: number | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
+          total_budget?: number | null
           updated_at?: string
         }
         Update: {
@@ -2570,8 +2577,10 @@ export type Database = {
           id?: string
           name?: string
           portfolio_id?: string | null
+          project_count?: number | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
+          total_budget?: number | null
           updated_at?: string
         }
         Relationships: [
