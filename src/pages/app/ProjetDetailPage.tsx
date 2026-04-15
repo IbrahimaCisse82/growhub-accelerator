@@ -213,7 +213,7 @@ export default function ProjetDetailPage() {
               )}
             </div>
             <div className="flex gap-2 shrink-0">
-              <GhButton size="sm" variant="ghost" onClick={() => exportProjectPdf({ project, logFrame: logFrame ?? null, indicators: indicators ?? [], budgetLines: budgetLines ?? [] })}>
+              <GhButton size="sm" variant="ghost" onClick={() => exportProjectPdf({ project, logFrame: logFrame ?? null, toc: toc ?? null, indicators: indicators ?? [], budgetLines: budgetLines ?? [], budgetDetails: budgetDetails ?? [], risks: projectRisks ?? [], milestones: milestones ?? [], partners: projectPartners ?? [] })}>
                 📄 Export PDF
               </GhButton>
               {isAdmin && (
