@@ -125,21 +125,7 @@ export default function GrantsAnalyticsPage() {
   const avgConsumption = totalBudget > 0 ? Math.round((totalDisbursed / totalBudget) * 100) : 0;
   const pendingDisbursements = disbursements.filter(d => d.status === "pending").length;
 
-  // Forecast: project spending trend forward
-  const forecast = useMemo(() => {
-    if (monthlySpending.length < 3) return [];
-    const last3 = monthlySpending.slice(-3);
-    const avgMonthly = last3.reduce((s, m) => s + m.dépenses, 0) / 3;
-    const lastMonth = last3[last3.length - 1]?.mois ?? "";
-    const result = [...monthlySpending];
-    for (let i = 1; i <= 6; i++) {
-      const [y, m] = (lastMonth || "2026-01").split("-").map(Number);
-      const nm = m + i > 12 ? m + i - 12 : m + i;
-      const ny = m + i > 12 ? y + 1 : y;
-      result.push({ mois: `${ny}-${String(nm).padStart(2, "0")}`, dépenses: 0, prévision: Math.round(avgMonthly) } as any);
-    }
-    return result;
-  }, [monthlySpending]);
+  // (forecast moved after monthlySpending)
 
   // Grant comparison data
   const comparisonData = useMemo(() => {
