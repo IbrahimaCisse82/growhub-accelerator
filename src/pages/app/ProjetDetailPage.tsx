@@ -307,32 +307,7 @@ export default function ProjetDetailPage() {
         {/* Budget tab */}
         <TabsContent value="budget" className="mt-4">
           {budgetLines && budgetLines.length > 0 ? (
-            <div className="bg-card border border-border rounded-xl overflow-hidden">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-secondary">
-                    <Th>Poste</Th><Th>Catégorie</Th><Th>Qté × Coût unit.</Th><Th>Total</Th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {budgetLines.map(line => (
-                    <tr key={line.id} className="border-b border-border last:border-b-0 hover:bg-secondary/50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="text-foreground font-semibold text-xs">{line.label}</div>
-                        {line.description && <div className="text-[10px] text-muted-foreground mt-0.5 line-clamp-1">{line.description}</div>}
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">{line.category}</td>
-                      <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{line.quantity ?? 1} × {Number(line.unit_cost ?? 0).toLocaleString("fr-FR")}</td>
-                      <td className="px-4 py-3 text-xs font-mono font-semibold text-foreground">{Number(line.total_cost ?? 0).toLocaleString("fr-FR")} XOF</td>
-                    </tr>
-                  ))}
-                  <tr className="bg-secondary/80">
-                    <td colSpan={3} className="px-4 py-3 text-xs font-bold text-foreground uppercase">Total général</td>
-                    <td className="px-4 py-3 text-sm font-mono font-extrabold text-primary">{totalBudget.toLocaleString("fr-FR")} XOF</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <BudgetTab budgetLines={budgetLines} totalBudget={totalBudget} currency={(project.metadata as any)?.currency || "USD"} startYear={project.start_date ? parseInt(project.start_date.split("-")[0]) : 2026} contingencyPct={(project.metadata as any)?.contingency_pct ?? 7} projectId={project.id} isAdmin={isAdmin} />
           ) : <Empty text="Aucune ligne budgétaire" />}
         </TabsContent>
 
