@@ -362,6 +362,20 @@ export default function LmsPage() {
             </div>
             <div className="px-3.5 py-2.5 bg-surface-2 border-t border-border flex justify-between items-center">
               <Pill color={c.is_published ? "green" : "amber"}>{c.is_published ? "● Publié" : "● Brouillon"}</Pill>
+              {(() => {
+                const enrollment = myEnrollments?.find(e => e.course_id === c.id);
+                if (enrollment?.completed_at) {
+                  return (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCertCourse(c); setCertOpen(true); }}
+                      className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <Award size={12} /> Certificat
+                    </button>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </div>
         ))}
