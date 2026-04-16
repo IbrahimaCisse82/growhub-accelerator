@@ -11,10 +11,13 @@ import { exportToCSV } from "@/lib/exportUtils";
 import CourseStatsPanel from "@/components/lms/CourseStatsPanel";
 import AICourseGenerator from "@/components/lms/AICourseGenerator";
 import AIAssistantChat from "@/components/lms/AIAssistantChat";
+import CourseCertificateDialog from "@/components/lms/CourseCertificateDialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { Award } from "lucide-react";
 
 const levelEmoji: Record<string, string> = { beginner: "🌱", intermediate: "📊", advanced: "🚀" };
 
