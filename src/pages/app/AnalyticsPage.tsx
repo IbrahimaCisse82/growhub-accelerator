@@ -52,7 +52,9 @@ export default function AnalyticsPage() {
   const { data: sessions } = useCoachingSessions();
   const { data: applications } = useApplications();
   const { data: allKpis } = useAllKpis();
-  const [period, setPeriod] = useState<"30d" | "90d" | "12m" | "all">("12m");
+  const [period, setPeriod] = useState<"30d" | "90d" | "12m" | "all" | "custom">("12m");
+  const [customFrom, setCustomFrom] = useState<Date | null>(null);
+  const [customTo, setCustomTo] = useState<Date | null>(null);
 
   // Impact KPIs
   const impactKpis = useMemo(() => {
