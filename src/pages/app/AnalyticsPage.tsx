@@ -74,7 +74,14 @@ export default function AnalyticsPage() {
   }, [allKpis]);
 
   const inPeriod = (dateLike?: string | null) => {
-    if (!dateLike || period === "all") return true;
+    if (!dateLike) return true;
+    if (period === "all") return true;
+    if (period === "custom") {
+      const date = new Date(dateLike).getTime();
+      if (customFrom && date < customFrom.getTime()) return false;
+      if (customTo && date > customTo.getTime()) return false;
+      return true;
+    }
     const date = new Date(dateLike).getTime();
     const now = Date.now();
     const days = period === "30d" ? 30 : period === "90d" ? 90 : 365;
