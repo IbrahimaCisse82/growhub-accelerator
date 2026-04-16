@@ -16,6 +16,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveCo
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
 import { Download, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import TopStartupsTable from "@/components/analytics/TopStartupsTable";
+import DateRangePicker from "@/components/shared/DateRangePicker";
 import { fr } from "date-fns/locale";
 
 const COLORS = ["hsl(165,100%,41%)", "hsl(199,90%,48%)", "hsl(37,91%,55%)", "hsl(258,73%,62%)", "hsl(348,90%,60%)", "hsl(280,60%,50%)"];
