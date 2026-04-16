@@ -291,6 +291,32 @@ export default function LmsPage() {
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any | null>(null);
+  const [certOpen, setCertOpen] = useState(false);
+  const [certCourse, setCertCourse] = useState<any | null>(null);
+  const { user } = useAuth();
+
+  // Check user enrollment for certificate eligibility
+  const { data: myEnrollments } = useQuery({
+    queryKey: ["my-enrollments", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("course_enrollments")
+        .select("*")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile-lms", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("full_name").eq("user_id", user!.id).single();
+      return data;
+    },
+  });
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
