@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCourses } from "@/hooks/useCourses";
 import CreateCourseDialog from "@/components/dialogs/CreateCourseDialog";
 import { exportToCSV } from "@/lib/exportUtils";
+import CourseStatsPanel from "@/components/lms/CourseStatsPanel";
 import AICourseGenerator from "@/components/lms/AICourseGenerator";
 import AIAssistantChat from "@/components/lms/AIAssistantChat";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -301,6 +302,10 @@ export default function LmsPage() {
           <GhButton variant="primary" onClick={() => setAiGenOpen(true)}>✨ Générer avec IA</GhButton>
           <CreateCourseDialog><GhButton>+ Créer cours</GhButton></CreateCourseDialog>
         </>} />
+
+      {/* Course Stats Dashboard */}
+      <CourseStatsPanel />
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Cours" value={String(courses?.length ?? 0)} note="" color="blue" />
         <StatCard label="Publiés" value={String(courses?.filter((c) => c.is_published).length ?? 0)} note="" color="green" />

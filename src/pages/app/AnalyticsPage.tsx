@@ -9,11 +9,13 @@ import { useGrants } from "@/hooks/useGrants";
 import { useProjects } from "@/hooks/useProjects";
 import { useCohorts } from "@/hooks/useCohorts";
 import { useCoachingSessions } from "@/hooks/useCoachingSessions";
-import { exportToPDF } from "@/lib/exportUtils";
+import { exportToPDF, exportToCSV } from "@/lib/exportUtils";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, AreaChart, Area, Legend } from "recharts";
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
+import { Download, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import TopStartupsTable from "@/components/analytics/TopStartupsTable";
 import { fr } from "date-fns/locale";
 
 const COLORS = ["hsl(165,100%,41%)", "hsl(199,90%,48%)", "hsl(37,91%,55%)", "hsl(258,73%,62%)", "hsl(348,90%,60%)", "hsl(280,60%,50%)"];
@@ -152,16 +154,33 @@ export default function AnalyticsPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       <SectionHeader title="Analytics" subtitle="Performances, tendances et rétention"
-        actions={<GhButton variant="ghost" onClick={() => {
-          const summary = [
-            { metric: "Entreprises", value: startupsCount ?? 0 },
-            { metric: "Financement total", value: totalFunding },
-            { metric: "Cohortes", value: cohorts?.length ?? 0 },
-            { metric: "Sessions coaching", value: totalSessions },
-            { metric: "Avancement moyen", value: `${avgProgress}%` },
-          ];
-          exportToPDF("Analytics — Grow Hub", summary, [{ key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" }]);
-        }}>⎙ PDF</GhButton>} />
+        actions={<div className="flex items-center gap-2">
+          <GhButton variant="ghost" onClick={() => {
+            const rows = [
+              { metric: "Entreprises", value: startupsCount ?? 0 },
+              { metric: "Financement total (XOF)", value: totalFunding },
+              { metric: "Cohortes", value: cohorts?.length ?? 0 },
+              { metric: "Sessions coaching", value: totalSessions },
+              { metric: "Avancement moyen", value: `${avgProgress}%` },
+              { metric: "Emplois créés", value: impactKpis.jobs },
+              { metric: "CA cumulé (XOF)", value: impactKpis.revenue },
+              { metric: "Fonds levés (XOF)", value: impactKpis.funding },
+            ];
+            exportToCSV(rows, `analytics-${new Date().toISOString().slice(0, 10)}`, [
+              { key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" },
+            ]);
+          }}><Download size={13} className="mr-1" />CSV</GhButton>
+          <GhButton variant="ghost" onClick={() => {
+            const summary = [
+              { metric: "Entreprises", value: startupsCount ?? 0 },
+              { metric: "Financement total", value: totalFunding },
+              { metric: "Cohortes", value: cohorts?.length ?? 0 },
+              { metric: "Sessions coaching", value: totalSessions },
+              { metric: "Avancement moyen", value: `${avgProgress}%` },
+            ];
+            exportToPDF("Analytics — Grow Hub", summary, [{ key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" }]);
+          }}>⎙ PDF</GhButton>
+        </div>} />
 
       {/* Period filter */}
       <div className="flex items-center gap-2">
@@ -309,6 +328,32 @@ export default function AnalyticsPage() {
           </div>
         </GhCard>
       </div>
+
+      {/* Top 10 Startups */}
+      <TopStartupsTable />
+
+      {/* Trend indicators */}
+      <GhCard title="Indicateurs de tendance">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: "Entreprises", current: startupsCount ?? 0, icon: "green" as const },
+            { label: "Candidatures", current: applications?.length ?? 0, icon: "blue" as const },
+            { label: "Sessions", current: totalSessions, icon: "purple" as const },
+            { label: "Projets", current: projectsFiltered.length, icon: "amber" as const },
+          ].map(item => {
+            const trend = item.current > 0 ? "up" : item.current === 0 ? "flat" : "down";
+            return (
+              <div key={item.label} className="flex items-center gap-3 bg-surface-2 rounded-lg p-3">
+                {trend === "up" ? <TrendingUp size={16} className="text-gh-green" /> : trend === "down" ? <TrendingDown size={16} className="text-gh-rose" /> : <Minus size={16} className="text-muted-foreground" />}
+                <div>
+                  <div className="text-[11px] text-muted-foreground">{item.label}</div>
+                  <div className="text-sm font-bold text-foreground">{item.current}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </GhCard>
     </motion.div>
   );
 }
