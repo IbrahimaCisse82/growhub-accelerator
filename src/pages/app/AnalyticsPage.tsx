@@ -193,7 +193,7 @@ export default function AnalyticsPage() {
         </div>} />
 
       {/* Period filter */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {([
           { key: "30d", label: "30j" }, { key: "90d", label: "90j" }, { key: "12m", label: "12m" }, { key: "all", label: "Tout" },
         ] as const).map(p => (
@@ -202,6 +202,18 @@ export default function AnalyticsPage() {
             {p.label}
           </button>
         ))}
+        <div className="border-l border-border pl-2 ml-1">
+          <DateRangePicker
+            from={customFrom}
+            to={customTo}
+            onChange={(f, t) => {
+              setCustomFrom(f);
+              setCustomTo(t);
+              if (f || t) setPeriod("custom");
+              else setPeriod("all");
+            }}
+          />
+        </div>
       </div>
 
       {/* Top stats */}
