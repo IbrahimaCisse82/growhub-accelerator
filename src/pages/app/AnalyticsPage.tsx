@@ -16,6 +16,7 @@ import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveCo
 import { format, subMonths, startOfMonth, endOfMonth, isWithinInterval, parseISO } from "date-fns";
 import { Download, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import TopStartupsTable from "@/components/analytics/TopStartupsTable";
+import DateRangePicker from "@/components/shared/DateRangePicker";
 import { fr } from "date-fns/locale";
 
 const COLORS = ["hsl(165,100%,41%)", "hsl(199,90%,48%)", "hsl(37,91%,55%)", "hsl(258,73%,62%)", "hsl(348,90%,60%)", "hsl(280,60%,50%)"];
@@ -51,7 +52,9 @@ export default function AnalyticsPage() {
   const { data: sessions } = useCoachingSessions();
   const { data: applications } = useApplications();
   const { data: allKpis } = useAllKpis();
-  const [period, setPeriod] = useState<"30d" | "90d" | "12m" | "all">("12m");
+  const [period, setPeriod] = useState<"30d" | "90d" | "12m" | "all" | "custom">("12m");
+  const [customFrom, setCustomFrom] = useState<Date | null>(null);
+  const [customTo, setCustomTo] = useState<Date | null>(null);
 
   // Impact KPIs
   const impactKpis = useMemo(() => {
@@ -71,7 +74,14 @@ export default function AnalyticsPage() {
   }, [allKpis]);
 
   const inPeriod = (dateLike?: string | null) => {
-    if (!dateLike || period === "all") return true;
+    if (!dateLike) return true;
+    if (period === "all") return true;
+    if (period === "custom") {
+      const date = new Date(dateLike).getTime();
+      if (customFrom && date < customFrom.getTime()) return false;
+      if (customTo && date > customTo.getTime()) return false;
+      return true;
+    }
     const date = new Date(dateLike).getTime();
     const now = Date.now();
     const days = period === "30d" ? 30 : period === "90d" ? 90 : 365;
@@ -183,7 +193,7 @@ export default function AnalyticsPage() {
         </div>} />
 
       {/* Period filter */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         {([
           { key: "30d", label: "30j" }, { key: "90d", label: "90j" }, { key: "12m", label: "12m" }, { key: "all", label: "Tout" },
         ] as const).map(p => (
@@ -192,6 +202,18 @@ export default function AnalyticsPage() {
             {p.label}
           </button>
         ))}
+        <div className="border-l border-border pl-2 ml-1">
+          <DateRangePicker
+            from={customFrom}
+            to={customTo}
+            onChange={(f, t) => {
+              setCustomFrom(f);
+              setCustomTo(t);
+              if (f || t) setPeriod("custom");
+              else setPeriod("all");
+            }}
+          />
+        </div>
       </div>
 
       {/* Top stats */}

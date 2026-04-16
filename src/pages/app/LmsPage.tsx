@@ -11,10 +11,13 @@ import { exportToCSV } from "@/lib/exportUtils";
 import CourseStatsPanel from "@/components/lms/CourseStatsPanel";
 import AICourseGenerator from "@/components/lms/AICourseGenerator";
 import AIAssistantChat from "@/components/lms/AIAssistantChat";
+import CourseCertificateDialog from "@/components/lms/CourseCertificateDialog";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
+import { Award } from "lucide-react";
 
 const levelEmoji: Record<string, string> = { beginner: "🌱", intermediate: "📊", advanced: "🚀" };
 
@@ -288,6 +291,32 @@ export default function LmsPage() {
   const [aiChatOpen, setAiChatOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any | null>(null);
+  const [certOpen, setCertOpen] = useState(false);
+  const [certCourse, setCertCourse] = useState<any | null>(null);
+  const { user } = useAuth();
+
+  // Check user enrollment for certificate eligibility
+  const { data: myEnrollments } = useQuery({
+    queryKey: ["my-enrollments", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("course_enrollments")
+        .select("*")
+        .eq("user_id", user!.id);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["my-profile-lms", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase.from("profiles").select("full_name").eq("user_id", user!.id).single();
+      return data;
+    },
+  });
 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
@@ -333,6 +362,20 @@ export default function LmsPage() {
             </div>
             <div className="px-3.5 py-2.5 bg-surface-2 border-t border-border flex justify-between items-center">
               <Pill color={c.is_published ? "green" : "amber"}>{c.is_published ? "● Publié" : "● Brouillon"}</Pill>
+              {(() => {
+                const enrollment = myEnrollments?.find(e => e.course_id === c.id);
+                if (enrollment?.completed_at) {
+                  return (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setCertCourse(c); setCertOpen(true); }}
+                      className="flex items-center gap-1 text-[10px] text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <Award size={12} /> Certificat
+                    </button>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </div>
         ))}
@@ -341,6 +384,15 @@ export default function LmsPage() {
       <AICourseGenerator open={aiGenOpen} onOpenChange={setAiGenOpen} />
       <AIAssistantChat open={aiChatOpen} onOpenChange={setAiChatOpen} />
       <CourseEditorDialog open={editorOpen} onOpenChange={setEditorOpen} course={selectedCourse} />
+      <CourseCertificateDialog
+        open={certOpen}
+        onOpenChange={setCertOpen}
+        studentName={profile?.full_name ?? "Apprenant"}
+        courseTitle={certCourse?.title ?? ""}
+        completedAt={myEnrollments?.find(e => e.course_id === certCourse?.id)?.completed_at ?? undefined}
+        modulesCount={certCourse?.modules_count}
+        durationHours={certCourse?.duration_hours}
+      />
     </motion.div>
   );
 }

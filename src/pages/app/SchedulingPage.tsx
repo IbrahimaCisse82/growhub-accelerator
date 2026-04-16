@@ -12,7 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
 import { format, addDays, addMonths, subMonths, startOfWeek, startOfMonth, isSameDay, isAfter } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar, CalendarDays, Trash2, X } from "lucide-react";
+import { Calendar, CalendarDays, Trash2, X, Download } from "lucide-react";
+import { exportToCSV } from "@/lib/exportUtils";
 import AddAvailabilityDialog from "@/components/scheduling/AddAvailabilityDialog";
 import BookSlotDialog from "@/components/scheduling/BookSlotDialog";
 import MonthCalendarView from "@/components/scheduling/MonthCalendarView";
@@ -118,6 +119,19 @@ export default function SchedulingPage() {
         subtitle="Réservez un créneau avec un mentor ou gérez vos disponibilités"
         actions={
           <div className="flex items-center gap-2">
+            <GhButton variant="ghost" size="sm" onClick={() => {
+              const exportData = (slots ?? []).map(s => ({
+                date: format(new Date(s.start_at), "yyyy-MM-dd"),
+                début: format(new Date(s.start_at), "HH:mm"),
+                fin: format(new Date(s.end_at), "HH:mm"),
+                mentor: getMentorName(s.mentor_id),
+                statut: s.is_booked ? "Réservé" : "Disponible",
+              }));
+              exportToCSV(exportData, `planning-${format(new Date(), "yyyy-MM-dd")}`, [
+                { key: "date", label: "Date" }, { key: "début", label: "Début" }, { key: "fin", label: "Fin" },
+                { key: "mentor", label: "Mentor" }, { key: "statut", label: "Statut" },
+              ]);
+            }}><Download size={13} className="mr-1" />CSV</GhButton>
             <div className="flex items-center bg-surface-2 border border-border rounded-lg p-0.5">
               <button onClick={() => setViewMode("week")} className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${viewMode === "week" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}>
                 <CalendarDays size={13} className="inline mr-1" />Semaine
