@@ -384,6 +384,15 @@ export default function LmsPage() {
       <AICourseGenerator open={aiGenOpen} onOpenChange={setAiGenOpen} />
       <AIAssistantChat open={aiChatOpen} onOpenChange={setAiChatOpen} />
       <CourseEditorDialog open={editorOpen} onOpenChange={setEditorOpen} course={selectedCourse} />
+      <CourseCertificateDialog
+        open={certOpen}
+        onOpenChange={setCertOpen}
+        studentName={profile?.full_name ?? "Apprenant"}
+        courseTitle={certCourse?.title ?? ""}
+        completedAt={myEnrollments?.find(e => e.course_id === certCourse?.id)?.completed_at ?? undefined}
+        modulesCount={certCourse?.modules_count}
+        durationHours={certCourse?.duration_hours}
+      />
     </motion.div>
   );
 }
