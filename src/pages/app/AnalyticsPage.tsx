@@ -154,16 +154,33 @@ export default function AnalyticsPage() {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
       <SectionHeader title="Analytics" subtitle="Performances, tendances et rétention"
-        actions={<GhButton variant="ghost" onClick={() => {
-          const summary = [
-            { metric: "Entreprises", value: startupsCount ?? 0 },
-            { metric: "Financement total", value: totalFunding },
-            { metric: "Cohortes", value: cohorts?.length ?? 0 },
-            { metric: "Sessions coaching", value: totalSessions },
-            { metric: "Avancement moyen", value: `${avgProgress}%` },
-          ];
-          exportToPDF("Analytics — Grow Hub", summary, [{ key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" }]);
-        }}>⎙ PDF</GhButton>} />
+        actions={<div className="flex items-center gap-2">
+          <GhButton variant="ghost" onClick={() => {
+            const rows = [
+              { metric: "Entreprises", value: startupsCount ?? 0 },
+              { metric: "Financement total (XOF)", value: totalFunding },
+              { metric: "Cohortes", value: cohorts?.length ?? 0 },
+              { metric: "Sessions coaching", value: totalSessions },
+              { metric: "Avancement moyen", value: `${avgProgress}%` },
+              { metric: "Emplois créés", value: impactKpis.jobs },
+              { metric: "CA cumulé (XOF)", value: impactKpis.revenue },
+              { metric: "Fonds levés (XOF)", value: impactKpis.funding },
+            ];
+            exportToCSV(rows, `analytics-${new Date().toISOString().slice(0, 10)}`, [
+              { key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" },
+            ]);
+          }}><Download size={13} className="mr-1" />CSV</GhButton>
+          <GhButton variant="ghost" onClick={() => {
+            const summary = [
+              { metric: "Entreprises", value: startupsCount ?? 0 },
+              { metric: "Financement total", value: totalFunding },
+              { metric: "Cohortes", value: cohorts?.length ?? 0 },
+              { metric: "Sessions coaching", value: totalSessions },
+              { metric: "Avancement moyen", value: `${avgProgress}%` },
+            ];
+            exportToPDF("Analytics — Grow Hub", summary, [{ key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" }]);
+          }}>⎙ PDF</GhButton>
+        </div>} />
 
       {/* Period filter */}
       <div className="flex items-center gap-2">
