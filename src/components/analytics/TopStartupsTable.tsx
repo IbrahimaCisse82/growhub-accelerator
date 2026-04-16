@@ -26,10 +26,10 @@ export default function TopStartupsTable() {
     },
   });
 
-  const healthColor = (score: number): "green" | "amber" | "red" => {
+  const healthColor = (score: number): "green" | "amber" | "rose" => {
     if (score >= 60) return "green";
     if (score >= 30) return "amber";
-    return "red";
+    return "rose";
   };
 
   return (
