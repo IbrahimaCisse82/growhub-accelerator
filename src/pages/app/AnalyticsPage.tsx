@@ -328,6 +328,32 @@ export default function AnalyticsPage() {
           </div>
         </GhCard>
       </div>
+
+      {/* Top 10 Startups */}
+      <TopStartupsTable />
+
+      {/* Trend indicators */}
+      <GhCard title="Indicateurs de tendance">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { label: "Entreprises", current: startupsCount ?? 0, icon: "green" as const },
+            { label: "Candidatures", current: applications?.length ?? 0, icon: "blue" as const },
+            { label: "Sessions", current: totalSessions, icon: "purple" as const },
+            { label: "Projets", current: projectsFiltered.length, icon: "amber" as const },
+          ].map(item => {
+            const trend = item.current > 0 ? "up" : item.current === 0 ? "flat" : "down";
+            return (
+              <div key={item.label} className="flex items-center gap-3 bg-surface-2 rounded-lg p-3">
+                {trend === "up" ? <TrendingUp size={16} className="text-gh-green" /> : trend === "down" ? <TrendingDown size={16} className="text-gh-rose" /> : <Minus size={16} className="text-muted-foreground" />}
+                <div>
+                  <div className="text-[11px] text-muted-foreground">{item.label}</div>
+                  <div className="text-sm font-bold text-foreground">{item.current}</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </GhCard>
     </motion.div>
   );
 }
