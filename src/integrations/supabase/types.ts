@@ -1012,6 +1012,50 @@ export type Database = {
           },
         ]
       }
+      entity_comments: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          is_edited: boolean
+          parent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_edited?: boolean
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_edited?: boolean
+          parent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entity_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "entity_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entity_documents: {
         Row: {
           category: string
@@ -3643,6 +3687,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_notification_prefs: {
+        Row: {
+          application_notifications: boolean
+          coaching_notifications: boolean
+          created_at: string
+          email_digest_enabled: boolean
+          email_digest_frequency: string
+          message_notifications: boolean
+          milestone_notifications: boolean
+          risk_notifications: boolean
+          task_notifications: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_notifications?: boolean
+          coaching_notifications?: boolean
+          created_at?: string
+          email_digest_enabled?: boolean
+          email_digest_frequency?: string
+          message_notifications?: boolean
+          milestone_notifications?: boolean
+          risk_notifications?: boolean
+          task_notifications?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_notifications?: boolean
+          coaching_notifications?: boolean
+          created_at?: string
+          email_digest_enabled?: boolean
+          email_digest_frequency?: string
+          message_notifications?: boolean
+          milestone_notifications?: boolean
+          risk_notifications?: boolean
+          task_notifications?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_presence: {
         Row: {
