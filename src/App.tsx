@@ -8,6 +8,8 @@ import { I18nProvider } from "@/lib/i18n";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminRoute from "@/components/auth/AdminRoute";
 import AppLayout from "@/components/layout/AppLayout";
+import PWAInstallPrompt from "@/components/shared/PWAInstallPrompt";
+import KeyboardShortcutsProvider from "@/components/shared/KeyboardShortcutsProvider";
 import { lazy, Suspense } from "react";
 
 // Auth pages (small, loaded eagerly)
@@ -92,8 +94,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+          <KeyboardShortcutsProvider>
+            <PWAInstallPrompt />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               <Route path="/" element={<Navigate to="/app/dashboard" replace />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<Navigate to="/login" replace />} />
@@ -150,6 +154,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </KeyboardShortcutsProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -11,6 +11,8 @@ import { useCohorts } from "@/hooks/useCohorts";
 import { useCoachingSessions } from "@/hooks/useCoachingSessions";
 import { exportToPDF, exportToCSV } from "@/lib/exportUtils";
 import { exportAnalyticsToPDF } from "@/lib/analyticsPdfExport";
+import { exportToExcel } from "@/lib/excelExport";
+import CohortAdvancedAnalytics from "@/components/analytics/CohortAdvancedAnalytics";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, AreaChart, Area, Legend } from "recharts";
@@ -181,6 +183,28 @@ export default function AnalyticsPage() {
               { key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" },
             ]);
           }}><Download size={13} className="mr-1" />CSV</GhButton>
+          <GhButton variant="ghost" onClick={() => {
+            exportToExcel([
+              { name: "Indicateurs", rows: [
+                { metric: "Entreprises", value: startupsCount ?? 0 },
+                { metric: "Financement (XOF)", value: totalFunding },
+                { metric: "Cohortes", value: cohorts?.length ?? 0 },
+                { metric: "Sessions coaching", value: totalSessions },
+                { metric: "Candidatures", value: applications?.length ?? 0 },
+                { metric: "Emplois créés", value: impactKpis.jobs },
+                { metric: "CA cumulé", value: impactKpis.revenue },
+                { metric: "Fonds levés", value: impactKpis.funding },
+              ], columns: [{ key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" }] },
+              { name: "Projets par statut", rows: projectsByStatus, columns: [{ key: "name", label: "Statut" }, { key: "value", label: "Nombre" }] },
+              { name: "Grants par statut", rows: grantsByStatus, columns: [{ key: "name", label: "Statut" }, { key: "value", label: "Nombre" }] },
+              { name: "Rétention cohortes", rows: cohortRetention, columns: [
+                { key: "name", label: "Cohorte" }, { key: "total", label: "Total" },
+                { key: "active", label: "Actives" }, { key: "graduated", label: "Graduées" },
+                { key: "retentionPct", label: "Rétention %" },
+              ] },
+              { name: "Funnel candidatures", rows: appFunnel, columns: [{ key: "name", label: "Étape" }, { key: "value", label: "Nombre" }] },
+            ], `analytics-${new Date().toISOString().slice(0, 10)}`);
+          }}><Download size={13} className="mr-1" />Excel</GhButton>
           <GhButton variant="primary" onClick={() => {
             const periodLabel = period === "30d" ? "30 derniers jours" : period === "90d" ? "90 derniers jours" : period === "12m" ? "12 derniers mois" : period === "custom" ? `${customFrom ? format(customFrom, "dd/MM/yy") : "—"} → ${customTo ? format(customTo, "dd/MM/yy") : "—"}` : "Toutes périodes";
             exportAnalyticsToPDF({
@@ -391,6 +415,9 @@ export default function AnalyticsPage() {
           })}
         </div>
       </GhCard>
+
+      {/* V5: Advanced cohort analytics */}
+      <CohortAdvancedAnalytics />
     </motion.div>
   );
 }
