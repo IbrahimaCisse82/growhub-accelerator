@@ -415,6 +415,9 @@ export default function AnalyticsPage() {
           })}
         </div>
       </GhCard>
+
+      {/* V5: Advanced cohort analytics */}
+      <CohortAdvancedAnalytics />
     </motion.div>
   );
 }
