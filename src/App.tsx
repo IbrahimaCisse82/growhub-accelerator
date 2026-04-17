@@ -154,6 +154,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </KeyboardShortcutsProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
