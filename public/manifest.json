@@ -3,13 +3,21 @@
   "short_name": "GrowHub",
   "description": "Plateforme de gestion d'accélérateurs et programmes d'accompagnement",
   "start_url": "/app/dashboard",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0a0a0a",
   "theme_color": "#00d4aa",
   "orientation": "any",
+  "lang": "fr",
+  "categories": ["business", "productivity", "education"],
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Dashboard", "url": "/app/dashboard", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Tâches", "url": "/app/taches", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Coaching", "url": "/app/coaching", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }
