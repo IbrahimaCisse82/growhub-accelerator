@@ -8,6 +8,9 @@ import AuditTrailPanel from "@/components/audit/AuditTrailPanel";
 import GhCard from "@/components/shared/GhCard";
 import GhButton from "@/components/shared/GhButton";
 import { toast } from "@/hooks/use-toast";
+import { useNotificationPrefs } from "@/hooks/useNotificationPrefs";
+import { SHORTCUT_HINTS } from "@/hooks/useKeyboardShortcuts";
+import { Keyboard } from "lucide-react";
 
 const notifTypes = [
   { key: "application", label: "Candidatures", description: "Mises à jour de statut des candidatures" },
@@ -208,7 +211,94 @@ export default function SettingsPage() {
         <GhCard title="📋 Historique d'activité" className="mt-4">
           <AuditTrailPanel limit={30} />
         </GhCard>
+
+        <NewNotifPrefsCard />
+        <KeyboardShortcutsCard />
       </div>
     </motion.div>
+  );
+}
+
+function NewNotifPrefsCard() {
+  const { prefs, isLoading, save } = useNotificationPrefs();
+  const [draft, setDraft] = useState(prefs ?? null);
+
+  useEffect(() => { setDraft(prefs ?? null); }, [prefs]);
+
+  if (isLoading || !draft) return null;
+
+  const Toggle = ({ label, description, value, onChange }: { label: string; description: string; value: boolean; onChange: (v: boolean) => void }) => (
+    <div className="flex items-center justify-between py-2 border-b border-border last:border-b-0">
+      <div>
+        <div className="text-[13px] font-medium text-foreground">{label}</div>
+        <div className="text-[11px] text-muted-foreground">{description}</div>
+      </div>
+      <button
+        onClick={() => onChange(!value)}
+        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${value ? "bg-primary" : "bg-muted"}`}
+      >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${value ? "translate-x-6" : "translate-x-1"}`} />
+      </button>
+    </div>
+  );
+
+  return (
+    <GhCard title="🔔 Préférences avancées (V4)" className="mt-4">
+      <div className="space-y-1">
+        <Toggle label="Tâches" description="Notifications quand on t'assigne une tâche" value={draft.task_notifications} onChange={v => setDraft({ ...draft, task_notifications: v })} />
+        <Toggle label="Candidatures" description="Mises à jour de statut des candidatures" value={draft.application_notifications} onChange={v => setDraft({ ...draft, application_notifications: v })} />
+        <Toggle label="Coaching" description="Sessions planifiées, confirmées, annulées" value={draft.coaching_notifications} onChange={v => setDraft({ ...draft, coaching_notifications: v })} />
+        <Toggle label="Jalons" description="Jalons atteints dans tes projets" value={draft.milestone_notifications} onChange={v => setDraft({ ...draft, milestone_notifications: v })} />
+        <Toggle label="Risques" description="Alertes critiques sur les risques" value={draft.risk_notifications} onChange={v => setDraft({ ...draft, risk_notifications: v })} />
+        <Toggle label="Messages" description="Nouveaux messages reçus" value={draft.message_notifications} onChange={v => setDraft({ ...draft, message_notifications: v })} />
+      </div>
+
+      <div className="mt-4 pt-3 border-t border-border space-y-3">
+        <Toggle
+          label="Résumé email périodique"
+          description="Reçois un récap des activités par email"
+          value={draft.email_digest_enabled}
+          onChange={v => setDraft({ ...draft, email_digest_enabled: v })}
+        />
+        {draft.email_digest_enabled && (
+          <div className="flex items-center gap-2">
+            <label className="text-[11px] text-muted-foreground">Fréquence :</label>
+            <select
+              value={draft.email_digest_frequency}
+              onChange={e => setDraft({ ...draft, email_digest_frequency: e.target.value as any })}
+              className="bg-surface-2 border border-border rounded-lg px-2 py-1 text-[12px] text-foreground"
+            >
+              <option value="daily">Quotidien</option>
+              <option value="weekly">Hebdomadaire</option>
+              <option value="never">Jamais</option>
+            </select>
+          </div>
+        )}
+      </div>
+
+      <div className="mt-4 flex justify-end">
+        <GhButton variant="primary" onClick={() => save.mutate(draft)} disabled={save.isPending}>
+          {save.isPending ? "Sauvegarde…" : "Enregistrer"}
+        </GhButton>
+      </div>
+    </GhCard>
+  );
+}
+
+function KeyboardShortcutsCard() {
+  return (
+    <GhCard title="⌨ Raccourcis clavier" className="mt-4">
+      <div className="text-[11px] text-muted-foreground mb-3 flex items-center gap-1.5">
+        <Keyboard size={12} /> Navigation rapide — appuie sur <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">g</kbd> puis une lettre.
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {SHORTCUT_HINTS.map(s => (
+          <div key={s.key} className="flex items-center justify-between bg-surface-2 rounded-lg px-3 py-2">
+            <span className="text-[12px] text-foreground">{s.label}</span>
+            <kbd className="px-2 py-0.5 bg-card border border-border rounded text-[10px] font-mono text-muted-foreground">{s.key}</kbd>
+          </div>
+        ))}
+      </div>
+    </GhCard>
   );
 }
