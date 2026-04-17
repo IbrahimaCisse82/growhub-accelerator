@@ -336,6 +336,11 @@ export default function LmsPage() {
       {/* Course Stats Dashboard */}
       <CourseStatsPanel />
 
+      {/* Learner progress tracking */}
+      <div className="mb-5">
+        <LearnerProgressPanel />
+      </div>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Cours" value={String(courses?.length ?? 0)} note="" color="blue" />
         <StatCard label="Publiés" value={String(courses?.filter((c) => c.is_published).length ?? 0)} note="" color="green" />
