@@ -12,6 +12,7 @@ import CourseStatsPanel from "@/components/lms/CourseStatsPanel";
 import AICourseGenerator from "@/components/lms/AICourseGenerator";
 import AIAssistantChat from "@/components/lms/AIAssistantChat";
 import CourseCertificateDialog from "@/components/lms/CourseCertificateDialog";
+import LearnerProgressPanel from "@/components/lms/LearnerProgressPanel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
