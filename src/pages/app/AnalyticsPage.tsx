@@ -10,6 +10,7 @@ import { useProjects } from "@/hooks/useProjects";
 import { useCohorts } from "@/hooks/useCohorts";
 import { useCoachingSessions } from "@/hooks/useCoachingSessions";
 import { exportToPDF, exportToCSV } from "@/lib/exportUtils";
+import { exportAnalyticsToPDF } from "@/lib/analyticsPdfExport";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, AreaChart, Area, Legend } from "recharts";
@@ -180,16 +181,30 @@ export default function AnalyticsPage() {
               { key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" },
             ]);
           }}><Download size={13} className="mr-1" />CSV</GhButton>
-          <GhButton variant="ghost" onClick={() => {
-            const summary = [
-              { metric: "Entreprises", value: startupsCount ?? 0 },
-              { metric: "Financement total", value: totalFunding },
-              { metric: "Cohortes", value: cohorts?.length ?? 0 },
-              { metric: "Sessions coaching", value: totalSessions },
-              { metric: "Avancement moyen", value: `${avgProgress}%` },
-            ];
-            exportToPDF("Analytics — Grow Hub", summary, [{ key: "metric", label: "Métrique" }, { key: "value", label: "Valeur" }]);
-          }}>⎙ PDF</GhButton>
+          <GhButton variant="primary" onClick={() => {
+            const periodLabel = period === "30d" ? "30 derniers jours" : period === "90d" ? "90 derniers jours" : period === "12m" ? "12 derniers mois" : period === "custom" ? `${customFrom ? format(customFrom, "dd/MM/yy") : "—"} → ${customTo ? format(customTo, "dd/MM/yy") : "—"}` : "Toutes périodes";
+            exportAnalyticsToPDF({
+              title: "Analytics — Grow Hub",
+              period: periodLabel,
+              generatedAt: format(new Date(), "dd MMMM yyyy 'à' HH:mm", { locale: fr }),
+              topStats: [
+                { label: "Entreprises", value: startupsCount ?? 0 },
+                { label: "Financement (XOF)", value: fmtNum(totalFunding) },
+                { label: "Cohortes", value: cohorts?.length ?? 0, note: `${cohorts?.filter(c => c.status === "active").length ?? 0} actives` },
+                { label: "Sessions coaching", value: totalSessions, note: `${completedSessions} terminées` },
+                { label: "Candidatures", value: applications?.length ?? 0 },
+              ],
+              impactKpis: [
+                { label: "Emplois créés", value: fmtNum(impactKpis.jobs) },
+                { label: "CA cumulé (XOF)", value: fmtNum(impactKpis.revenue) },
+                { label: "Fonds levés (XOF)", value: fmtNum(impactKpis.funding) },
+              ],
+              projectsByStatus,
+              grantsByStatus,
+              cohortRetention,
+              appFunnel,
+            });
+          }}><Download size={13} className="mr-1" />Rapport PDF</GhButton>
         </div>} />
 
       {/* Period filter */}

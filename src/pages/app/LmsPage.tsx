@@ -12,6 +12,7 @@ import CourseStatsPanel from "@/components/lms/CourseStatsPanel";
 import AICourseGenerator from "@/components/lms/AICourseGenerator";
 import AIAssistantChat from "@/components/lms/AIAssistantChat";
 import CourseCertificateDialog from "@/components/lms/CourseCertificateDialog";
+import LearnerProgressPanel from "@/components/lms/LearnerProgressPanel";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -334,6 +335,11 @@ export default function LmsPage() {
 
       {/* Course Stats Dashboard */}
       <CourseStatsPanel />
+
+      {/* Learner progress tracking */}
+      <div className="mb-5">
+        <LearnerProgressPanel />
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mb-5">
         <StatCard label="Cours" value={String(courses?.length ?? 0)} note="" color="blue" />
