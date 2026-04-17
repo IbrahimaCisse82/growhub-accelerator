@@ -133,6 +133,20 @@ export default function SchedulingPage() {
                 { key: "mentor", label: "Mentor" }, { key: "statut", label: "Statut" },
               ]);
             }}><Download size={13} className="mr-1" />CSV</GhButton>
+            <GhButton variant="ghost" size="sm" onClick={() => {
+              const myEvents = myBookings.map(b => ({
+                uid: b.id,
+                title: `Coaching avec ${getMentorName(b.mentor_id)}`,
+                description: "Session de coaching réservée via Grow Hub",
+                startAt: new Date(b.start_at),
+                endAt: new Date(b.end_at),
+              }));
+              if (myEvents.length === 0) {
+                toast({ title: "Aucune réservation à exporter" });
+                return;
+              }
+              downloadICS(myEvents, `mes-rdv-${format(new Date(), "yyyy-MM-dd")}`, "Grow Hub — Mes RDV");
+            }}><CalendarPlus size={13} className="mr-1" />.ics</GhButton>
             <div className="flex items-center bg-surface-2 border border-border rounded-lg p-0.5">
               <button onClick={() => setViewMode("week")} className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${viewMode === "week" ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground"}`}>
                 <CalendarDays size={13} className="inline mr-1" />Semaine
