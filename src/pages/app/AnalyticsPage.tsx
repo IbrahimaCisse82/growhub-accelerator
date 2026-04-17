@@ -11,6 +11,8 @@ import { useCohorts } from "@/hooks/useCohorts";
 import { useCoachingSessions } from "@/hooks/useCoachingSessions";
 import { exportToPDF, exportToCSV } from "@/lib/exportUtils";
 import { exportAnalyticsToPDF } from "@/lib/analyticsPdfExport";
+import { exportToExcel } from "@/lib/excelExport";
+import CohortAdvancedAnalytics from "@/components/analytics/CohortAdvancedAnalytics";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, AreaChart, Area, Legend } from "recharts";
