@@ -28,8 +28,8 @@ export default function BookSlotDialog({ slot, mentorName }: { slot: any; mentor
           .eq("booked_by", user!.id)
           .eq("is_booked", true),
         supabase.from("coaching_sessions")
-          .select("id, title, scheduled_at, duration_minutes")
-          .eq("status", "scheduled"),
+          .select("id, title, scheduled_at, duration_minutes, status")
+          .in("status", ["planned", "confirmed"]),
       ]);
 
       const bookingConflicts = (bookingsRes.data ?? []).filter(b => {
